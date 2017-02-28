@@ -1,0 +1,37 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+group = 'com.cisco.trex'
+version = '1.00'
+
+description = """TRex Client example"""
+
+sourceCompatibility = '1.8'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+sourceSets.main.java.srcDirs = ['src/main/java']
+
+mainClassName='com.cisco.trex.stateless.TRexClientApp'
+if (!hasProperty('mainClass')) {
+    ext.mainClass = mainClassName
+}
+
+repositories {
+    maven { url "https://jitpack.io" }
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // dependency from github sources via jitpack.io
+    compile group: 'com.github.cisco-system-traffic-generator', name: 'trex-java-sdk', version:'master'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
