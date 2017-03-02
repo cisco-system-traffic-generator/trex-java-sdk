@@ -1,5 +1,7 @@
 package com.cisco.trex.stateless.model;
 
+import org.pcap4j.packet.Packet;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,19 +14,20 @@ public class Stream {
     private Double isg;
     private StreamMode mode;
     private Integer next_stream_id;
-    private Packet packet;
+    private StreamPacket packet;
     private StreamRxStats rx_stats;
     private StreamVM vm;
     private Boolean self_start;
     private Map<String, Object> flow_stats = new HashMap<>();
 
-        public Stream(Integer id, Boolean enabled, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
+    public Stream(Integer id, Boolean enabled, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
         this.id = id;
         this.enabled = enabled;
         this.isg = isg;
         this.mode = mode;
         this.next_stream_id = next_stream_id;
-        this.packet = packet;
+        String pkt = Base64.getEncoder().encodeToString(packet.getRawData());
+        this.packet = new StreamPacket(pkt);
         this.rx_stats = rx_stats;
         this.vm = vm;
         this.self_start = self_start;
@@ -52,7 +55,7 @@ public class Stream {
         return next_stream_id;
     }
 
-    public Packet getPacket() {
+    public StreamPacket getPacket() {
         return packet;
     }
 
@@ -76,5 +79,35 @@ public class Stream {
         
         Stream s2 = (Stream) obj;
         return id.equals(s2.getId()) || super.equals(obj);
+    }
+
+    public static class StreamPacket {
+        /**
+         * Binary representation encoded as base64 string
+         */
+        private String binary;
+        private String meta = "";
+    
+        public StreamPacket(String binaryBase64) {
+            this(binaryBase64, "");
+        }
+    
+        public StreamPacket(String binaryBase64, String meta) {
+            binary = binaryBase64;
+            this.meta = meta;
+        }
+    
+    
+        public String getBinary() {
+            return binary;
+        }
+    
+        public byte[] getBytes() {
+            return Base64.getDecoder().decode(binary.getBytes());
+        }
+    
+        public String getMeta() {
+            return meta;
+        }
     }
 }
