@@ -4,25 +4,33 @@ package com.cisco.trex.stateless;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
-import com.google.gson.Gson;
 import org.junit.*;
+import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.ArpPacket;
+import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.namednumber.ArpHardwareType;
+import org.pcap4j.packet.namednumber.ArpOperation;
+import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.util.ByteArrays;
+import org.pcap4j.util.MacAddress;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TRexClientTest {
     public static final String CLIENT_USER = "unit-tests-user";
-    private static final Packet SIMPLE_PACKET = new Packet("AAAAAQAAAAAAAgAACABFAAAoAAEAAEAGOs4QAAABMAAAAQQBBAEAAff6AAAAAFAAIACz4wAA");
-    private static final Packet PING_PACKET = new Packet("AFBWiv6jpF5g0BfXCABFAAAcAAEAAEAB8kfAqANswKgD3AgA9+MAHAAA");
+    private static final Packet SIMPLE_PACKET = buildArpPkt();
     private static final Integer STREAM_ID = 100500;
-    public static Gson gson = new Gson();
-    public static TRexClient client = null;
+    public static TRexClient client;
 
     @BeforeClass
     public static void setUp() throws TRexConnectionException, TRexTimeoutException {
-        client = new TRexClient("tcp", "trex-xored", "4501", CLIENT_USER);
+        client = new TRexClient("tcp", "trex-host", "4501", CLIENT_USER);
         client.connect();
     }
 
@@ -161,6 +169,40 @@ public class TRexClientTest {
         
         client.releasePort(port.getIndex());
     }
+
+    @Test
+    @Ignore
+    public void arpTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        Port port1 = ports.get(1);
+        client.acquirePort(port.getIndex(), true);
+        client.acquirePort(port1.getIndex(), true);
+        
+        client.serviceMode(port.getIndex(), true);
+        client.serviceMode(port1.getIndex(), true);
+
+        client.removeRxQueue(port.getIndex());
+        client.setRxQueue(port.getIndex(), 5);
+            
+        EthernetPacket pkt = buildArpPkt();
+        client.sendPacket(port.getIndex(), pkt);
+
+        Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
+            if(etherPkt.contains(ArpPacket.class)) {
+                ArpPacket arp = (ArpPacket) etherPkt.getPayload();
+                if (ArpOperation.REPLY.equals(arp.getHeader().getOperation())) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        List<org.pcap4j.packet.Packet> pkts = client.getRxQueue(port.getIndex(), arpReplyFilter);
+        client.removeRxQueue(port.getIndex());
+        client.serviceMode(port.getIndex(), false);
+        client.serviceMode(port1.getIndex(), false);
+        Assert.assertTrue(pkts.size() > 0);
+    }
     
     @Test
     @Ignore
@@ -207,5 +249,35 @@ public class TRexClientTest {
                 ),
                 StreamMode.Type.continuous
         );
+    }
+
+    private static EthernetPacket buildArpPkt() {
+        ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
+        MacAddress srcMac = MacAddress.getByName("00:50:56:94:21:df");
+        try {
+            String strSrcIpAddress = "192.168.9.27";
+            String strDstIpAddress = "192.168.9.28";
+            arpBuilder
+                    .hardwareType(ArpHardwareType.ETHERNET)
+                    .protocolType(EtherType.IPV4)
+                    .hardwareAddrLength((byte) MacAddress.SIZE_IN_BYTES)
+                    .protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
+                    .operation(ArpOperation.REQUEST)
+                    .srcHardwareAddr(srcMac)
+                    .srcProtocolAddr(InetAddress.getByName(strSrcIpAddress))
+                    .dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                    .dstProtocolAddr(InetAddress.getByName(strDstIpAddress));
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+        etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                .srcAddr(srcMac)
+                .type(EtherType.ARP)
+                .payloadBuilder(arpBuilder)
+                .paddingAtBuild(true);
+
+        return etherBuilder.build();
     }
 }
