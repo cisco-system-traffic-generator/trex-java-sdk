@@ -1,9 +1,6 @@
 package com.cisco.trex.stateless;
 
-import com.cisco.trex.stateless.model.Port;
-import com.cisco.trex.stateless.model.PortStatus;
-import com.cisco.trex.stateless.model.Stream;
-import com.cisco.trex.stateless.model.SystemInfo;
+import com.cisco.trex.stateless.model.*;
 import com.google.gson.*;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IllegalRawDataException;
@@ -256,6 +253,50 @@ public class TRexClient {
         callMethod("set_rx_feature", payload);
     }
 
+    public void removeRxQueue(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        callMethod("remove_rx_filters", payload);
+    }
+    
+    public void sendPacket(int portIndex, Packet pkt) {
+        Stream stream = build1PktSingleBurstStream(pkt);
+        
+        removeAllStreams(portIndex);
+        addStream(portIndex, stream);
+        
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 1.0);
+        startTraffic(portIndex, 1, true, mul, 1);
+        stopTraffic(portIndex);
+    }
+    
+    private Stream build1PktSingleBurstStream(Packet pkt) {
+        int stream_id = (int) (Math.random() * 1000);
+        return new Stream(
+                stream_id,
+                true,
+                0.0,
+                new StreamMode(
+                        1,
+                        1,
+                        1,
+                        1.0,
+                        new StreamModeRate(
+                                StreamModeRate.Type.pps,
+                                1.0
+                        ),
+                        StreamMode.Type.single_burst
+                ),
+                -1,
+                pkt,
+                new StreamRxStats(true, true, true, stream_id),
+                new StreamVM("", Collections.<VMInstruction>emptyList()),
+                true
+        );
+    }
+    
     public List<Packet> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
 
         Map<String, Object> payload = createPayload(portIndex);
@@ -266,12 +307,12 @@ public class TRexClient {
                 .getAsJsonObject()
                 .getAsJsonArray("pkts");
         return StreamSupport.stream(pkts.spliterator(), false)
-                .map(this::buildPkt)
+                .map(this::buildEthernetPkt)
                 .filter(filter)
                 .collect(Collectors.toList());
     }
     
-    private EthernetPacket buildPkt(JsonElement jsonElement) {
+    private EthernetPacket buildEthernetPkt(JsonElement jsonElement) {
         try {
             byte[] binary = Base64.getDecoder().decode(jsonElement.getAsJsonObject().get("binary").getAsString());
             EthernetPacket pkt = EthernetPacket.newPacket(binary, 0, binary.length);
