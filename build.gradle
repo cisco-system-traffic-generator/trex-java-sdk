@@ -18,12 +18,6 @@ dependencies {
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.+'
     compile group: 'org.zeromq', name: 'jeromq', version:'0.3.5'
     compile group: 'com.google.code.gson', name: 'gson', version:'1.7.1'
-    compile(group: 'log4j', name: 'log4j', version:'1.2.15') {
-        exclude(module: 'mail')
-        exclude(module: 'jms')
-        exclude(module: 'jmxtools')
-        exclude(module: 'jmxri')
-    }
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     sourceSets {

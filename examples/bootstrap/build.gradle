@@ -26,6 +26,12 @@ repositories {
 dependencies {
     // dependency from github sources via jitpack.io
     compile group: 'com.github.cisco-system-traffic-generator', name: 'trex-java-sdk', version:'master'
+    compile(group: 'log4j', name: 'log4j', version:'1.2.15') {
+        exclude(module: 'mail')
+        exclude(module: 'jms')
+        exclude(module: 'jmxtools')
+        exclude(module: 'jmxri')
+    }
 }
 
 jar {
