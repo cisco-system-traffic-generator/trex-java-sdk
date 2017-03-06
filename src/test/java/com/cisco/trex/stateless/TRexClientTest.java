@@ -5,9 +5,9 @@ import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
 import org.junit.*;
-import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.ArpHardwareType;
 import org.pcap4j.packet.namednumber.ArpOperation;
 import org.pcap4j.packet.namednumber.EtherType;
@@ -145,6 +145,48 @@ public class TRexClientTest {
         client.releasePort(port.getIndex());
     }
 
+    /**
+     * This is a specific test which is not related to standalone Java SDK
+     */
+    @Test
+    @Ignore
+    public void pingTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        try {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+            String host = "192.168.9.1";
+            EthernetPacket icmpReply = client.sendIcmpEcho(port.getIndex(), host, 10, 10, 1000);
+            Assert.assertNotNull(icmpReply);
+        } catch (UnknownHostException ignored) {
+        } finally {
+            client.serviceMode(port.getIndex(), false);
+            client.releasePort(port.getIndex());
+        }
+    }
+
+    /**
+     * This is a specific test which is not related to standalone Java SDK
+     */
+    @Test
+    @Ignore
+    public void setL3Test() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        try {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+            client.setL3Mode(port.getIndex(), null, "192.168.9.27", "192.168.9.28");
+            String nextHopMac = client.resolveArp(port.getIndex(), "192.168.9.27", "192.168.9.28");
+            boolean result = client.setL3Mode(port.getIndex(), nextHopMac, "192.168.9.27", "192.168.9.28");
+            Assert.assertTrue(result);
+        } finally {
+            client.serviceMode(port.getIndex(), false);
+            client.releasePort(port.getIndex());
+        }
+    }
+    
     @Test
     public void startStopTrafficTest() {
         List<Port> ports = client.getPorts();
@@ -170,6 +212,9 @@ public class TRexClientTest {
         client.releasePort(port.getIndex());
     }
 
+    /**
+     * This is a specific test which is not related to standalone Java SDK
+     */
     @Test
     @Ignore
     public void arpTest() {
