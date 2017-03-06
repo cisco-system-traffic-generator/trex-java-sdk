@@ -56,10 +56,10 @@ public class PortStatus {
         );
     }
 
-    //    public PortStatusAttribute.link getLink() {
-//        return attr.link;
-//    }
 
+    public LayerConfigurationMode getLayerConfigurationMode() {
+        return cfgMode;
+    }
     class PortStatusAttribute {
         
         public fc fc;
