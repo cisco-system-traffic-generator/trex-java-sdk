@@ -6,7 +6,7 @@ public class Port {
     public String description;
     public String driver;
     public String dst_macaddr;
-    public String hw_macaddr;
+    public String hw_mac;
     public Integer index;
     public Boolean is_fc_supported;
     public Boolean is_led_supported;
