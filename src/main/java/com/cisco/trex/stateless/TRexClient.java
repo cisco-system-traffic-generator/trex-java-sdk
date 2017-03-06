@@ -2,13 +2,17 @@ package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.model.*;
 import com.google.gson.*;
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IllegalRawDataException;
-import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.*;
+import org.pcap4j.packet.namednumber.*;
+import org.pcap4j.util.ByteArrays;
+import org.pcap4j.util.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -127,7 +131,14 @@ public class TRexClient {
 
     public List<Port> getPorts() {
         logger.info("Getting ports list.");
-        return getSystemInfo().getPorts();
+        List<Port> ports = getSystemInfo().getPorts(); 
+        ports.stream().forEach(port -> {
+            PortStatus status = getPortStatus(port.getIndex());
+            port.hw_mac = status.cfgMode.getEtherAttr("src");
+            port.dst_macaddr = status.cfgMode.getEtherAttr("dst");
+        });
+        
+        return ports;
     }
 
     public PortStatus getPortStatus(int portIdx) {
@@ -255,7 +266,9 @@ public class TRexClient {
 
     public void removeRxQueue(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
-        callMethod("remove_rx_filters", payload);
+        payload.put("type", "queue");
+        payload.put("enabled", false);
+        callMethod("set_rx_feature", payload);
     }
     
     public void sendPacket(int portIndex, Packet pkt) {
@@ -270,6 +283,73 @@ public class TRexClient {
         mul.put("value", 1.0);
         startTraffic(portIndex, 1, true, mul, 1);
         stopTraffic(portIndex);
+    }
+    
+    public String resolveArp(int portIndex, String srcIp, String dstIp) {
+        removeRxQueue(portIndex);
+        setRxQueue(portIndex, 100);
+
+        String srcMac = getPorts().get(portIndex).hw_mac;
+        EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp);
+        sendPacket(portIndex, pkt);
+
+        Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
+            if(etherPkt.contains(ArpPacket.class)) {
+                ArpPacket arp = (ArpPacket) etherPkt.getPayload();
+                ArpOperation arpOp = arp.getHeader().getOperation();
+                String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
+                return ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+            }
+            return false;
+        };
+
+        List<org.pcap4j.packet.Packet> pkts = new ArrayList<>();
+
+        try {
+            int steps = 10;
+            while (steps > 0) {
+                steps -= 1;
+                Thread.sleep(500);
+                pkts.addAll(getRxQueue(portIndex, arpReplyFilter));
+                if(pkts.size() > 0) {
+                    ArpPacket arpPacket = (ArpPacket) pkts.get(0).getPayload();
+                    return arpPacket.getHeader().getSrcHardwareAddr().toString();
+                }
+            }
+            logger.info("Unable to get ARP reply in {} seconds", steps);
+        } catch (InterruptedException ignored) {}
+        finally {
+            removeRxQueue(portIndex);
+        }
+        return null;
+    }
+
+    private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp) {
+        ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
+        MacAddress srcMacAddress = MacAddress.getByName(srcMac);
+        try {
+            arpBuilder
+                    .hardwareType(ArpHardwareType.ETHERNET)
+                    .protocolType(EtherType.IPV4)
+                    .hardwareAddrLength((byte) MacAddress.SIZE_IN_BYTES)
+                    .protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
+                    .operation(ArpOperation.REQUEST)
+                    .srcHardwareAddr(srcMacAddress)
+                    .srcProtocolAddr(InetAddress.getByName(srcIp))
+                    .dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                    .dstProtocolAddr(InetAddress.getByName(dstIp));
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+        etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                .srcAddr(srcMacAddress)
+                .type(EtherType.ARP)
+                .payloadBuilder(arpBuilder)
+                .paddingAtBuild(true);
+
+        return etherBuilder.build();
     }
     
     private Stream build1PktSingleBurstStream(Packet pkt) {
@@ -323,6 +403,83 @@ public class TRexClient {
         }
     }
 
+    public boolean setL3Mode(int portIndex, String nextHopMac, String sourceIp, String destinationIp) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("src_addr", sourceIp);
+        payload.put("dst_addr", destinationIp);
+        if (nextHopMac != null) {
+            payload.put("resolved_mac", nextHopMac);
+        }
+        callMethod("set_l3", payload);
+        return true;
+    }
+
+    public void updatePortHandler(int portID, String handler) {
+        portHandlers.put(portID, handler);
+    }
+
+    public void invalidatePortHandler(int portID) {
+        portHandlers.remove(portID);
+    }
+
+    public EthernetPacket sendIcmpEcho(int portIndex, String host, int reqId, int seqNumber, long waitResponse) throws UnknownHostException {
+        Port port = getPorts().get(portIndex);
+        PortStatus portStatus = getPortStatus(portIndex);
+        String srcIp = portStatus.getLayerConfigurationMode().getIpv4Attr("src");
+
+        EthernetPacket icmpRequest = buildIcmpV4Request(port.hw_mac, port.dst_macaddr, srcIp, host, reqId, seqNumber);
+
+        removeAllStreams(portIndex);
+        setRxQueue(portIndex, 1000);
+        sendPacket(portIndex, icmpRequest);
+        try {
+            Thread.sleep(waitResponse);
+        } catch (InterruptedException ignored) {}
+
+        try {
+            List<Packet> receivedPkts = getRxQueue(portIndex, etherPkt -> etherPkt.contains(IcmpV4EchoReplyPacket.class));
+            if (!receivedPkts.isEmpty()) {
+                return (EthernetPacket) receivedPkts.get(0);
+            }
+            return null;
+        } finally {
+            removeRxQueue(portIndex);
+        }
+    }
+
+    private EthernetPacket buildIcmpV4Request(String srcMac, String dstMac, String srcIp, String dstIp, int reqId, int seqNumber) throws UnknownHostException {
+
+        IcmpV4EchoPacket.Builder icmpReqBuilder = new IcmpV4EchoPacket.Builder();
+        icmpReqBuilder.identifier((short) reqId);
+        icmpReqBuilder.sequenceNumber((short) seqNumber);
+
+        IcmpV4CommonPacket.Builder icmpv4CommonPacketBuilder = new IcmpV4CommonPacket.Builder();
+        icmpv4CommonPacketBuilder.type(IcmpV4Type.ECHO)
+                .code(IcmpV4Code.NO_CODE)
+                .correctChecksumAtBuild(true)
+                .payloadBuilder(icmpReqBuilder);
+
+        IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
+        ipv4Builder.version(IpVersion.IPV4)
+                .tos(IpV4Rfc791Tos.newInstance((byte) 0))
+                .ttl((byte) 64)
+                .protocol(IpNumber.ICMPV4)
+                .srcAddr((Inet4Address) Inet4Address.getByName(srcIp))
+                .dstAddr((Inet4Address) Inet4Address.getByName(dstIp))
+                .correctChecksumAtBuild(true)
+                .correctLengthAtBuild(true)
+                .payloadBuilder(icmpv4CommonPacketBuilder);
+
+        EthernetPacket.Builder eb = new EthernetPacket.Builder();
+        eb.srcAddr(MacAddress.getByName(srcMac))
+                .dstAddr(MacAddress.getByName(dstMac))
+                .type(EtherType.IPV4)
+                .paddingAtBuild(true)
+                .payloadBuilder(ipv4Builder);
+
+        return eb.build();
+    }
+    
     public void stopTraffic(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("stop_traffic", payload);
