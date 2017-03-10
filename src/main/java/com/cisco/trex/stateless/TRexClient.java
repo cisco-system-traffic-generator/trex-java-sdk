@@ -336,7 +336,7 @@ public class TRexClient {
                     .operation(ArpOperation.REQUEST)
                     .srcHardwareAddr(srcMacAddress)
                     .srcProtocolAddr(InetAddress.getByName(srcIp))
-                    .dstHardwareAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                    .dstHardwareAddr(MacAddress.getByName("00:00:00:00:00:00"))
                     .dstProtocolAddr(InetAddress.getByName(dstIp));
         } catch (UnknownHostException e) {
             throw new IllegalArgumentException(e);
@@ -357,6 +357,7 @@ public class TRexClient {
         return new Stream(
                 stream_id,
                 true,
+                3,
                 0.0,
                 new StreamMode(
                         1,
