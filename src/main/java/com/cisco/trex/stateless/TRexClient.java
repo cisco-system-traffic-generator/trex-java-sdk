@@ -95,7 +95,9 @@ public class TRexClient {
         String connectionUrl = getConnectionAddress();
         logger.info("Connect to {}", connectionUrl);
         zmqSocket = zmqCtx.socket(ZMQ.REQ);
+        zmqSocket.setReceiveTimeOut(3000);
         zmqSocket.connect(connectionUrl);
+        
         serverAPISync();
         supportedCmds.addAll(getSupportedCommands());
     }
