@@ -20,8 +20,9 @@ public class Stream {
     private Boolean self_start;
     private Map<String, Object> flow_stats = new HashMap<>();
 
-    public Stream(Integer id, Boolean enabled, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
         this.id = id;
+        this.flags = flags;
         this.enabled = enabled;
         this.isg = isg;
         this.mode = mode;

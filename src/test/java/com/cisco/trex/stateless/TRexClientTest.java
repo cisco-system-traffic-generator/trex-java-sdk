@@ -272,6 +272,7 @@ public class TRexClientTest {
         return new Stream(
                 (int) (Math.random() * 1000),
                 true,
+                3,
                 0.0,
                 createStreamMode(),
                 -1,
