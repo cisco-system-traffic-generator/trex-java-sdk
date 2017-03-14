@@ -9,6 +9,7 @@ import org.pcap4j.util.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -86,7 +87,12 @@ public class TRexClient {
     private String call(String json) {
         logger.info("JSON Req: " + json);
         zmqSocket.send(json);
-        String response = new String(zmqSocket.recv(0));
+        byte[] msg = zmqSocket.recv(0);
+        if (msg == null) {
+            int errNumber = zmqSocket.base().errno();
+            throw new ZMQException("Unable to receive message from socket", errNumber);
+        }
+        String response = new String(msg);
         logger.info("JSON Resp: " + response);
         return response;
     }
@@ -101,7 +107,7 @@ public class TRexClient {
         serverAPISync();
         supportedCmds.addAll(getSupportedCommands());
     }
-
+    
     private String getConnectionAddress() {
         return "tcp://"+host+":"+port;
     }
