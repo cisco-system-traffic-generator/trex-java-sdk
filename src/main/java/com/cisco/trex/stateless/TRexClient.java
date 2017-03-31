@@ -295,7 +295,7 @@ public class TRexClient {
     
     public String resolveArp(int portIndex, String srcIp, String dstIp) {
         removeRxQueue(portIndex);
-        setRxQueue(portIndex, 100);
+        setRxQueue(portIndex, 1000);
 
         String srcMac = getPorts().get(portIndex).hw_mac;
         EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp);
