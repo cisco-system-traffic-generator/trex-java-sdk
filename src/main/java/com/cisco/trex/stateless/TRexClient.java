@@ -168,6 +168,15 @@ public class TRexClient {
         return getPortStatus(portIndex);
     }
 
+    public void resetPort(int portIndex) {
+        acquirePort(portIndex, true);
+        stopTraffic(portIndex);
+        removeAllStreams(portIndex);
+        removeRxQueue(portIndex);
+        serviceMode(portIndex, false);
+        releasePort(portIndex);
+    }
+    
     private Map<String, Object> createPayload(int portIndex) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("port_id", portIndex);
