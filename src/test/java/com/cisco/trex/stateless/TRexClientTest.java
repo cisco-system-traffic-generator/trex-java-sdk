@@ -48,9 +48,27 @@ public class TRexClientTest {
 
     @Test
     public void getPortStatusTest() {
-        PortStatus portStatus = client.getPortStatus(0);
+        PortStatus portStatus = getPortStatus(0);
         Assert.assertTrue(portStatus.linkUp);
     }
+
+    @Test
+    public void getPortStatusThreadSafeTest() {
+        new Thread(() -> getPortStatus(0)).start();
+        new Thread(() -> getPortStatus(1)).start();
+        new Thread(() -> getPortStatus(0)).start();
+        new Thread(() -> getPortStatus(1)).start();
+    }
+
+    private PortStatus getPortStatus(int portIdx) {
+        try{
+            return client.getPortStatus(portIdx);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
 
     @Test
     public void acquirePortTest() {

@@ -84,7 +84,7 @@ public class TRexClient {
         return gson.toJson(parameters);
     }
 
-    private String call(String json) {
+    synchronized private String call(String json) {
         logger.info("JSON Req: " + json);
         zmqSocket.send(json);
         byte[] msg = zmqSocket.recv(0);
