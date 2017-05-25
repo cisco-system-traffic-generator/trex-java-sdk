@@ -1,97 +1,87 @@
 package com.cisco.trex.stateless.model;
 
-import com.google.gson.JsonObject;
+import com.cisco.trex.stateless.model.port.PortAttributes;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PortStatus {
-    public Integer max_stream_id;
-    public Boolean service;
+    
+    @JsonProperty("attr")
+    public PortAttributes attr;
+
+    @JsonProperty("max_stream_id")
+    private int max_stream_id;
+
+    @JsonProperty("owner")
     public String owner;
+
+    @JsonProperty("rx_info")
+    private PortRXInfo rx_info;
+    
+    @JsonProperty("service")
+    public Boolean service;
+    
+    @JsonProperty("state")
     public String state;
-    public Integer fc;
-    public Boolean linkUp;
-    public Boolean multicast;
-    public Boolean promiscuous;
-    public Boolean grat_arp;
-    public Boolean latency;
-    public Boolean queue;
-    public String rx_filter_mode;
-    public Integer speed;
-    public LayerConfigurationMode cfgMode;
 
-    public PortStatus(Integer max_stream_id, Boolean service, String owner, String state, Integer fc, Boolean linkUp, Boolean multicast, Boolean promiscuous, Boolean grat_arp, Boolean latency, Boolean queue, String rx_filter_mode, Integer speed, JsonObject jsonObject) {
+    @JsonProperty("attr")
+    public PortAttributes getAttr() {
+        return attr;
+    }
+
+    @JsonProperty("attr")
+    public void setAttr(PortAttributes attr) {
+        this.attr = attr;
+    }
+
+    @JsonProperty("max_stream_id")
+    public int getMax_stream_id() {
+        return max_stream_id;
+    }
+
+    @JsonProperty("max_stream_id")
+    public void setMax_stream_id(int max_stream_id) {
         this.max_stream_id = max_stream_id;
-        this.service = service;
+    }
+
+    @JsonProperty("owner")
+    public String getOwner() {
+        return owner;
+    }
+
+    @JsonProperty("owner")
+    public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    @JsonProperty("rx_info")
+    public PortRXInfo getRx_info() {
+        return rx_info;
+    }
+
+    @JsonProperty("rx_info")
+    public void setRx_info(PortRXInfo rx_info) {
+        this.rx_info = rx_info;
+    }
+
+    @JsonProperty("service")
+    public Boolean getService() {
+        return service;
+    }
+
+    @JsonProperty("service")
+    public void setService(Boolean service) {
+        this.service = service;
+    }
+
+    @JsonProperty("state")
+    public String getState() {
+        return state;
+    }
+
+    @JsonProperty("state")
+    public void setState(String state) {
         this.state = state;
-        this.fc = fc;
-        this.linkUp = linkUp;
-        this.multicast = multicast;
-        this.promiscuous = promiscuous;
-        this.grat_arp = grat_arp;
-        this.latency = latency;
-        this.queue = queue;
-        this.rx_filter_mode = rx_filter_mode;
-        this.speed = speed;
-        this.cfgMode = new LayerConfigurationMode(jsonObject);
-    }
-
-    public static PortStatus fromJson(JsonObject jsonObject) {
-        JsonObject attr = jsonObject.getAsJsonObject("attr");
-        JsonObject rx_info = jsonObject.getAsJsonObject("rx_info");
-        return new PortStatus(
-            jsonObject.get("max_stream_id").getAsInt(),
-            jsonObject.get("service").getAsBoolean(),
-            jsonObject.get("owner").getAsString(),
-            jsonObject.get("state").getAsString(),
-            attr.getAsJsonObject("fc").get("mode").getAsInt(),
-            attr.getAsJsonObject("link").get("up").getAsBoolean(),
-            attr.getAsJsonObject("multicast").get("enabled").getAsBoolean(),
-            attr.getAsJsonObject("promiscuous").get("enabled").getAsBoolean(),
-            rx_info.getAsJsonObject("grat_arp").get("is_active").getAsBoolean(),
-            rx_info.getAsJsonObject("latency").get("is_active").getAsBoolean(),
-            rx_info.getAsJsonObject("queue").get("is_active").getAsBoolean(),
-            attr.get("rx_filter_mode").getAsString(),
-            attr.get("speed").getAsInt(),
-            attr.getAsJsonObject("layer_cfg")
-        );
-    }
-
-
-    public LayerConfigurationMode getLayerConfigurationMode() {
-        return cfgMode;
-    }
-    class PortStatusAttribute {
-        
-        public fc fc;
-        public link link;
-        public promiscuous promiscuous;
-
-        public PortStatusAttribute(PortStatusAttribute.fc fc, PortStatusAttribute.link link, PortStatusAttribute.promiscuous promiscuous) {
-            this.fc = fc;
-            this.link = link;
-            this.promiscuous = promiscuous;
-        }
-
-        class fc {
-            public Integer mode;
-
-            public fc(Integer mode) {
-                this.mode = mode;
-            }
-        }
-        class link {
-            public Boolean up;
-
-            public link(Boolean up) {
-                this.up = up;
-            }
-        }
-        class promiscuous {
-            public Boolean enabled;
-
-            public promiscuous(Boolean enabled) {
-                this.enabled = enabled;
-            }
-        }
     }
 }
