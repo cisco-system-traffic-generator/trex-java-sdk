@@ -24,13 +24,13 @@ public class TRexClient {
 
     private static final Logger logger = LoggerFactory.getLogger(TRexClient.class);
     
-    private TRexTransport transport;
-    
     private static String JSON_RPC_VERSION = "2.0";
 
     private static Integer API_VERSION_MAJOR = 3;
 
     private static Integer API_VERSION_MINOR = 0;
+
+    private TRexTransport transport;
     
     private Gson gson = new Gson();
     
@@ -67,9 +67,9 @@ public class TRexClient {
 
     private String buildRequest(String methodName, Map<String, Object> payload) {
         if (payload == null) {
-            payload = new LinkedHashMap<>();
+            payload = new HashMap<>();
         }
-        Map<String, Object> parameters = new LinkedHashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", "aggogxls");
         parameters.put("jsonrpc", JSON_RPC_VERSION);
         parameters.put("method", methodName);
@@ -114,9 +114,9 @@ public class TRexClient {
 
     private TRexCommand buildCommand(String methodName, Map<String, Object> parameters) {
         if (parameters == null) {
-            parameters = new LinkedHashMap<>();
+            parameters = new HashMap<>();
         }
-        Map<String, Object> payload = new LinkedHashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("id", "aggogxls");
         payload.put("jsonrpc", JSON_RPC_VERSION);
         payload.put("method", methodName);
@@ -146,12 +146,12 @@ public class TRexClient {
     private void serverAPISync() {
         logger.info("Sync API with the TRex");
         
-        Map<String, Object> api_vers = new LinkedHashMap<>();
+        Map<String, Object> api_vers = new HashMap<>();
         api_vers.put("type", "core");
         api_vers.put("major", API_VERSION_MAJOR);
         api_vers.put("minor", API_VERSION_MINOR);
         
-        Map<String, Object> parameters = new LinkedHashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
         parameters.put("api_vers", Arrays.asList(api_vers));
 
         TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
@@ -161,8 +161,12 @@ public class TRexClient {
     }
 
     public void disconnect() {
-        transport.getSocket().close();
-        logger.info("Disconnected");
+        if (transport != null) {
+            transport.getSocket().close();
+            logger.info("Disconnected");
+        } else {
+            logger.info("Already disconnected");
+        }
     }
 
     public void reconnect() {
@@ -211,7 +215,7 @@ public class TRexClient {
     }
     
     private Map<String, Object> createPayload(int portIndex) {
-        Map<String, Object> payload = new LinkedHashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("port_id", portIndex);
         payload.put("api_h", api_h);
         String handler = portHandlers.get(portIndex);
@@ -231,7 +235,7 @@ public class TRexClient {
     }
 
     public List<String> getSupportedCommands() {
-        Map<String, Object> payload = new LinkedHashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("api_h", api_h);
         String json = callMethod("get_supported_cmds", payload);
         JsonElement response = new JsonParser().parse(json);
