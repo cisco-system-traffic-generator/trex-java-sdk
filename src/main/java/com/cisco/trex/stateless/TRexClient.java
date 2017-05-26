@@ -104,7 +104,7 @@ public class TRexClient {
         TRexClientResult<T> result = new TRexClientResult<>();
         try {
             RPCResponse response = transport.sendCommand(buildCommand(methodName, parameters));
-            if (!response.failed()) {
+            if (!response.isFailed()) {
                 T resutlObject = new ObjectMapper().readValue(response.getResult(), responseType);
                 result.set(resutlObject);
             } else {
@@ -171,6 +171,7 @@ public class TRexClient {
     public void disconnect() {
         if (transport != null) {
             transport.getSocket().close();
+            transport = null;
             logger.info("Disconnected");
         } else {
             logger.info("Already disconnected");
@@ -188,7 +189,7 @@ public class TRexClient {
         List<Port> ports = getSystemInfo().getPorts(); 
         ports.stream().forEach(port -> {
             TRexClientResult<PortStatus> result = getPortStatus(port.getIndex());
-            if (result.failed()) {
+            if (result.isFailed()) {
                 return;
             }
             PortStatus status = result.get();

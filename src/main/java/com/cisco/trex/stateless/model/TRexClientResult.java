@@ -22,7 +22,7 @@ public class TRexClientResult<T> {
         this.resultObj = resultObj;
     }
 
-    public boolean failed() {
+    public boolean isFailed() {
         return error != null;
     }
 }

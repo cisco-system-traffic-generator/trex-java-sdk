@@ -11,13 +11,13 @@ public class PortStatus {
     public PortAttributes attr;
 
     @JsonProperty("max_stream_id")
-    private int max_stream_id;
+    private int maxStreamId;
 
     @JsonProperty("owner")
     public String owner;
 
     @JsonProperty("rx_info")
-    private PortRXInfo rx_info;
+    private PortRXInfo rxInfo;
     
     @JsonProperty("service")
     public Boolean service;
@@ -36,13 +36,13 @@ public class PortStatus {
     }
 
     @JsonProperty("max_stream_id")
-    public int getMax_stream_id() {
-        return max_stream_id;
+    public int getMaxStreamId() {
+        return maxStreamId;
     }
 
     @JsonProperty("max_stream_id")
-    public void setMax_stream_id(int max_stream_id) {
-        this.max_stream_id = max_stream_id;
+    public void setMaxStreamId(int maxStreamId) {
+        this.maxStreamId = maxStreamId;
     }
 
     @JsonProperty("owner")
@@ -57,12 +57,12 @@ public class PortStatus {
 
     @JsonProperty("rx_info")
     public PortRXInfo getRx_info() {
-        return rx_info;
+        return rxInfo;
     }
 
     @JsonProperty("rx_info")
-    public void setRx_info(PortRXInfo rx_info) {
-        this.rx_info = rx_info;
+    public void setRx_info(PortRXInfo rxInfo) {
+        this.rxInfo = rxInfo;
     }
 
     @JsonProperty("service")

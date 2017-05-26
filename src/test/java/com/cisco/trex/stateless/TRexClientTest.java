@@ -63,7 +63,7 @@ public class TRexClientTest {
     private PortStatus getPortStatus(int portIdx) {
         try{
             TRexClientResult<PortStatus> result = client.getPortStatus(portIdx);
-            if (result.failed()) {
+            if (result.isFailed()) {
                 Assert.fail(result.getError());
             }
             return result.get();

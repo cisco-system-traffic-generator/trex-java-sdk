@@ -22,7 +22,7 @@ public class PortAttributes {
     private PortMulticastAttribute multicast;
 
     @JsonProperty("rx_filter_mode")
-    private String rx_filter_mode;
+    private String rxFilterMode;
 
     @JsonProperty("speed")
     private int speed;
@@ -78,13 +78,13 @@ public class PortAttributes {
     }
 
     @JsonProperty("rx_filter_mode")
-    public String getRx_filter_mode() {
-        return rx_filter_mode;
+    public String getRxFilterMode() {
+        return rxFilterMode;
     }
 
     @JsonProperty("rx_filter_mode")
-    public void setRx_filter_mode(String rx_filter_mode) {
-        this.rx_filter_mode = rx_filter_mode;
+    public void setRxFilterMode(String rxFilterMode) {
+        this.rxFilterMode = rxFilterMode;
     }
 
     @JsonProperty("speed")

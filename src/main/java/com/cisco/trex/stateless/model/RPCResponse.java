@@ -58,7 +58,7 @@ public class RPCResponse {
         this.error = error;
     }
 
-    public boolean failed() {
+    public boolean isFailed() {
         return error != null;
     }
 }

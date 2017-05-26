@@ -5,26 +5,30 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true) 
-public class ApiVers {
+public class ApiVersionHolder {
     @JsonProperty("type")
     private String type;
 
     @JsonProperty("api_h")
-    private String api_h;
+    private String apiH;
 
+    @JsonProperty("type")
     public String getType() {
         return type;
     }
 
+    @JsonProperty("type")
     public void setType(String type) {
         this.type = type;
     }
 
-    public String getApi_h() {
-        return api_h;
+    @JsonProperty("api_h")
+    public String getApiH() {
+        return apiH;
     }
 
-    public void setApi_h(String api_h) {
-        this.api_h = api_h;
+    @JsonProperty("api_h")
+    public void setApiH(String apiH) {
+        this.apiH = apiH;
     }
 }

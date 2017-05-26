@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortRXInfo {
     @JsonProperty("grat_arp")
-    private PortGARPAttribute grat_arp;
+    private PortGARPAttribute gratArp;
 
     @JsonProperty("latency")
     private PortLatencyAttribute latency;
@@ -18,16 +18,16 @@ public class PortRXInfo {
     private PortQueueAttribute queue;
 
     @JsonProperty("grat_arp")
-    public PortGARPAttribute getGrat_arp() {
-        return grat_arp;
+    public PortGARPAttribute getGratArp() {
+        return gratArp;
     }
 
     @JsonProperty("grat_arp")
-    public void setGrat_arp(PortGARPAttribute grat_arp) {
-        this.grat_arp = grat_arp;
+    public void setGratArp(PortGARPAttribute gratArp) {
+        this.gratArp = gratArp;
     }
 
-    @JsonProperty(" latency")
+    @JsonProperty("latency")
     public PortLatencyAttribute getLatency() {
         return latency;
     }

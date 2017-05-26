@@ -8,22 +8,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ApiVersion {
 
     @JsonProperty("api_vers")
-    private ApiVers[] api_vers;
+    private ApiVersionHolder[] apiVers;
 
-    public ApiVers[] getApi_vers() {
-        return api_vers;
+    @JsonProperty("api_vers")
+    public ApiVersionHolder[] getApiVers() {
+        return apiVers;
     }
 
-    public void setApi_vers(ApiVers[] api_vers) {
-        this.api_vers = api_vers;
+    @JsonProperty("api_vers")
+    public void setApiVers(ApiVersionHolder[] apiVers) {
+        this.apiVers = apiVers;
     }
 
     public String getType() {
-        return api_vers[0].getType();
+        return apiVers[0].getType();
     }
     
     public String getApi_h() {
-        return api_vers[0].getApi_h();
+        return apiVers[0].getApiH();
     }
     
 }

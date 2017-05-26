@@ -7,15 +7,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class PortLatencyAttribute {
     
     @JsonProperty("is_active")
-    private boolean is_active;
+    private boolean isActive;
 
     @JsonProperty("is_active")
     public boolean getIsActive() {
-        return is_active;
+        return isActive;
     }
 
     @JsonProperty("is_active")
-    public void setIsActive(boolean is_active) {
-        this.is_active = is_active;
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }

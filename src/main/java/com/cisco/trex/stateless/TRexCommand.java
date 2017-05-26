@@ -1,6 +1,5 @@
 package com.cisco.trex.stateless;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class TRexCommand {
@@ -17,8 +16,6 @@ public class TRexCommand {
     }
 
     public Map<String, Object> getParameters() {
-        Map<String, Object> params = new HashMap<>(parameters);
-        params.put("method", apiMethod);
-        return params;
+        return parameters;
     }
 }
