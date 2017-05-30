@@ -24,7 +24,7 @@ public class ApiVersion {
         return apiVers[0].getType();
     }
     
-    public String getApi_h() {
+    public String getApiH() {
         return apiVers[0].getApiH();
     }
     

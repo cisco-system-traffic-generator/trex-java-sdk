@@ -170,7 +170,7 @@ public class TRexClient {
             LOGGER.error("Unable to sync client with TRex server due to: {}", e.getMessage());
             throw e;
         }
-        apiH = result.get().getApi_h();
+        apiH = result.get().getApiH();
         LOGGER.info("Received api_H: {}", apiH);
     }
 
