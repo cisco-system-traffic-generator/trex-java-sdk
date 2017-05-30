@@ -56,12 +56,12 @@ public class PortStatus {
     }
 
     @JsonProperty("rx_info")
-    public PortRXInfo getRx_info() {
+    public PortRXInfo getRxInfo() {
         return rxInfo;
     }
 
     @JsonProperty("rx_info")
-    public void setRx_info(PortRXInfo rxInfo) {
+    public void setRxInfo(PortRXInfo rxInfo) {
         this.rxInfo = rxInfo;
     }
 
