@@ -39,7 +39,7 @@ public class L2Configuration {
         return state;
     }
 
-    @JsonProperty("state")
+    @JsonProperty("status")
     public void setStatus(String status) {
         this.state = status;
     }
