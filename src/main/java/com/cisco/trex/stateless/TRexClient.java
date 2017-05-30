@@ -40,7 +40,7 @@ public class TRexClient {
     
     private String asyncPort;
     
-    private String apiH;
+    private String api_h;
     
     private String userName = "";
     private Integer session_id = 123456789;
@@ -73,7 +73,7 @@ public class TRexClient {
         parameters.put("id", "aggogxls");
         parameters.put("jsonrpc", JSON_RPC_VERSION);
         parameters.put("method", methodName);
-        payload.put("apiH", apiH);
+        payload.put("api_h", api_h);
         
         
         parameters.put("params", payload);
@@ -123,7 +123,7 @@ public class TRexClient {
         if (parameters == null) {
             parameters = new HashMap<>();
         }
-        parameters.put("apiH", apiH);
+        parameters.put("api_h", api_h);
         
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", "aggogxls");
@@ -164,8 +164,8 @@ public class TRexClient {
 
         TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
         
-        apiH = result.get().getApi_h();
-        logger.info("Received api_H: {}", apiH);
+        api_h = result.get().getApi_h();
+        logger.info("Received api_H: {}", api_h);
     }
 
     public void disconnect() {
@@ -232,7 +232,7 @@ public class TRexClient {
     private Map<String, Object> createPayload(int portIndex) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("port_id", portIndex);
-        payload.put("apiH", apiH);
+        payload.put("api_h", api_h);
         String handler = portHandlers.get(portIndex);
         if (handler != null) {
             payload.put("handler", handler);
@@ -251,7 +251,7 @@ public class TRexClient {
 
     public List<String> getSupportedCommands() {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("apiH", apiH);
+        payload.put("api_h", api_h);
         String json = callMethod("get_supported_cmds", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonArray cmds = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
@@ -570,7 +570,7 @@ public class TRexClient {
             }
 
             public String getApi_h() {
-                return api_vers.get(0).get("apiH");
+                return api_vers.get(0).get("api_h");
             }
         }
 
