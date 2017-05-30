@@ -1,49 +1,47 @@
 package com.cisco.trex.stateless.model;
 
-import com.cisco.trex.stateless.model.port.PortGARPAttribute;
-import com.cisco.trex.stateless.model.port.PortLatencyAttribute;
-import com.cisco.trex.stateless.model.port.PortQueueAttribute;
+import com.cisco.trex.stateless.model.port.IsActiveAttribute;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortRXInfo {
     @JsonProperty("grat_arp")
-    private PortGARPAttribute gratArp;
+    private IsActiveAttribute gratArp;
 
     @JsonProperty("latency")
-    private PortLatencyAttribute latency;
+    private IsActiveAttribute latency;
 
     @JsonProperty("queue")
-    private PortQueueAttribute queue;
+    private IsActiveAttribute queue;
 
     @JsonProperty("grat_arp")
-    public PortGARPAttribute getGratArp() {
+    public IsActiveAttribute getGratArp() {
         return gratArp;
     }
 
     @JsonProperty("grat_arp")
-    public void setGratArp(PortGARPAttribute gratArp) {
+    public void setGratArp(IsActiveAttribute gratArp) {
         this.gratArp = gratArp;
     }
 
     @JsonProperty("latency")
-    public PortLatencyAttribute getLatency() {
+    public IsActiveAttribute getLatency() {
         return latency;
     }
 
     @JsonProperty("latency")
-    public void setLatency(PortLatencyAttribute latency) {
+    public void setLatency(IsActiveAttribute latency) {
         this.latency = latency;
     }
 
     @JsonProperty("queue")
-    public PortQueueAttribute getQueue() {
+    public IsActiveAttribute getQueue() {
         return queue;
     }
 
     @JsonProperty("queue")
-    public void setQueue(PortQueueAttribute queue) {
+    public void setQueue(IsActiveAttribute queue) {
         this.queue = queue;
     }
 }
