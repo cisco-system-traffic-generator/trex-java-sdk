@@ -154,13 +154,13 @@ public class TRexClient {
     private void serverAPISync() {
         logger.info("Sync API with the TRex");
         
-        Map<String, Object> api_vers = new HashMap<>();
-        api_vers.put("type", "core");
-        api_vers.put("major", API_VERSION_MAJOR);
-        api_vers.put("minor", API_VERSION_MINOR);
+        Map<String, Object> apiVers = new HashMap<>();
+        apiVers.put("type", "core");
+        apiVers.put("major", API_VERSION_MAJOR);
+        apiVers.put("minor", API_VERSION_MINOR);
         
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("api_vers", Arrays.asList(api_vers));
+        parameters.put("api_vers", Arrays.asList(apiVers));
 
         TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
         
