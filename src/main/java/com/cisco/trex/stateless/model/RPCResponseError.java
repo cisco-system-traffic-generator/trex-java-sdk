@@ -42,5 +42,4 @@ public class RPCResponseError {
     public void setSpecificErr(String specificErr) {
         this.specificErr = specificErr;
     }
-
 }
