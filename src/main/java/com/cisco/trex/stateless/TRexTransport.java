@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class TRexTransport {
 
-    private static final Logger logger = LoggerFactory.getLogger(TRexTransport.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TRexTransport.class);
     
     public static final int DEFAULT_RECEIVE_TIMEOUT = 3000;
     
@@ -41,7 +41,7 @@ public class TRexTransport {
 
         String json = new ObjectMapper().writeValueAsString(command.getParameters());
 
-        logger.info("JSON Req: " + json);
+        LOGGER.info("JSON Req: " + json);
         zmqSocket.send(json);
         byte[] msg = zmqSocket.recv(0);
         if (msg == null) {
@@ -49,7 +49,7 @@ public class TRexTransport {
             throw new ZMQException("Unable to receive message from socket", errNumber);
         }
         String response = new String(msg);
-        logger.info("JSON Resp: " + response);
+        LOGGER.info("JSON Resp: " + response);
 
         RPCResponse[] rpcResult = new ObjectMapper().readValue(response, RPCResponse[].class);
         return rpcResult[0];

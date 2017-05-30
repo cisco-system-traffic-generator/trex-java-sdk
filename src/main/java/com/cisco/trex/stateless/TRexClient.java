@@ -23,7 +23,7 @@ import java.util.stream.StreamSupport;
 
 public class TRexClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(TRexClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TRexClient.class);
     
     private static String JSON_RPC_VERSION = "2.0";
 
@@ -57,9 +57,9 @@ public class TRexClient {
     }
     
     public String callMethod(String methodName, Map<String, Object> payload) {
-        logger.info("Call {} method.", methodName);
+        LOGGER.info("Call {} method.", methodName);
         if (!supportedCmds.contains(methodName)) {
-            logger.error("Unsupported {} method.", methodName);
+            LOGGER.error("Unsupported {} method.", methodName);
             throw new UnsupportedOperationException();
         }
         String req = buildRequest(methodName, payload);
@@ -82,24 +82,24 @@ public class TRexClient {
     }
 
     private String call(String json) {
-        logger.info("JSON Req: " + json);
+        LOGGER.info("JSON Req: " + json);
         byte[] msg = transport.sendJson(json);
         if (msg == null) {
             int errNumber = transport.getSocket().base().errno();
             String errMsg = "Unable to receive message from socket";
             ZMQException zmqException = new ZMQException(errMsg, errNumber);
-            logger.error(errMsg, zmqException);
+            LOGGER.error(errMsg, zmqException);
             throw zmqException;
         }
         String response = new String(msg);
-        logger.info("JSON Resp: " + response);
+        LOGGER.info("JSON Resp: " + response);
         return response;
     }
 
     public <T> TRexClientResult<T> callMethod(String methodName, Map<String, Object> parameters, Class<T> responseType) {
-        logger.info("Call {} method.", methodName);
+        LOGGER.info("Call {} method.", methodName);
         if (!supportedCmds.contains(methodName)) {
-            logger.error("Unsupported {} method.", methodName);
+            LOGGER.error("Unsupported {} method.", methodName);
             throw new UnsupportedOperationException();
         }
         TRexClientResult<T> result = new TRexClientResult<>();
@@ -113,7 +113,7 @@ public class TRexClient {
             }
         } catch (IOException e) {
             String errorMsg = "Error occurred during processing '"+methodName+"' method with params: " +parameters.toString();
-            logger.error(errorMsg, e);
+            LOGGER.error(errorMsg, e);
             result.setError(errorMsg);
             return result;
         }
@@ -153,7 +153,7 @@ public class TRexClient {
     }
 
     private void serverAPISync() throws TRexConnectionException {
-        logger.info("Sync API with the TRex");
+        LOGGER.info("Sync API with the TRex");
         
         Map<String, Object> apiVers = new HashMap<>();
         apiVers.put("type", "core");
@@ -167,20 +167,20 @@ public class TRexClient {
         
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException("API_H is null.");
-            logger.error("Unable to sync client with TRex server due to: {}", e.getMessage());
+            LOGGER.error("Unable to sync client with TRex server due to: {}", e.getMessage());
             throw e;
         }
         apiH = result.get().getApi_h();
-        logger.info("Received api_H: {}", apiH);
+        LOGGER.info("Received api_H: {}", apiH);
     }
 
     public void disconnect() {
         if (transport != null) {
             transport.getSocket().close();
             transport = null;
-            logger.info("Disconnected");
+            LOGGER.info("Disconnected");
         } else {
-            logger.info("Already disconnected");
+            LOGGER.info("Already disconnected");
         }
     }
 
@@ -191,7 +191,7 @@ public class TRexClient {
 
     // TODO: move to upper layer
     public List<Port> getPorts() {
-        logger.info("Getting ports list.");
+        LOGGER.info("Getting ports list.");
         List<Port> ports = getSystemInfo().getPorts(); 
         ports.stream().forEach(port -> {
             TRexClientResult<PortStatus> result = getPortStatus(port.getIndex());
@@ -267,7 +267,7 @@ public class TRexClient {
     }
 
     public PortStatus serviceMode(int portIndex, Boolean isOn) {
-        logger.info("Set service mode : {}", isOn ? "on" : "off");
+        LOGGER.info("Set service mode : {}", isOn ? "on" : "off");
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("enabled", isOn);
         String result = callMethod("service", payload);
@@ -391,7 +391,7 @@ public class TRexClient {
                     return arpPacket.getHeader().getSrcHardwareAddr().toString();
                 }
             }
-            logger.info("Unable to get ARP reply in {} seconds", steps);
+            LOGGER.info("Unable to get ARP reply in {} seconds", steps);
         } catch (InterruptedException ignored) {}
         finally {
             removeRxQueue(portIndex);
@@ -472,7 +472,7 @@ public class TRexClient {
         try {
             byte[] binary = Base64.getDecoder().decode(jsonElement.getAsJsonObject().get("binary").getAsString());
             EthernetPacket pkt = EthernetPacket.newPacket(binary, 0, binary.length);
-            logger.info("Received pkt: {}", pkt.toString());
+            LOGGER.info("Received pkt: {}", pkt.toString());
             return pkt;
         } catch (IllegalRawDataException e) {
             return null;
