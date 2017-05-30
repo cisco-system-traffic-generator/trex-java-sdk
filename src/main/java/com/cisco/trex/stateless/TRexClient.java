@@ -1,5 +1,6 @@
 package com.cisco.trex.stateless;
 
+import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
@@ -141,7 +142,7 @@ public class TRexClient {
         return new TRexCommand(methodName, payload);
     }
     
-    public void connect() {
+    public void connect() throws TRexConnectionException {
         transport = new TRexTransport(this.host, this.port, 3000);
         serverAPISync();
         supportedCmds.addAll(getSupportedCommands());
@@ -151,7 +152,7 @@ public class TRexClient {
         return "tcp://"+host+":"+port;
     }
 
-    private void serverAPISync() {
+    private void serverAPISync() throws TRexConnectionException {
         logger.info("Sync API with the TRex");
         
         Map<String, Object> apiVers = new HashMap<>();
@@ -164,6 +165,11 @@ public class TRexClient {
 
         TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
         
+        if (result.get() == null) {
+            TRexConnectionException e = new TRexConnectionException("API_H is null.");
+            logger.error("Unable to sync client with TRex server due to: {}", e.getMessage());
+            throw e;
+        }
         apiH = result.get().getApi_h();
         logger.info("Received api_H: {}", apiH);
     }
@@ -178,7 +184,7 @@ public class TRexClient {
         }
     }
 
-    public void reconnect() {
+    public void reconnect() throws TRexConnectionException {
         disconnect();
         connect();
     }
