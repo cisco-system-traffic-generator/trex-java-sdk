@@ -34,6 +34,7 @@ public class L3Configuration {
         this.src = src;
     }
 
+    @JsonProperty("state")
     public void setState(String state) {
         this.state = state;
     }
