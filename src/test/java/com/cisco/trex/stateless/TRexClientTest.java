@@ -30,7 +30,7 @@ public class TRexClientTest {
 
     @BeforeClass
     public static void setUp() throws TRexConnectionException, TRexTimeoutException {
-        client = new TRexClient("tcp", "trex-host", "4501", CLIENT_USER);
+        client = new TRexClient("trex-host", "4501", CLIENT_USER);
         client.connect();
     }
 
@@ -49,7 +49,7 @@ public class TRexClientTest {
     @Test
     public void getPortStatusTest() {
         PortStatus portStatus = getPortStatus(0);
-        Assert.assertTrue(portStatus.linkUp);
+        Assert.assertTrue(portStatus.getAttr().getLink().getUp());
     }
 
     @Test
@@ -62,7 +62,11 @@ public class TRexClientTest {
 
     private PortStatus getPortStatus(int portIdx) {
         try{
-            return client.getPortStatus(portIdx);
+            TRexClientResult<PortStatus> result = client.getPortStatus(portIdx);
+            if (result.isFailed()) {
+                Assert.fail(result.getError());
+            }
+            return result.get();
         } catch (Exception e) {
             Assert.fail(e.getMessage());
             return null;
@@ -220,11 +224,11 @@ public class TRexClientTest {
         mul.put("value", 1.0);
         client.startTraffic(port.getIndex(), -1.0, true, mul, 1);
         
-        PortStatus portStatusTX = client.getPortStatus(port.getIndex());
+        PortStatus portStatusTX = client.getPortStatus(port.getIndex()).get();
         Assert.assertTrue(portStatusTX.state.equals("TX"));
         client.stopTraffic(port.getIndex());
 
-        PortStatus portStatusStream = client.getPortStatus(port.getIndex());
+        PortStatus portStatusStream = client.getPortStatus(port.getIndex()).get();
         Assert.assertTrue(portStatusStream.state.equals("STREAMS"));
         
         client.releasePort(port.getIndex());
