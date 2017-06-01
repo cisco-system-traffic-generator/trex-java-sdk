@@ -3,15 +3,16 @@ package com.cisco.trex.stateless.model.stats;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PGIdStatsRPCResult {
     @JsonProperty("flow_stats")
-    private Map<String, FlowStat> flowStats;
+    private Map<String, FlowStat> flowStats = new HashMap<>();
     @JsonProperty("latency")
-    private Map<String, LatencyStat> latency;
+    private Map<String, LatencyStat> latency = new HashMap<>();
 
     @JsonProperty("flow_stats")
     public Map<String, FlowStat> getFlowStats() {

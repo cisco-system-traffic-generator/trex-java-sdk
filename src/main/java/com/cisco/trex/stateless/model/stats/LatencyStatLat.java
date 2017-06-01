@@ -3,21 +3,22 @@ package com.cisco.trex.stateless.model.stats;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatencyStatLat {
     @JsonProperty("average")
-    private double average;
+    private double average = 0;
     @JsonProperty("histogram")
-    private Map<String, Long> histogram;
+    private Map<String, Long> histogram = new HashMap<>();
     @JsonProperty("jit")
-    private long jit;
+    private long jit = 0;
     @JsonProperty("last_max")
-    private long lastMax;
+    private long lastMax = 0;
     @JsonProperty("total_max")
-    private long totalMax;
+    private long totalMax = 0;
 
     @JsonProperty("average")
     public double getAverage() {

@@ -3,27 +3,28 @@ package com.cisco.trex.stateless.model.stats;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlowStat {
     @JsonProperty("rb")
-    private Map<String, Long> rb;
+    private Map<String, Long> rb = new HashMap<>();
     @JsonProperty("rbs")
-    private Map<String, Double> rbs;
+    private Map<String, Double> rbs = new HashMap<>();
     @JsonProperty("rp")
-    private Map<String, Long> rp;
+    private Map<String, Long> rp = new HashMap<>();
     @JsonProperty("rps")
-    private Map<String, Double> rps;
+    private Map<String, Double> rps = new HashMap<>();
     @JsonProperty("tb")
-    private Map<String, Long> tb;
+    private Map<String, Long> tb = new HashMap<>();
     @JsonProperty("tbs")
-    private Map<String, Double> tbs;
+    private Map<String, Double> tbs = new HashMap<>();
     @JsonProperty("tp")
-    private Map<String, Long> tp;
+    private Map<String, Long> tp = new HashMap<>();
     @JsonProperty("tps")
-    private Map<String, Double> tps;
+    private Map<String, Double> tps = new HashMap<>();
 
     @JsonProperty("rb")
     public Map<String, Long> getRb() {
