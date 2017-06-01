@@ -1,5 +1,6 @@
 package com.cisco.trex.stateless.model.stats;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -7,15 +8,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatencyStatErr {
     @JsonProperty("drp")
-    private long drp;
+    private long drp = 0;
     @JsonProperty("dup")
-    private long dup;
+    private long dup = 0;
     @JsonProperty("ooo")
-    private long ooo;
+    private long ooo = 0;
     @JsonProperty("sth")
-    private long sth;
+    private long sth = 0;
     @JsonProperty("stl")
-    private long stl;
+    private long stl = 0;
 
     @JsonProperty("drp")
     public long getDrp() {
@@ -65,5 +66,10 @@ public class LatencyStatErr {
     @JsonProperty("stl")
     public void setStl(final long stl) {
         this.stl = stl;
+    }
+
+    @JsonIgnore
+    public long getTotal() {
+        return drp + dup + ooo + sth + stl;
     }
 }

@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatencyStat {
     @JsonProperty("er")
-    private LatencyStatErr err;
+    private LatencyStatErr err = new LatencyStatErr();
     @JsonProperty("lat")
-    private LatencyStatLat lat;
+    private LatencyStatLat lat = new LatencyStatLat();
 
     @JsonProperty("er")
     public LatencyStatErr getErr() {

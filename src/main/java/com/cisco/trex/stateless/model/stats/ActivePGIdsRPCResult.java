@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ActivePGIdsRPCResult {
     @JsonProperty("ids")
-    private ActivePGIds ids;
+    private ActivePGIds ids = new ActivePGIds();
 
     @JsonProperty("ids")
     public ActivePGIds getIds() {

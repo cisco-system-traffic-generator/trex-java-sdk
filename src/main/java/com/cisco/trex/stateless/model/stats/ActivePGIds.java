@@ -7,27 +7,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ActivePGIds {
     @JsonProperty("flow_stats")
-    private Integer[] flowStats;
+    private int[] flowStats = new int[0];
     @JsonProperty("latency")
-    private Integer[] latency;
+    private int[] latency = new int[0];
 
     @JsonProperty("flow_stats")
-    public Integer[] getFlowStats() {
+    public int[] getFlowStats() {
         return flowStats;
     }
 
     @JsonProperty("flow_stats")
-    public void setFlowStats(final Integer[] flowStats) {
+    public void setFlowStats(final int[] flowStats) {
         this.flowStats = flowStats;
     }
 
     @JsonProperty("latency")
-    public Integer[] getLatency() {
+    public int[] getLatency() {
         return latency;
     }
 
     @JsonProperty("latency")
-    public void setLatency(final Integer[] latency) {
+    public void setLatency(final int[] latency) {
         this.latency = latency;
     }
 }
