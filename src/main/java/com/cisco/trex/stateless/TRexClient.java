@@ -27,7 +27,7 @@ public class TRexClient {
     
     private static String JSON_RPC_VERSION = "2.0";
 
-    private static Integer API_VERSION_MAJOR = 3;
+    private static Integer API_VERSION_MAJOR = 4;
 
     private static Integer API_VERSION_MINOR = 0;
 
