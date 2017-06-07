@@ -13,6 +13,8 @@ public class PGIdStatsRPCResult {
     private Map<String, FlowStat> flowStats = new HashMap<>();
     @JsonProperty("latency")
     private Map<String, LatencyStat> latency = new HashMap<>();
+    @JsonProperty("ver_id")
+    private Map<String, Integer> verId = new HashMap<>();
 
     @JsonProperty("flow_stats")
     public Map<String, FlowStat> getFlowStats() {
@@ -32,5 +34,15 @@ public class PGIdStatsRPCResult {
     @JsonProperty("latency")
     public void setLatency(final Map<String, LatencyStat> latency) {
         this.latency = latency;
+    }
+
+    @JsonProperty("ver_id")
+    public Map<String, Integer> getVerId() {
+        return verId;
+    }
+
+    @JsonProperty("ver_id")
+    public void setVerId(final Map<String, Integer> verId) {
+        this.verId = verId;
     }
 }
