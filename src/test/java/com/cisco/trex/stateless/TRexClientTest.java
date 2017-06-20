@@ -4,6 +4,8 @@ package com.cisco.trex.stateless;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.capture.CaptureInfo;
+import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -162,6 +164,33 @@ public class TRexClientTest {
         Assert.assertTrue(s.equals(streamFromTrex));
         
         client.releasePort(port.getIndex());
+    }
+
+    @Test
+    public void getCapturesTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+
+        client.acquirePort(port.getIndex(), true);
+        client.serviceMode(0, true);
+        TRexClientResult<CaptureMonitor> result = startMonitor();
+        Assert.assertFalse(result.isFailed());
+
+        CaptureMonitor monitor = result.get(); 
+        Assert.assertTrue(monitor.getcaptureId() > 0);
+        
+        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
+        Optional<CaptureInfo> monitorInfoResult = Arrays.stream(activeCaptures.get())
+                                                  .filter(info -> info.getId() == monitor.getcaptureId())
+                                                  .findFirst();
+        
+        Assert.assertFalse(monitorInfoResult.isPresent());
+    }
+
+    private TRexClientResult<CaptureMonitor> startMonitor() {
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        return client.captureMonitorStart(rxPorts, txPorts);
     }
 
     /**

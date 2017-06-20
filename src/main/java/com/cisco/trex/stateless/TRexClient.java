@@ -2,6 +2,8 @@ package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.capture.CaptureInfo;
+import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.pcap4j.packet.*;
@@ -580,7 +582,39 @@ public class TRexClient {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("stop_traffic", payload);
     }
-    
+
+    public TRexClientResult<CaptureInfo[]> getActiveCaptures() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "status");
+        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
+        return result;
+    }
+
+    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "start");
+        payload.put("limit", 1000);
+        payload.put("mode", "cyclic");
+        payload.put("rx", rxPorts);
+        payload.put("tx", txPorts);
+        
+        return callMethod("capture", payload, CaptureMonitor.class);
+    }
+
+//    public void captureRecorderStop(int captureId) {
+//        Map<String, Object> payload = new HashMap<>();
+//        payload.put("command", "stop");
+//        payload.put("capture_id", captureId);
+//        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
+//    }
+//
+//    public void captureRecorderRemove(int captureId) {
+//        Map<String, Object> payload = new HashMap<>();
+//        payload.put("command", "remove");
+//        payload.put("capture_id", captureId);
+//        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
+//    }
+
     private class ApiVersionResponse {
         private String id;
         private String jsonrpc;
