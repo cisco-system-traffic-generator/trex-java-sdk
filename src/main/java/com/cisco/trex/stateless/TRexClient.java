@@ -2,9 +2,7 @@ package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
-import com.cisco.trex.stateless.model.capture.CaptureInfo;
-import com.cisco.trex.stateless.model.capture.CaptureMonitor;
-import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
+import com.cisco.trex.stateless.model.capture.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.pcap4j.packet.*;
@@ -53,6 +51,7 @@ public class TRexClient {
     private Map<Integer, String> portHandlers = new HashMap<>();
     private List<String> supportedCmds = new ArrayList<>();
     private Random randomizer = new Random();
+    private int currentCaptureMonitorId = 0;
 
     public TRexClient(String host, String port, String userName) {
         this.host = host;
@@ -150,7 +149,7 @@ public class TRexClient {
     }
 
     public TRexClientResult<List<RPCResponse>> callMethods(List<TRexCommand> commands) {
-        TRexClientResult<List<RPCResponse>> result = new TRexClientResult();
+        TRexClientResult<List<RPCResponse>> result = new TRexClientResult<>();
 
         try {
             RPCResponse[] rpcResponses = transport.sendCommands(commands);
@@ -650,7 +649,16 @@ public class TRexClient {
         Optional<RPCResponse> failed = result.get().stream().filter(RPCResponse::isFailed).findFirst();
         return !failed.isPresent();
     }
-    
+
+    public TRexClientResult<CapturedPackets> captureFetchPkts(int captureId, int chunkSize) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "fetch");
+        payload.put("capture_id", captureId);
+        payload.put("pkt_limit", chunkSize);
+
+        return callMethod("capture", payload, CapturedPackets.class);
+    }
+
     private class ApiVersionResponse {
         private String id;
         private String jsonrpc;

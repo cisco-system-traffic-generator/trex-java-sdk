@@ -7,6 +7,7 @@ import com.cisco.trex.stateless.model.*;
 import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
+import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -375,6 +376,27 @@ public class TRexClientTest {
         Assert.assertTrue(stoppedMonitor.isPresent());
         
         Assert.assertEquals("STOPPED", stoppedMonitor.get().getState());
+    }
+    
+    @Test
+    public void fetchCapturedPKtsTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+        
+        List<Integer> rxPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>());
+
+        TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
+        
+        Assert.assertFalse(capturedPktsResult.isFailed());
+        CapturedPackets capturedPkts = capturedPktsResult.get();
+        
+        Assert.assertTrue(capturedPkts.getPkts().size() > 0);
+        
     }
     
     @Test
