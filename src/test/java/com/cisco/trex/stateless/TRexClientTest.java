@@ -6,6 +6,7 @@ import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
 import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
+import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -346,6 +347,34 @@ public class TRexClientTest {
         Assert.assertFalse(result.isFailed());
         
         Assert.assertEquals(commands.size(), result.get().size());
+    }
+    
+    @Test
+    public void captureRecordStopTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 1000);
+        
+        CaptureMonitor recordMonitor = result.get();
+
+        TRexClientResult<CaptureMonitorStop> stopResult = client.captureRecorderStop(result.get().getCaptureId());
+        Assert.assertFalse(stopResult.isFailed());
+
+        TRexClientResult<CaptureInfo[]> activeCapturesResult = client.getActiveCaptures();
+        Assert.assertFalse(activeCapturesResult.isFailed());
+
+        Optional<CaptureInfo> stoppedMonitor = Arrays.stream(activeCapturesResult.get())
+                .filter(captureInfo -> captureInfo.getId() == recordMonitor.getCaptureId())
+                .findFirst();
+        
+        Assert.assertTrue(stoppedMonitor.isPresent());
+        
+        Assert.assertEquals("STOPPED", stoppedMonitor.get().getState());
     }
     
     @Test

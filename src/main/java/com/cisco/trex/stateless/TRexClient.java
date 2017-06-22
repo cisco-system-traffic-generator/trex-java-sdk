@@ -4,6 +4,7 @@ import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
 import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
+import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.pcap4j.packet.*;
@@ -627,13 +628,15 @@ public class TRexClient {
                           })
                           .collect(Collectors.toList());
     }
-//    public void captureRecorderStop(int captureId) {
-//        Map<String, Object> payload = new HashMap<>();
-//        payload.put("command", "stop");
-//        payload.put("capture_id", captureId);
-//        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
-//    }
-//
+    
+    public TRexClientResult<CaptureMonitorStop> captureRecorderStop(int captureId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "stop");
+        payload.put("capture_id", captureId);
+
+        return callMethod("capture", payload, CaptureMonitorStop.class);
+    }
+
     public boolean captureRecorderRemove(int captureId) {
 
         List<TRexCommand> commands = buildRemoveCaptureCommand(Collections.singletonList(captureId));
