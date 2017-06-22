@@ -16,10 +16,7 @@ import org.pcap4j.util.MacAddress;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class TRexClientTest {
@@ -269,6 +266,21 @@ public class TRexClientTest {
         client.serviceMode(port.getIndex(), false);
         client.serviceMode(port1.getIndex(), false);
         Assert.assertTrue(pkts.size() > 0);
+    }
+    
+    @Test
+    public void sendMultipleCmdsTest() {
+        List<TRexCommand> commands = new ArrayList<>();
+        
+        for (int i = 1; i <= 10; i++) {
+            commands.add(client.buildCommand("ping", new HashMap<>()));
+        }
+
+        TRexClientResult<List<RPCResponse>> result = client.callMethods(commands);
+        
+        Assert.assertFalse(result.isFailed());
+        
+        Assert.assertEquals(commands.size(), result.get().size());
     }
     
     @Test

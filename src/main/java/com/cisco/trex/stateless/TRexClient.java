@@ -21,6 +21,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static java.lang.Math.abs;
+
 public class TRexClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TRexClient.class);
@@ -47,6 +49,7 @@ public class TRexClient {
     private Integer session_id = 123456789;
     private Map<Integer, String> portHandlers = new HashMap<>();
     private List<String> supportedCmds = new ArrayList<>();
+    private Random randomizer = new Random();
 
     public TRexClient(String host, String port, String userName) {
         this.host = host;
@@ -120,14 +123,15 @@ public class TRexClient {
         return result;
     }
 
-    private TRexCommand buildCommand(String methodName, Map<String, Object> parameters) {
+    public TRexCommand buildCommand(String methodName, Map<String, Object> parameters) {
         if (parameters == null) {
             parameters = new HashMap<>();
         }
         parameters.put("api_h", apiH);
         
         Map<String, Object> payload = new HashMap<>();
-        payload.put("id", "aggogxls");
+        int cmdId = abs(randomizer.nextInt());
+        payload.put("id", cmdId);
         payload.put("jsonrpc", JSON_RPC_VERSION);
         payload.put("method", methodName);
         
@@ -139,7 +143,21 @@ public class TRexClient {
             }
         }
         payload.put("params", parameters);
-        return new TRexCommand(methodName, payload);
+        return new TRexCommand(cmdId, methodName, payload);
+    }
+
+    public TRexClientResult<List<RPCResponse>> callMethods(List<TRexCommand> commands) {
+        TRexClientResult<List<RPCResponse>> result = new TRexClientResult();
+
+        try {
+            RPCResponse[] rpcResponses = transport.sendCommands(commands);
+            result.set(Arrays.asList(rpcResponses));
+        } catch (IOException e) {
+            String msg = "Unable to send RPC Batch";
+            result.setError(msg);
+            LOGGER.error(msg, e);
+        }
+        return result;
     }
     
     public void connect() throws TRexConnectionException {
