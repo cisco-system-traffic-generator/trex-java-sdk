@@ -8,6 +8,9 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TRexTransport {
 
@@ -37,10 +40,24 @@ public class TRexTransport {
         zmqSocket.connect(connectionString);
     }
 
-    synchronized public RPCResponse sendCommand(TRexCommand command) throws IOException {
-
+    public RPCResponse sendCommand(TRexCommand command) throws IOException {
         String json = new ObjectMapper().writeValueAsString(command.getParameters());
+        RPCResponse[] rpcResult = doSend(json);
+        return rpcResult[0];
+    }
 
+    public RPCResponse[] sendCommands(List<TRexCommand> commands) throws IOException {
+        List<Map<String, Object>> commandList = commands.stream().map(TRexCommand::getParameters).collect(Collectors.toList());
+        
+        if (commandList.isEmpty()) {
+            return new RPCResponse[0];
+        }
+        
+        String json = new ObjectMapper().writeValueAsString(commandList);
+        return doSend(json);
+    }
+
+    synchronized private RPCResponse[] doSend(String json) throws IOException {
         LOGGER.info("JSON Req: " + json);
         zmqSocket.send(json);
         byte[] msg = zmqSocket.recv(0);
@@ -50,11 +67,10 @@ public class TRexTransport {
         }
         String response = new String(msg);
         LOGGER.info("JSON Resp: " + response);
-
-        RPCResponse[] rpcResult = new ObjectMapper().readValue(response, RPCResponse[].class);
-        return rpcResult[0];
+        
+        return new ObjectMapper().readValue(response, RPCResponse[].class);
     }
-
+    
     public String getHost() {
         return host;
     }
