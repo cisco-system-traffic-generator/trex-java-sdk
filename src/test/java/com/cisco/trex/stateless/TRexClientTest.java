@@ -166,33 +166,6 @@ public class TRexClientTest {
         client.releasePort(port.getIndex());
     }
 
-    @Test
-    public void getCapturesTest() {
-        List<Port> ports = client.getPorts();
-        Port port = ports.get(0);
-
-        client.acquirePort(port.getIndex(), true);
-        client.serviceMode(0, true);
-        TRexClientResult<CaptureMonitor> result = startMonitor();
-        Assert.assertFalse(result.isFailed());
-
-        CaptureMonitor monitor = result.get(); 
-        Assert.assertTrue(monitor.getcaptureId() > 0);
-        
-        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
-        Optional<CaptureInfo> monitorInfoResult = Arrays.stream(activeCaptures.get())
-                                                  .filter(info -> info.getId() == monitor.getcaptureId())
-                                                  .findFirst();
-        
-        Assert.assertFalse(monitorInfoResult.isPresent());
-    }
-
-    private TRexClientResult<CaptureMonitor> startMonitor() {
-        List<Integer> rxPorts = Arrays.asList(0);
-        List<Integer> txPorts = Arrays.asList(0, 1);
-        return client.captureMonitorStart(rxPorts, txPorts);
-    }
-
     /**
      * This is a specific test which is not related to standalone Java SDK
      */
@@ -295,6 +268,42 @@ public class TRexClientTest {
         client.serviceMode(port.getIndex(), false);
         client.serviceMode(port1.getIndex(), false);
         Assert.assertTrue(pkts.size() > 0);
+    }
+
+    @Test
+    public void getCapturesTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+
+        TRexClientResult<CaptureMonitor> result = startMonitor();
+        Assert.assertFalse(result.isFailed());
+
+        CaptureMonitor monitor = result.get();
+        Assert.assertTrue(monitor.getcaptureId() > 0);
+
+        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
+        Optional<CaptureInfo> monitorInfoResult = Arrays.stream(activeCaptures.get())
+                .filter(info -> info.getId() == monitor.getcaptureId())
+                .findFirst();
+
+        Assert.assertFalse(monitorInfoResult.isPresent());
+    }
+    
+    private TRexClientResult<CaptureMonitor> startMonitor() {
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        return client.captureMonitorStart(rxPorts, txPorts, 1000);
+    }
+    
+    @Test
+    public void removeAllRecorderTest() {
+        TRexClientResult<List<RPCResponse>> result = client.captureClear();
+        Assert.assertFalse(result.isFailed());
     }
     
     @Test

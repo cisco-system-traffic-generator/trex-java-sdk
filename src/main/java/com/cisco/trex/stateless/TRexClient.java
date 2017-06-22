@@ -590,10 +590,10 @@ public class TRexClient {
         return result;
     }
 
-    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
+    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("command", "start");
-        payload.put("limit", 1000);
+        payload.put("limit", limit);
         payload.put("mode", "cyclic");
         payload.put("rx", rxPorts);
         payload.put("tx", txPorts);
@@ -601,6 +601,24 @@ public class TRexClient {
         return callMethod("capture", payload, CaptureMonitor.class);
     }
 
+    public TRexClientResult<List<RPCResponse>> captureClear() {
+        TRexClientResult<CaptureInfo[]> activeCaptures = getActiveCaptures();
+
+        List<Integer> captureIds = Arrays.stream(activeCaptures.get()).map(CaptureInfo::getId).collect(Collectors.toList());
+        List<TRexCommand> commands = buildRemoveCaptureCommand(captureIds);
+        return callMethods(commands);
+    }
+
+    private List<TRexCommand> buildRemoveCaptureCommand(List<Integer> capture_ids) {
+        return capture_ids.stream()
+                          .map(captureId -> {
+                              Map<String, Object> parameters = new HashMap<>();
+                              parameters.put("command", "remove");
+                              parameters.put("capture_id", captureId);
+                              return buildCommand("capture", parameters);
+                          })
+                          .collect(Collectors.toList());
+    }
 //    public void captureRecorderStop(int captureId) {
 //        Map<String, Object> payload = new HashMap<>();
 //        payload.put("command", "stop");
@@ -608,12 +626,19 @@ public class TRexClient {
 //        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
 //    }
 //
-//    public void captureRecorderRemove(int captureId) {
-//        Map<String, Object> payload = new HashMap<>();
-//        payload.put("command", "remove");
-//        payload.put("capture_id", captureId);
-//        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
-//    }
+    public boolean captureRecorderRemove(int captureId) {
+
+        List<TRexCommand> commands = buildRemoveCaptureCommand(Collections.singletonList(captureId));
+        TRexCommand tRexCommand = commands.get(0);
+
+        TRexClientResult<List<RPCResponse>> result = callMethods(commands);
+        if (result.isFailed()) {
+            LOGGER.error("Unable to remove recorder due to: {}", result.getError());
+            return false;
+        }
+        Optional<RPCResponse> failed = result.get().stream().filter(RPCResponse::isFailed).findFirst();
+        return !failed.isPresent();
+    }
 
     private class ApiVersionResponse {
         private String id;
