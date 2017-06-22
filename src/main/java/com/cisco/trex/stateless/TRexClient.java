@@ -590,18 +590,26 @@ public class TRexClient {
         return result;
     }
 
-    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
+    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
+        return startCapture(rxPorts, txPorts, "cyclic", 1000);
+    }
+
+    public TRexClientResult<CaptureMonitor> captureRecorderStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
+        return startCapture(rxPorts, txPorts, "fixed", limit);
+    }
+
+    public TRexClientResult<CaptureMonitor> startCapture(List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("command", "start");
         payload.put("limit", limit);
-        payload.put("mode", "cyclic");
+        payload.put("mode", mode);
         payload.put("rx", rxPorts);
         payload.put("tx", txPorts);
-        
+
         return callMethod("capture", payload, CaptureMonitor.class);
     }
-
-    public TRexClientResult<List<RPCResponse>> captureClear() {
+    
+    public TRexClientResult<List<RPCResponse>> removeAllCaptures() {
         TRexClientResult<CaptureInfo[]> activeCaptures = getActiveCaptures();
 
         List<Integer> captureIds = Arrays.stream(activeCaptures.get()).map(CaptureInfo::getId).collect(Collectors.toList());
@@ -639,7 +647,7 @@ public class TRexClient {
         Optional<RPCResponse> failed = result.get().stream().filter(RPCResponse::isFailed).findFirst();
         return !failed.isPresent();
     }
-
+    
     private class ApiVersionResponse {
         private String id;
         private String jsonrpc;

@@ -284,11 +284,11 @@ public class TRexClientTest {
         Assert.assertFalse(result.isFailed());
 
         CaptureMonitor monitor = result.get();
-        Assert.assertTrue(monitor.getcaptureId() > 0);
+        Assert.assertTrue(monitor.getCaptureId() > 0);
 
         TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
         Optional<CaptureInfo> monitorInfoResult = Arrays.stream(activeCaptures.get())
-                .filter(info -> info.getId() == monitor.getcaptureId())
+                .filter(info -> info.getId() == monitor.getCaptureId())
                 .findFirst();
 
         Assert.assertFalse(monitorInfoResult.isPresent());
@@ -297,12 +297,39 @@ public class TRexClientTest {
     private TRexClientResult<CaptureMonitor> startMonitor() {
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        return client.captureMonitorStart(rxPorts, txPorts, 1000);
+        return client.captureMonitorStart(rxPorts, txPorts);
+    }
+    
+    @Test
+    public void startRecorderTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+        
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 100);
+        
+        Assert.assertFalse(result.isFailed());
+
+        CaptureMonitor capture = result.get();
+
+        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
+        Optional<CaptureInfo> recordMonitor = Arrays.stream(activeCaptures.get())
+                .filter(info -> info.getId() == capture.getCaptureId())
+                .findFirst();
+        
+        Assert.assertTrue(recordMonitor.isPresent());
+        Assert.assertEquals("ACTIVE", recordMonitor.get().getState());
     }
     
     @Test
     public void removeAllRecorderTest() {
-        TRexClientResult<List<RPCResponse>> result = client.captureClear();
+        TRexClientResult<List<RPCResponse>> result = client.removeAllCaptures();
         Assert.assertFalse(result.isFailed());
     }
     
