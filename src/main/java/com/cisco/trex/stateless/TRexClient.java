@@ -184,8 +184,8 @@ public class TRexClient {
         TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
         
         if (result.get() == null) {
-            TRexConnectionException e = new TRexConnectionException("API_H is null.");
-            LOGGER.error("Unable to sync client with TRex server due to: {}", e.getMessage());
+            TRexConnectionException e = new TRexConnectionException("Unable to connect to TRex server. Required API version is " +API_VERSION_MAJOR+"."+API_VERSION_MINOR);
+            LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
         }
         apiH = result.get().getApiH();
