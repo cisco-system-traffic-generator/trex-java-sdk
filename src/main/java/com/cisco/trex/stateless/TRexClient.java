@@ -591,7 +591,7 @@ public class TRexClient {
     }
 
     public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
-        return startCapture(rxPorts, txPorts, "cyclic", 1000);
+        return startCapture(rxPorts, txPorts, "cyclic", 100);
     }
 
     public TRexClientResult<CaptureMonitor> captureRecorderStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
@@ -628,7 +628,7 @@ public class TRexClient {
                           .collect(Collectors.toList());
     }
     
-    public TRexClientResult<CaptureMonitorStop> captureRecorderStop(int captureId) {
+    public TRexClientResult<CaptureMonitorStop> captureMonitorStop(int captureId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("command", "stop");
         payload.put("capture_id", captureId);
@@ -636,7 +636,7 @@ public class TRexClient {
         return callMethod("capture", payload, CaptureMonitorStop.class);
     }
 
-    public boolean captureRecorderRemove(int captureId) {
+    public boolean captureMonitorRemove(int captureId) {
 
         List<TRexCommand> commands = buildRemoveCaptureCommand(Collections.singletonList(captureId));
         TRexCommand tRexCommand = commands.get(0);

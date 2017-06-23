@@ -363,7 +363,7 @@ public class TRexClientTest {
         
         CaptureMonitor recordMonitor = result.get();
 
-        TRexClientResult<CaptureMonitorStop> stopResult = client.captureRecorderStop(result.get().getCaptureId());
+        TRexClientResult<CaptureMonitorStop> stopResult = client.captureMonitorStop(result.get().getCaptureId());
         Assert.assertFalse(stopResult.isFailed());
 
         TRexClientResult<CaptureInfo[]> activeCapturesResult = client.getActiveCaptures();
