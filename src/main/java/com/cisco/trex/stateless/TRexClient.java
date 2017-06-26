@@ -114,7 +114,7 @@ public class TRexClient {
                 T resutlObject = new ObjectMapper().readValue(response.getResult(), responseType);
                 result.set(resutlObject);
             } else {
-                result.setError(response.getError().getMessage());
+                result.setError(response.getError().getMessage() + " " +response.getError().getSpecificErr());
             }
         } catch (IOException e) {
             String errorMsg = "Error occurred during processing '"+methodName+"' method with params: " +parameters.toString();
