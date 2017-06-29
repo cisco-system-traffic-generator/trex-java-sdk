@@ -4,6 +4,10 @@ package com.cisco.trex.stateless;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.capture.CaptureInfo;
+import com.cisco.trex.stateless.model.capture.CaptureMonitor;
+import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
+import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -267,6 +271,69 @@ public class TRexClientTest {
         client.serviceMode(port1.getIndex(), false);
         Assert.assertTrue(pkts.size() > 0);
     }
+
+    @Test
+    public void getCapturesTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+
+        TRexClientResult<CaptureMonitor> result = startMonitor();
+        Assert.assertFalse(result.isFailed());
+
+        CaptureMonitor monitor = result.get();
+        Assert.assertTrue(monitor.getCaptureId() > 0);
+
+        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
+        Optional<CaptureInfo> monitorInfoResult = Arrays.stream(activeCaptures.get())
+                .filter(info -> info.getId() == monitor.getCaptureId())
+                .findFirst();
+
+        Assert.assertFalse(monitorInfoResult.isPresent());
+    }
+    
+    private TRexClientResult<CaptureMonitor> startMonitor() {
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        return client.captureMonitorStart(rxPorts, txPorts);
+    }
+    
+    @Test
+    public void startRecorderTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+        
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 100);
+        
+        Assert.assertFalse(result.isFailed());
+
+        CaptureMonitor capture = result.get();
+
+        TRexClientResult<CaptureInfo[]> activeCaptures = client.getActiveCaptures();
+        Optional<CaptureInfo> recordMonitor = Arrays.stream(activeCaptures.get())
+                .filter(info -> info.getId() == capture.getCaptureId())
+                .findFirst();
+        
+        Assert.assertTrue(recordMonitor.isPresent());
+        Assert.assertEquals("ACTIVE", recordMonitor.get().getState());
+    }
+    
+    @Test
+    public void removeAllRecorderTest() {
+        TRexClientResult<List<RPCResponse>> result = client.removeAllCaptures();
+        Assert.assertFalse(result.isFailed());
+    }
     
     @Test
     public void sendMultipleCmdsTest() {
@@ -281,6 +348,55 @@ public class TRexClientTest {
         Assert.assertFalse(result.isFailed());
         
         Assert.assertEquals(commands.size(), result.get().size());
+    }
+    
+    @Test
+    public void captureRecordStopTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        List<Integer> rxPorts = Arrays.asList(0);
+        List<Integer> txPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 1000);
+        
+        CaptureMonitor recordMonitor = result.get();
+
+        TRexClientResult<CaptureMonitorStop> stopResult = client.captureMonitorStop(result.get().getCaptureId());
+        Assert.assertFalse(stopResult.isFailed());
+
+        TRexClientResult<CaptureInfo[]> activeCapturesResult = client.getActiveCaptures();
+        Assert.assertFalse(activeCapturesResult.isFailed());
+
+        Optional<CaptureInfo> stoppedMonitor = Arrays.stream(activeCapturesResult.get())
+                .filter(captureInfo -> captureInfo.getId() == recordMonitor.getCaptureId())
+                .findFirst();
+        
+        Assert.assertTrue(stoppedMonitor.isPresent());
+        
+        Assert.assertEquals("STOPPED", stoppedMonitor.get().getState());
+    }
+    
+    @Test
+    public void fetchCapturedPKtsTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+        client.acquirePort(ports.get(1).getIndex(), true);
+        client.serviceMode(ports.get(1).getIndex(), true);
+        
+        List<Integer> rxPorts = Arrays.asList(0, 1);
+        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>());
+
+        TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
+        
+        Assert.assertFalse(capturedPktsResult.isFailed());
+        CapturedPackets capturedPkts = capturedPktsResult.get();
+        
+        Assert.assertTrue(capturedPkts.getPkts().size() > 0);
+        
     }
     
     @Test

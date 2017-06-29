@@ -2,6 +2,7 @@ package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.capture.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.pcap4j.packet.*;
@@ -50,6 +51,7 @@ public class TRexClient {
     private Map<Integer, String> portHandlers = new HashMap<>();
     private List<String> supportedCmds = new ArrayList<>();
     private Random randomizer = new Random();
+    private int currentCaptureMonitorId = 0;
 
     public TRexClient(String host, String port, String userName) {
         this.host = host;
@@ -112,7 +114,7 @@ public class TRexClient {
                 T resutlObject = new ObjectMapper().readValue(response.getResult(), responseType);
                 result.set(resutlObject);
             } else {
-                result.setError(response.getError().getMessage());
+                result.setError(response.getError().getMessage() + " " +response.getError().getSpecificErr());
             }
         } catch (IOException e) {
             String errorMsg = "Error occurred during processing '"+methodName+"' method with params: " +parameters.toString();
@@ -147,7 +149,7 @@ public class TRexClient {
     }
 
     public TRexClientResult<List<RPCResponse>> callMethods(List<TRexCommand> commands) {
-        TRexClientResult<List<RPCResponse>> result = new TRexClientResult();
+        TRexClientResult<List<RPCResponse>> result = new TRexClientResult<>();
 
         try {
             RPCResponse[] rpcResponses = transport.sendCommands(commands);
@@ -580,7 +582,83 @@ public class TRexClient {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("stop_traffic", payload);
     }
+
+    public TRexClientResult<CaptureInfo[]> getActiveCaptures() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "status");
+        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
+        return result;
+    }
+
+    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
+        return startCapture(rxPorts, txPorts, "cyclic", 100);
+    }
+
+    public TRexClientResult<CaptureMonitor> captureRecorderStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
+        return startCapture(rxPorts, txPorts, "fixed", limit);
+    }
+
+    public TRexClientResult<CaptureMonitor> startCapture(List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "start");
+        payload.put("limit", limit);
+        payload.put("mode", mode);
+        payload.put("rx", rxPorts);
+        payload.put("tx", txPorts);
+
+        return callMethod("capture", payload, CaptureMonitor.class);
+    }
     
+    public TRexClientResult<List<RPCResponse>> removeAllCaptures() {
+        TRexClientResult<CaptureInfo[]> activeCaptures = getActiveCaptures();
+
+        List<Integer> captureIds = Arrays.stream(activeCaptures.get()).map(CaptureInfo::getId).collect(Collectors.toList());
+        List<TRexCommand> commands = buildRemoveCaptureCommand(captureIds);
+        return callMethods(commands);
+    }
+
+    private List<TRexCommand> buildRemoveCaptureCommand(List<Integer> capture_ids) {
+        return capture_ids.stream()
+                          .map(captureId -> {
+                              Map<String, Object> parameters = new HashMap<>();
+                              parameters.put("command", "remove");
+                              parameters.put("capture_id", captureId);
+                              return buildCommand("capture", parameters);
+                          })
+                          .collect(Collectors.toList());
+    }
+    
+    public TRexClientResult<CaptureMonitorStop> captureMonitorStop(int captureId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "stop");
+        payload.put("capture_id", captureId);
+
+        return callMethod("capture", payload, CaptureMonitorStop.class);
+    }
+
+    public boolean captureMonitorRemove(int captureId) {
+
+        List<TRexCommand> commands = buildRemoveCaptureCommand(Collections.singletonList(captureId));
+        TRexCommand tRexCommand = commands.get(0);
+
+        TRexClientResult<List<RPCResponse>> result = callMethods(commands);
+        if (result.isFailed()) {
+            LOGGER.error("Unable to remove recorder due to: {}", result.getError());
+            return false;
+        }
+        Optional<RPCResponse> failed = result.get().stream().filter(RPCResponse::isFailed).findFirst();
+        return !failed.isPresent();
+    }
+
+    public TRexClientResult<CapturedPackets> captureFetchPkts(int captureId, int chunkSize) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("command", "fetch");
+        payload.put("capture_id", captureId);
+        payload.put("pkt_limit", chunkSize);
+
+        return callMethod("capture", payload, CapturedPackets.class);
+    }
+
     private class ApiVersionResponse {
         private String id;
         private String jsonrpc;
