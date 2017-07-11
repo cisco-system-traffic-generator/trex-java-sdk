@@ -23,6 +23,8 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.function.Predicate;
 
+import static java.lang.Thread.sleep;
+
 public class TRexClientTest {
     public static final String CLIENT_USER = "unit-tests-user";
     private static final Packet SIMPLE_PACKET = buildArpPkt();
@@ -282,6 +284,8 @@ public class TRexClientTest {
         client.acquirePort(ports.get(1).getIndex(), true);
         client.serviceMode(ports.get(1).getIndex(), true);
 
+        client.removeAllCaptures();
+        
         TRexClientResult<CaptureMonitor> result = startMonitor();
         Assert.assertFalse(result.isFailed());
 
@@ -293,7 +297,7 @@ public class TRexClientTest {
                 .filter(info -> info.getId() == monitor.getCaptureId())
                 .findFirst();
 
-        Assert.assertFalse(monitorInfoResult.isPresent());
+        Assert.assertTrue(monitorInfoResult.isPresent());
     }
     
     private TRexClientResult<CaptureMonitor> startMonitor() {
@@ -379,7 +383,7 @@ public class TRexClientTest {
     }
     
     @Test
-    public void fetchCapturedPKtsTest() {
+    public void fetchCapturedPKtsTest() throws InterruptedException {
         List<Port> ports = client.getPorts();
 
         client.acquirePort(ports.get(0).getIndex(), true);
@@ -389,7 +393,7 @@ public class TRexClientTest {
         
         List<Integer> rxPorts = Arrays.asList(0, 1);
         TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>());
-
+        sleep(3000);
         TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
         
         Assert.assertFalse(capturedPktsResult.isFailed());
