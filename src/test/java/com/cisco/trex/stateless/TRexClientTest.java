@@ -1,6 +1,7 @@
 package com.cisco.trex.stateless;
 
 
+import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
@@ -401,6 +402,21 @@ public class TRexClientTest {
         
         Assert.assertTrue(capturedPkts.getPkts().size() > 0);
         
+    }
+    
+    @Test
+    public void iPV6ScanTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        try {
+            Map<String, Ipv6Node> ipv6Nodes = client.scanIPv6(0);
+            Assert.assertTrue(ipv6Nodes.size() > 0);
+        } catch (ServiceModeRequiredException e) {
+            Assert.fail("Port 0 is not in service mode");
+        }
     }
     
     @Test

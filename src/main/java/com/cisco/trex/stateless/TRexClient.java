@@ -1,8 +1,12 @@
 package com.cisco.trex.stateless;
 
+import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.*;
-import com.cisco.trex.stateless.model.capture.*;
+import com.cisco.trex.stateless.model.capture.CaptureInfo;
+import com.cisco.trex.stateless.model.capture.CaptureMonitor;
+import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
+import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import org.pcap4j.packet.*;
@@ -380,6 +384,20 @@ public class TRexClient {
         stopTraffic(portIndex);
     }
     
+    public void sendPackets(int portIndex, List<Packet> pkts) {
+        removeAllStreams(portIndex);
+        for (Packet pkt : pkts) {
+            addStream(portIndex, build1PktSingleBurstStream(pkt));
+        }
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 1.0);
+        startTraffic(portIndex, 1, true, mul, 1);
+        stopTraffic(portIndex);
+    }
+    
     public String resolveArp(int portIndex, String srcIp, String dstIp) {
         removeRxQueue(portIndex);
         setRxQueue(portIndex, 1000);
@@ -658,6 +676,11 @@ public class TRexClient {
 
         return callMethod("capture", payload, CapturedPackets.class);
     }
+
+    public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {
+        return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10);
+    }
+
 
     private class ApiVersionResponse {
         private String id;
