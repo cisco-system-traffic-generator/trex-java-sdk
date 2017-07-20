@@ -24,6 +24,9 @@ public class CaptureInfo {
     @JsonProperty("state")
     private String state;
     
+    @JsonProperty("mode")
+    private String mode;
+    
     @JsonProperty("id")
     public int getId() {
         return id;
@@ -73,7 +76,17 @@ public class CaptureInfo {
     public void setState(String state) {
         this.state = state;
     }
-    
+
+    @JsonProperty("mode")
+    public String getMode() {
+        return mode;
+    }
+
+    @JsonProperty("mode")
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
     @JsonProperty("filter")
     public CaptureFilter getFilter() {
         return filter;
