@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import java.net.Inet6Address;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Predicate;
 
 import static org.pcap4j.util.ByteArrays.BYTE_SIZE_IN_BYTES;
@@ -25,18 +24,19 @@ public class IPv6NeighborDiscoveryService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IPv6NeighborDiscoveryService.class);
 
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
-    
     private TRexClient tRexClient;
     private String srcMac;
     private int portIdx;
     private Map<String, Ipv6Node> ipv6Nodes = new HashMap<>();
+    private long endTs;
 
     public IPv6NeighborDiscoveryService(TRexClient tRexClient) {
         this.tRexClient = tRexClient;
     }
     
     public Map<String, Ipv6Node> scan(int portIdx, int timeDuration)  throws ServiceModeRequiredException {
+        ipv6Nodes.clear();
+        endTs = System.currentTimeMillis() + timeDuration * 1000;
         TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
         PortStatus portStatus = portStatusResult.get();
 
@@ -47,23 +47,18 @@ public class IPv6NeighborDiscoveryService {
         srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
         this.portIdx = portIdx;
 
-        try {
-            executorService.submit(() -> {
-                EthernetPacket icmpv6EchoReqPkt = buildICMPV6EchoReq(srcMac);
-                sendPkt(Arrays.asList(icmpv6EchoReqPkt));
-            }).get(timeDuration, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        }
+        Packet icmpv6EchoReqPkt = buildICMPV6EchoReq(srcMac);
+        sendIcmpv6Pkt(icmpv6EchoReqPkt);
+        tRexClient.removeRxQueue(portIdx);
+        
         return ipv6Nodes;
 
     }
 
-    synchronized private void sendPkt(List<Packet> pkts) {
+    private void sendPkt(List<Packet> pkts) {
+        if (endTs < System.currentTimeMillis()) {
+            return;
+        }
         tRexClient.removeRxQueue(portIdx);
         tRexClient.setRxQueue(portIdx, 1000);
         if (pkts.size() == 1) {
@@ -73,31 +68,39 @@ public class IPv6NeighborDiscoveryService {
         }
 
         Predicate<EthernetPacket> ipV6NDPktFilter = etherPkt -> etherPkt.contains(IcmpV6NeighborSolicitationPacket.class) || etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class);
-        
-        try {
-            int steps = 5;
-            while (steps > 0) {
-                steps -= 1;
-                Thread.sleep(100);
-                tRexClient.getRxQueue(portIdx, ipV6NDPktFilter).forEach(this::onPktReceived);
+
+        tRexClient.getRxQueue(portIdx, ipV6NDPktFilter).forEach(this::onPktReceived);
+    }
+
+    private void sendIcmpv6Pkt(Packet icmpv6EchoReqPkt) {
+        tRexClient.removeRxQueue(portIdx);
+        tRexClient.setRxQueue(portIdx, 1000);
+        tRexClient.sendPacket(portIdx, icmpv6EchoReqPkt);
+        Predicate<EthernetPacket> ipV6NDPktFilter = etherPkt -> etherPkt.contains(IcmpV6NeighborSolicitationPacket.class) || etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class) || etherPkt.contains(IcmpV6EchoReplyPacket.class);
+        int tryCount = 10;
+        List<Packet> rxQueue = new ArrayList<>();
+        while(tryCount > 0) {
+            tryCount--;
+            rxQueue.addAll(tRexClient.getRxQueue(portIdx, ipV6NDPktFilter));
+            if (rxQueue.size() > 0) {
+                break;
             }
-            LOGGER.info("Unable to get IcmpV6EchoReply reply in {} seconds", steps);
-        } catch (InterruptedException ignored) {}
-        finally {
-            tRexClient.removeRxQueue(portIdx);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+            }
         }
+        rxQueue.forEach(this::onPktReceived);
     }
 
     private void onPktReceived(Packet pkt) {
         if (pkt.contains(IcmpV6NeighborSolicitationPacket.class)) {
             IpV6Packet ipV6Packet = pkt.get(IpV6Packet.class);
-            String nodeIp = ipV6Packet.getHeader().getSrcAddr().toString();
-            //Remove leading slash
-            nodeIp = nodeIp.substring(1);
+            String nodeIp = ipV6Packet.getHeader().getSrcAddr().toString().substring(1);
+            
             String nodeMac = getLinkLayerAddress(ipV6Packet);
 
             Packet icmpv6NSPkt = buildICMPV6NSPkt(nodeMac, nodeIp);
-            Packet idealicmpv6NSPkt = buildIdealICMPV6NSPkt("gCqowFgNAFBWjYX8ht1gAAAAACA6//6AAAAAAAAAAlBW//6Nhfz+gAAAAAAAAIIqqP/+wFgNhwC9fAAAAAD+gAAAAAAAAIIqqP/+wFgNAQEAUFaNhfw=");
             Packet icmpv6NAPkt = buildICMPV6NAPkt(nodeMac, nodeIp);
             sendPkt(Arrays.asList(icmpv6NSPkt, icmpv6NAPkt));
         } else if (pkt.contains(IcmpV6NeighborAdvertisementPacket.class)) {
@@ -108,21 +111,13 @@ public class IPv6NeighborDiscoveryService {
             String nodeIp = icmpV6NaHdr.getTargetAddress().toString().substring(1);
 
             IpV6Packet.IpV6Header ipV6Header = pkt.get(IpV6Packet.class).getHeader();
-            String dstIp = ipV6Header.getDstAddr().toString().substring(1);
+            String dstIp = ipV6Header.getDstAddr().toString().substring(1).replace("fe80:0:0:0:", "fe80::");
             String nodeMac = ((EthernetPacket) pkt).getHeader().getSrcAddr().toString();
             
-            ipv6Nodes.put(nodeMac, new Ipv6Node(nodeIp, dstIp, is_router));
+            if(!ipv6Nodes.containsKey(nodeIp)) {
+                ipv6Nodes.put(nodeIp, new Ipv6Node(nodeMac, nodeIp, is_router));
+            }
         }
-    }
-
-    private Packet buildIdealICMPV6NSPkt(String pkt) {
-        byte[] pktBin = Base64.getDecoder().decode(pkt);
-        try {
-            return EthernetPacket.newPacket(pktBin, 0, pktBin.length);
-        } catch (IllegalRawDataException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     private Packet buildICMPV6NSPkt(String dstMac, String dstIp) {
