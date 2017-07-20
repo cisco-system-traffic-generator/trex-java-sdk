@@ -370,7 +370,7 @@ public class TRexClient {
         callMethod("set_rx_feature", payload);
     }
     
-    public void sendPacket(int portIndex, Packet pkt) {
+    synchronized public void sendPacket(int portIndex, Packet pkt) {
         Stream stream = build1PktSingleBurstStream(pkt);
         
         removeAllStreams(portIndex);
@@ -383,8 +383,8 @@ public class TRexClient {
         startTraffic(portIndex, 1, true, mul, 1);
         stopTraffic(portIndex);
     }
-    
-    public void sendPackets(int portIndex, List<Packet> pkts) {
+
+    synchronized public void sendPackets(int portIndex, List<Packet> pkts) {
         removeAllStreams(portIndex);
         for (Packet pkt : pkts) {
             addStream(portIndex, build1PktSingleBurstStream(pkt));
@@ -473,8 +473,8 @@ public class TRexClient {
                 3,
                 0.0,
                 new StreamMode(
-                        1,
-                        1,
+                        2,
+                        2,
                         1,
                         1.0,
                         new StreamModeRate(
@@ -680,7 +680,6 @@ public class TRexClient {
     public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {
         return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10);
     }
-
 
     private class ApiVersionResponse {
         private String id;
