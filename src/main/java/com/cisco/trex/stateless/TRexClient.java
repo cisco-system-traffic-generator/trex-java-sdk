@@ -383,6 +383,18 @@ public class TRexClient {
         startTraffic(portIndex, 1, true, mul, 1);
         stopTraffic(portIndex);
     }
+    synchronized public void startStreamsIntermediate(int portIndex, List<Stream> streams) {
+        removeRxQueue(portIndex);
+        setRxQueue(portIndex, 1000);
+        removeAllStreams(portIndex);
+        streams.forEach(s -> addStream(portIndex, s));
+        
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "percentage");
+        mul.put("value", 100);
+        startTraffic(portIndex, -1, true, mul, 1);
+    }
 
     synchronized public void sendPackets(int portIndex, List<Packet> pkts) {
         removeAllStreams(portIndex);
@@ -491,7 +503,7 @@ public class TRexClient {
         );
     }
     
-    public List<Packet> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
+    public List<EthernetPacket> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
 
         Map<String, Object> payload = createPayload(portIndex);
         String json = callMethod("get_rx_queue_pkts", payload);
@@ -552,9 +564,9 @@ public class TRexClient {
         } catch (InterruptedException ignored) {}
 
         try {
-            List<Packet> receivedPkts = getRxQueue(portIndex, etherPkt -> etherPkt.contains(IcmpV4EchoReplyPacket.class));
+            List<EthernetPacket> receivedPkts = getRxQueue(portIndex, etherPkt -> etherPkt.contains(IcmpV4EchoReplyPacket.class));
             if (!receivedPkts.isEmpty()) {
-                return (EthernetPacket) receivedPkts.get(0);
+                return receivedPkts.get(0);
             }
             return null;
         } finally {
@@ -678,7 +690,11 @@ public class TRexClient {
     }
 
     public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {
-        return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10);
+        return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10, null);
+    }
+
+    public EthernetPacket sendIcmpV6Echo(int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) throws ServiceModeRequiredException {
+        return new IPv6NeighborDiscoveryService(this).sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
     }
 
     private class ApiVersionResponse {
