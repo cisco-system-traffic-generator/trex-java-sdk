@@ -12,6 +12,7 @@ import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
+§import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.ArpHardwareType;
 import org.pcap4j.packet.namednumber.ArpOperation;
@@ -268,7 +269,7 @@ public class TRexClientTest {
             }
             return false;
         };
-        List<org.pcap4j.packet.Packet> pkts = client.getRxQueue(port.getIndex(), arpReplyFilter);
+        List<EthernetPacket> pkts = client.getRxQueue(port.getIndex(), arpReplyFilter);
         client.removeRxQueue(port.getIndex());
         client.serviceMode(port.getIndex(), false);
         client.serviceMode(port1.getIndex(), false);
@@ -345,7 +346,7 @@ public class TRexClientTest {
         List<TRexCommand> commands = new ArrayList<>();
         
         for (int i = 1; i <= 10; i++) {
-            commands.add(client.buildCommand("ping", new HashMap<>()));
+            commands.add(client.buildCommand("sendIcmpV6Request", new HashMap<>()));
         }
 
         TRexClientResult<List<RPCResponse>> result = client.callMethods(commands);
@@ -420,6 +421,23 @@ public class TRexClientTest {
     }
     
     @Test
+    public void sendIcmpV6EchoTest() {
+        List<Port> ports = client.getPorts();
+
+        client.acquirePort(ports.get(0).getIndex(), true);
+        client.serviceMode(ports.get(0).getIndex(), true);
+
+        try {
+            // fe80:0:0:0:822a:a8ff:fe56:1517
+            // fe80:0:0:0:bc:18ff:fe6a:c570
+            // fe80:0:0:0:250:56ff:fe9b:2ef7
+            Assert.assertTrue(client.sendIcmpV6Echo(0, "fe80::822a:a8ff:fec0:5495", 0, 0, 2) != null);
+        } catch (ServiceModeRequiredException e) {
+            Assert.fail("Port 0 is not in service mode");
+        }
+    }
+    
+    @Test
     @Ignore
     public void sendPacketTest() throws TRexTimeoutException{
         List<Port> ports = client.getPorts();
@@ -428,8 +446,17 @@ public class TRexClientTest {
         client.acquirePort(port.getIndex(), true);
         client.serviceMode(port.getIndex(), true);
         client.setRxQueue(port.getIndex(), 10);
-        
-        List<org.pcap4j.packet.Packet> pkts = client.getRxQueue(port.getIndex(), p -> true);
+        List<EthernetPacket> pkts = client.getRxQueue(port.getIndex(), p -> true);
+    }
+    
+    private static EthernetPacket buildIdealPkt(String pkt) {
+        byte[] pktBin = Base64.getDecoder().decode(pkt);
+        try {
+            return EthernetPacket.newPacket(pktBin, 0, pktBin.length);
+        } catch (IllegalRawDataException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     
     @AfterClass
