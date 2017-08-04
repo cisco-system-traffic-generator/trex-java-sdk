@@ -108,6 +108,7 @@ public class IPv6NeighborDiscoveryService {
                 }
             }
         }
+        tRexClient.removeRxQueue(portIdx);
         return icmpUnicastReply;
 
     }
@@ -154,7 +155,7 @@ public class IPv6NeighborDiscoveryService {
                 naIncomingRequests.put(nodeIp, pkt);
             });
         }
-
+        tRexClient.removeRxQueue(portIdx);
         return naIncomingRequests;
 
     }
