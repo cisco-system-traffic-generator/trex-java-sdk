@@ -70,7 +70,7 @@ public class IPv6NeighborDiscoveryService {
         while (endTs > System.currentTimeMillis()) {
             icmpNAReplies.addAll(tRexClient.getRxQueue(portIdx, ipV6NAPktFilter));
         }
-        
+        tRexClient.removeRxQueue(portIdx);
         return icmpNAReplies.stream()
                             .map(this::toIpv6Node)
                             .distinct()
