@@ -697,6 +697,14 @@ public class TRexClient {
         return new IPv6NeighborDiscoveryService(this).sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
     }
 
+    public TRexClientResult<StubResult> setVlan(int portIdx, List<Integer> vlanIds) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIdx);
+        parameters.put("vlan", vlanIds);
+
+        return callMethod("set_vlan", parameters, StubResult.class);
+    }
+
     private class ApiVersionResponse {
         private String id;
         private String jsonrpc;

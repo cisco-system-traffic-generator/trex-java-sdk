@@ -26,6 +26,9 @@ public class PortAttributes {
 
     @JsonProperty("speed")
     private int speed;
+    
+    @JsonProperty("vlan")
+    private PortVlan vlan;
 
     @JsonProperty("fc")
     public PortFCAttribute getFlowControl() {
@@ -95,5 +98,15 @@ public class PortAttributes {
     @JsonProperty("speed")
     public void setSpeed(int speed) {
         this.speed = speed;
+    }
+    
+    @JsonProperty("vlan")
+    public PortVlan getVlan() {
+        return vlan;
+    }
+
+    @JsonProperty("vlan")
+    public void setVlan(PortVlan vlan) {
+        this.vlan = vlan;
     }
 }

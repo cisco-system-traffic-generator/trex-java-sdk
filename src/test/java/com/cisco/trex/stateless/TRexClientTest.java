@@ -9,10 +9,11 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
+import com.cisco.trex.stateless.model.port.PortVlan;
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
-§import org.pcap4j.packet.IllegalRawDataException;
+import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.namednumber.ArpHardwareType;
 import org.pcap4j.packet.namednumber.ArpOperation;
@@ -37,6 +38,20 @@ public class TRexClientTest {
     public static void setUp() throws TRexConnectionException, TRexTimeoutException {
         client = new TRexClient("trex-host", "4501", CLIENT_USER);
         client.connect();
+    }
+
+    @Test
+    public void setVlanTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        client.acquirePort(port.index, true);
+        TRexClientResult<StubResult> result = client.setVlan(port.index, Arrays.asList(23, 34));
+        Assert.assertTrue(!result.isFailed());
+
+        PortStatus portStatus = getPortStatus(port.index);
+        PortVlan vlan = portStatus.getAttr().getVlan();
+        Assert.assertTrue(vlan.tags.get(0).equals(23));
+        Assert.assertTrue(vlan.tags.get(1).equals(34));
     }
 
     @Test
