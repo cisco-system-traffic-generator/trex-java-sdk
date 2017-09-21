@@ -32,7 +32,10 @@ public class IPv6NeighborDiscoveryService {
         this.tRexClient = tRexClient;
     }
     
-    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIp)  throws ServiceModeRequiredException {
+    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIP)  throws ServiceModeRequiredException {
+
+        String broadcastIP = "ff02::1";
+
         long endTs = System.currentTimeMillis() + timeDuration/2 * 1000;
         TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
         PortStatus portStatus = portStatusResult.get();
@@ -43,7 +46,7 @@ public class IPv6NeighborDiscoveryService {
 
         srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
 
-        Packet pingPkt = buildICMPV6EchoReq(srcMac, multicastMacFromIPv6(dstIp).toString(), expandIPv6Address(dstIp));
+        Packet pingPkt = buildICMPV6EchoReq(srcMac, multicastMacFromIPv6(broadcastIP).toString(), expandIPv6Address(broadcastIP));
         tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(pingPkt)));
 
         
@@ -74,6 +77,13 @@ public class IPv6NeighborDiscoveryService {
         return icmpNAReplies.stream()
                             .map(this::toIpv6Node)
                             .distinct()
+                            .filter(ipv6Node -> {
+                                if(dstIP != null) {
+                                    //TODO: Implement logic which will compare compressed and expanded addresses properly
+                                    return ipv6Node.getIp().equals(dstIP);
+                                }
+                                return true;
+                            })
                             .collect(Collectors.toMap(Ipv6Node::getIp, node -> node));
     }
 
