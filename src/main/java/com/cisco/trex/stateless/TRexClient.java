@@ -620,21 +620,34 @@ public class TRexClient {
         return result;
     }
 
-    public TRexClientResult<CaptureMonitor> captureMonitorStart(List<Integer> rxPorts, List<Integer> txPorts) {
-        return startCapture(rxPorts, txPorts, "cyclic", 100);
+    public TRexClientResult<CaptureMonitor> captureMonitorStart(
+            List<Integer> rxPorts,
+            List<Integer> txPorts,
+            String filter) {
+        return startCapture(rxPorts, txPorts, "cyclic", 100, filter);
     }
 
-    public TRexClientResult<CaptureMonitor> captureRecorderStart(List<Integer> rxPorts, List<Integer> txPorts, int limit) {
-        return startCapture(rxPorts, txPorts, "fixed", limit);
+    public TRexClientResult<CaptureMonitor> captureRecorderStart(
+            List<Integer> rxPorts,
+            List<Integer> txPorts,
+            String filter,
+            int limit) {
+        return startCapture(rxPorts, txPorts, "fixed", limit, filter);
     }
 
-    public TRexClientResult<CaptureMonitor> startCapture(List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit) {
+    public TRexClientResult<CaptureMonitor> startCapture(
+            List<Integer> rxPorts,
+            List<Integer> txPorts,
+            String mode,
+            int limit,
+            String filter) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("command", "start");
         payload.put("limit", limit);
         payload.put("mode", mode);
         payload.put("rx", rxPorts);
         payload.put("tx", txPorts);
+        payload.put("filter", filter);
 
         return callMethod("capture", payload, CaptureMonitor.class);
     }
