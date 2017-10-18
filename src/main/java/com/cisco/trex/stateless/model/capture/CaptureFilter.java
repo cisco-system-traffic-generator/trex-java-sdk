@@ -5,12 +5,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CaptureFilter {
-    
+
     @JsonProperty("rx")
     private int rxPortMask;
-    
+
     @JsonProperty("tx")
     private int txPortMask;
+
+    @JsonProperty("bpf")
+    private String bpfFilter;
 
     @JsonProperty("rx")
     public int getRxPortMask() {
@@ -31,4 +34,16 @@ public class CaptureFilter {
     public void setTxPortMask(int txPortMask) {
         this.txPortMask = txPortMask;
     }
+
+
+    @JsonProperty("bpf")
+    public String getBpfFilter() {
+        return this.bpfFilter;
+    }
+
+    @JsonProperty("bpf")
+    public void setBpfFilter(String bpfFilter) {
+        this.bpfFilter = bpfFilter;
+    }
+
 }
