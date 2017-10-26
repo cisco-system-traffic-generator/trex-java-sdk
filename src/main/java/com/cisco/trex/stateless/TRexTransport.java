@@ -81,6 +81,7 @@ public class TRexTransport {
 
     synchronized public void close() {
         zmqSocket.disconnect(connectionString);
+        zmqSocket.close();
         zmqCtx.close();
     }
 
