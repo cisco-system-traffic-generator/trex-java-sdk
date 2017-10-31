@@ -16,7 +16,7 @@ public class TRexTransport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TRexTransport.class);
     
-    public static final int DEFAULT_RECEIVE_TIMEOUT = 3000;
+    public static final int DEFAULT_TIMEOUT = 3000;
     
     private final String connectionString;
 
@@ -30,12 +30,13 @@ public class TRexTransport {
 
     private String port;
 
-    public TRexTransport(String host, String port, int receiveTimeout) {
+    public TRexTransport(String host, String port, int timeout) {
         this.host = host;
         this.port = port;
         zmqSocket = zmqCtx.socket(ZMQ.REQ);
-        int timeout = receiveTimeout == 0 ? DEFAULT_RECEIVE_TIMEOUT : receiveTimeout;
-        zmqSocket.setReceiveTimeOut(timeout);
+        int actualTimeout = timeout <= 0 ? DEFAULT_TIMEOUT : timeout;
+        zmqSocket.setReceiveTimeOut(actualTimeout);
+        zmqSocket.setSendTimeOut(actualTimeout);
         connectionString = protocol + "://"+ this.host +":" + this.port;
         zmqSocket.connect(connectionString);
     }
