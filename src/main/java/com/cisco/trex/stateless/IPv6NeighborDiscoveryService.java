@@ -2,6 +2,7 @@ package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.model.*;
+import com.google.common.net.InetAddresses;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.IcmpV6CommonPacket.IpV6NeighborDiscoveryOption;
 import org.pcap4j.packet.IcmpV6NeighborAdvertisementPacket.IcmpV6NeighborAdvertisementHeader;
@@ -79,8 +80,7 @@ public class IPv6NeighborDiscoveryService {
                             .distinct()
                             .filter(ipv6Node -> {
                                 if(dstIP != null) {
-                                    //TODO: Implement logic which will compare compressed and expanded addresses properly
-                                    return ipv6Node.getIp().equals(dstIP);
+                                    return InetAddresses.forString(dstIP).equals(InetAddresses.forString(ipv6Node.getIp()));
                                 }
                                 return true;
                             })
