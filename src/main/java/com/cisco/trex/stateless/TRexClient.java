@@ -703,7 +703,7 @@ public class TRexClient {
     }
 
     public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {
-        return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10, null);
+        return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10, null, null);
     }
 
     public EthernetPacket sendIcmpV6Echo(int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) throws ServiceModeRequiredException {
