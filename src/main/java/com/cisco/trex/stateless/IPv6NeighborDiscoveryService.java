@@ -33,8 +33,7 @@ public class IPv6NeighborDiscoveryService {
         this.tRexClient = tRexClient;
     }
     
-    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIP)  throws ServiceModeRequiredException {
-
+    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIP, String srcIP)  throws ServiceModeRequiredException {
         String broadcastIP = "ff02::1";
 
         long endTs = System.currentTimeMillis() + timeDuration/2 * 1000;
@@ -47,10 +46,9 @@ public class IPv6NeighborDiscoveryService {
 
         srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
 
-        Packet pingPkt = buildICMPV6EchoReq(srcMac, multicastMacFromIPv6(broadcastIP).toString(), expandIPv6Address(broadcastIP));
-        tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(pingPkt)));
+        Packet pingPkt = buildICMPV6EchoReq(srcIP, srcMac, multicastMacFromIPv6(broadcastIP).toString(), expandIPv6Address(broadcastIP));
+        tRexClient.startStreamsIntermediate(portIdx, Collections.singletonList(buildStream(pingPkt)));
 
-        
         List<com.cisco.trex.stateless.model.Stream> nsNaStreams = new ArrayList<>();
         Predicate<EthernetPacket> ipV6NSPktFilter = etherPkt -> etherPkt.contains(IcmpV6NeighborSolicitationPacket.class) || etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class);
 
@@ -60,8 +58,8 @@ public class IPv6NeighborDiscoveryService {
                 String nodeIp = ipV6Packet.getHeader().getSrcAddr().toString().substring(1);
                 String nodeMac = getLinkLayerAddress(ipV6Packet);
 
-                nsNaStreams.add(buildStream(buildICMPV6NSPkt(nodeMac, nodeIp)));
-                nsNaStreams.add(buildStream(buildICMPV6NAPkt(nodeMac, nodeIp)));
+                nsNaStreams.add(buildStream(buildICMPV6NSPkt(nodeMac, nodeIp, srcIP)));
+                nsNaStreams.add(buildStream(buildICMPV6NAPkt(nodeMac, nodeIp, srcIP)));
             });
         }
 
@@ -107,7 +105,7 @@ public class IPv6NeighborDiscoveryService {
         if (icmpMulticastResponse.isPresent()) {
             EthernetPacket etherPkt = icmpMulticastResponse.get().getValue();
             String nodeMac = etherPkt.getHeader().getSrcAddr().toString();
-            Packet pingPkt = buildICMPV6EchoReq(srcMac, nodeMac, dstIp, icmpId, icmpSeq);
+            Packet pingPkt = buildICMPV6EchoReq(null, srcMac, nodeMac, dstIp, icmpId, icmpSeq);
             tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(pingPkt)));
             long endTs = System.currentTimeMillis() + timeOut * 1000/2;
 
@@ -130,8 +128,8 @@ public class IPv6NeighborDiscoveryService {
         
         srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
         
-        Packet pingPkt = buildICMPV6EchoReq(srcMac, null, dstIp);
-        Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp);
+        Packet pingPkt = buildICMPV6EchoReq(null, srcMac, null, dstIp);
+        Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp, null);
 
         List<com.cisco.trex.stateless.model.Stream> stlStreams = Stream.of(buildStream(pingPkt), buildStream(icmpv6NSPkt)).collect(Collectors.toList());
 
@@ -193,7 +191,7 @@ public class IPv6NeighborDiscoveryService {
         );
     }
     
-    private Packet buildICMPV6NSPkt(String dstMac, String dstIp) {
+    private Packet buildICMPV6NSPkt(String dstMac, String dstIp, String srcIp) {
         EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
         try {
 
@@ -208,10 +206,11 @@ public class IPv6NeighborDiscoveryService {
                     .options(Arrays.asList(sourceLLAddr))
                     .targetAddress((Inet6Address) Inet6Address.getByName(dstIp));
             
+            final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMac);
 
             IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
             icmpCommonPktBuilder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
                     .type(IcmpV6Type.NEIGHBOR_SOLICITATION)
                     .code(IcmpV6Code.NO_CODE)
@@ -220,7 +219,7 @@ public class IPv6NeighborDiscoveryService {
 
             IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
             ipV6Builder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
                     .version(IpVersion.IPV6)
                     .hopLimit((byte) -1)
@@ -276,7 +275,9 @@ public class IPv6NeighborDiscoveryService {
         return ByteArrays.toHexString(linkLayerAddress, ":");
     }
 
-    private Packet buildICMPV6NAPkt(String dstMac, String dstIp) {
+    private Packet buildICMPV6NAPkt(String dstMac, String dstIp, String srcIP) {
+        final String specifiedSrcIP = srcIP != null ? srcIP :  generateIPv6AddrFromMAC(srcMac);
+
         EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
         try {
 
@@ -291,11 +292,11 @@ public class IPv6NeighborDiscoveryService {
                          .options(Arrays.asList(tLLAddr))
                          .solicitedFlag(true)
                          .overrideFlag(true)
-                         .targetAddress((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac)));
+                         .targetAddress((Inet6Address) Inet6Address.getByName(specifiedSrcIP));
 
             IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
             icmpCommonPktBuilder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
                     .type(IcmpV6Type.NEIGHBOR_ADVERTISEMENT)
                     .code(IcmpV6Code.NO_CODE)
@@ -304,7 +305,7 @@ public class IPv6NeighborDiscoveryService {
 
             IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
             ipV6Builder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
                     .version(IpVersion.IPV6)
                     .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
@@ -335,7 +336,8 @@ public class IPv6NeighborDiscoveryService {
         return data;
     }
     
-    public static EthernetPacket buildICMPV6EchoReq(String srcMacString, String dstMacString, String dstIp, int icmpId, int icmpSeq) {
+    public static EthernetPacket buildICMPV6EchoReq(String srcIp, String srcMacString, String dstMacString, String dstIp, int icmpId, int icmpSeq) {
+        final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMacString);
 
         IcmpV6EchoRequestPacket.Builder icmpV6ERBuilder = new IcmpV6EchoRequestPacket.Builder();
         icmpV6ERBuilder
@@ -345,7 +347,7 @@ public class IPv6NeighborDiscoveryService {
         IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
         try {
             icmpCommonPktBuilder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMacString)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
                     .type(IcmpV6Type.ECHO_REQUEST)
                     .code(IcmpV6Code.NO_CODE)
@@ -353,7 +355,7 @@ public class IPv6NeighborDiscoveryService {
                     .payloadBuilder(icmpV6ERBuilder);
             IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
             ipV6Builder
-                    .srcAddr((Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMacString)))
+                    .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
                     .dstAddr((Inet6Address) Inet6Address.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
                     .version(IpVersion.IPV6)
                     .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
@@ -383,8 +385,8 @@ public class IPv6NeighborDiscoveryService {
         return null;
     }
     
-    public static EthernetPacket buildICMPV6EchoReq(String srcMacString, String dstMacString, String dstIp) {
-        return buildICMPV6EchoReq(srcMacString, dstMacString, dstIp, 0, 0);
+    public static EthernetPacket buildICMPV6EchoReq(String srcIp, String srcMacString, String dstMacString, String dstIp) {
+        return buildICMPV6EchoReq(srcIp, srcMacString, dstMacString, dstIp, 0, 0);
     }
 
     private static MacAddress multicastMacFromIPv6(String ipV6) {
