@@ -320,9 +320,9 @@ public class TRexClientTest {
     private TRexClientResult<CaptureMonitor> startMonitor() {
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        return client.captureMonitorStart(rxPorts, txPorts);
+        return client.captureMonitorStart(rxPorts, txPorts, "");
     }
-    
+
     @Test
     public void startRecorderTest() {
         List<Port> ports = client.getPorts();
@@ -335,7 +335,7 @@ public class TRexClientTest {
         
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 100);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 100);
         
         Assert.assertFalse(result.isFailed());
 
@@ -380,7 +380,7 @@ public class TRexClientTest {
 
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 1000);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 1000);
         
         CaptureMonitor recordMonitor = result.get();
 
@@ -409,7 +409,7 @@ public class TRexClientTest {
         client.serviceMode(ports.get(1).getIndex(), true);
         
         List<Integer> rxPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>());
+        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>(), "");
         sleep(3000);
         TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
         
@@ -419,7 +419,7 @@ public class TRexClientTest {
         Assert.assertTrue(capturedPkts.getPkts().size() > 0);
         
     }
-    
+
     @Test
     public void iPV6ScanTest() {
         List<Port> ports = client.getPorts();
