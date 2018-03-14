@@ -7,8 +7,11 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
+import com.cisco.trex.stateless.model.port.PortVlan;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.gson.*;
+import javafx.util.Pair;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
@@ -31,6 +34,8 @@ import static java.lang.Math.abs;
 public class TRexClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TRexClient.class);
+
+    private static final EtherType QInQ = new EtherType((short)0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
 
     private static String JSON_RPC_VERSION = "2.0";
 
@@ -63,6 +68,7 @@ public class TRexClient {
         this.userName = userName;
         supportedCmds.add("api_sync");
         supportedCmds.add("get_supported_cmds");
+        EtherType.register(QInQ);
     }
     
     public String callMethod(String methodName, Map<String, Object> payload) {
@@ -414,7 +420,8 @@ public class TRexClient {
         setRxQueue(portIndex, 1000);
 
         String srcMac = getPorts().get(portIndex).hw_mac;
-        EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp);
+	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+        EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
 
         Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
@@ -448,7 +455,7 @@ public class TRexClient {
         return null;
     }
 
-    private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp) {
+    private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp, PortVlan vlan) {
         ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
         MacAddress srcMacAddress = MacAddress.getByName(srcMac);
         try {
@@ -466,14 +473,43 @@ public class TRexClient {
             throw new IllegalArgumentException(e);
         }
 
+        Pair<EtherType, Packet.Builder> payload = buildVlan(arpBuilder, vlan);
+
         EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
         etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
                 .srcAddr(srcMacAddress)
-                .type(EtherType.ARP)
-                .payloadBuilder(arpBuilder)
+                .type(payload.getKey())
+                .payloadBuilder(payload.getValue())
                 .paddingAtBuild(true);
 
         return etherBuilder.build();
+    }
+
+    private static Pair<EtherType, Packet.Builder> buildVlan(ArpPacket.Builder arpBuilder, PortVlan vlan) {
+        Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
+        Packet.Builder resultPayloadBuilder = arpBuilder;
+        EtherType resulEtherType = EtherType.ARP;
+
+        if (vlanTags.peek() != null) {
+            Dot1qVlanTagPacket.Builder vlanInsideBuilder = new Dot1qVlanTagPacket.Builder();
+            vlanInsideBuilder.type(EtherType.ARP)
+                    .vid(vlanTags.poll().shortValue())
+                    .payloadBuilder(arpBuilder);
+
+            resultPayloadBuilder = vlanInsideBuilder;
+            resulEtherType = EtherType.DOT1Q_VLAN_TAGGED_FRAMES;
+
+            if(vlanTags.peek() != null) {
+                Dot1qVlanTagPacket.Builder vlanOutsideBuilder = new Dot1qVlanTagPacket.Builder();
+                vlanOutsideBuilder.type(EtherType.DOT1Q_VLAN_TAGGED_FRAMES)
+                        .vid(vlanTags.poll().shortValue())
+                        .payloadBuilder(vlanInsideBuilder);
+                resultPayloadBuilder = vlanOutsideBuilder;
+                resulEtherType = QInQ;
+            }
+        }
+
+        return new Pair<>(resulEtherType, resultPayloadBuilder);
     }
 
     private Stream build1PktSingleBurstStream(Packet pkt) {
