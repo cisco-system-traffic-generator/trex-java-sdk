@@ -31,7 +31,7 @@ import static java.lang.Math.abs;
 public class TRexClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TRexClient.class);
-    
+
     private static String JSON_RPC_VERSION = "2.0";
 
     private static Integer API_VERSION_MAJOR = 4;
@@ -381,7 +381,6 @@ public class TRexClient {
         mul.put("type", "pps");
         mul.put("value", 1.0);
         startTraffic(portIndex, 1, true, mul, 1);
-        stopTraffic(portIndex);
     }
     synchronized public void startStreamsIntermediate(int portIndex, List<Stream> streams) {
         removeRxQueue(portIndex);
@@ -476,7 +475,7 @@ public class TRexClient {
 
         return etherBuilder.build();
     }
-    
+
     private Stream build1PktSingleBurstStream(Packet pkt) {
         int stream_id = (int) (Math.random() * 1000);
         return new Stream(
