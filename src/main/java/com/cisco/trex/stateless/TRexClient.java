@@ -425,11 +425,35 @@ public class TRexClient {
         sendPacket(portIndex, pkt);
 
         Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
-            if(etherPkt.contains(ArpPacket.class)) {
-                ArpPacket arp = (ArpPacket) etherPkt.getPayload();
+            Queue<Integer> vlanTags = new LinkedList<>(vlan.getTags());
+            Packet next_pkt = etherPkt;
+
+            boolean vlanOutsideMatches = true;
+            if (etherPkt.getHeader().getType() == QInQ) {
+                try {
+                    Dot1qVlanTagPacket QInQPkt = Dot1qVlanTagPacket.newPacket(etherPkt.getRawData(),
+                            etherPkt.getHeader().length(), etherPkt.getPayload().length());
+                    vlanOutsideMatches = QInQPkt.getHeader().getVidAsInt() == vlanTags.poll();
+
+                    next_pkt = QInQPkt.getPayload();
+                } catch (IllegalRawDataException e) {
+                    return false;
+                }
+            }
+
+            boolean vlanInsideMatches = true;
+            if(next_pkt.contains(Dot1qVlanTagPacket.class)) {
+                Dot1qVlanTagPacket dot1qVlanTagPacket = next_pkt.get(Dot1qVlanTagPacket.class);
+                vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
+            }
+
+            if(next_pkt.contains(ArpPacket.class)) {
+                ArpPacket arp = next_pkt.get(ArpPacket.class);
                 ArpOperation arpOp = arp.getHeader().getOperation();
                 String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
-                return ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+                boolean arpMatches = ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+
+                return arpMatches && vlanOutsideMatches && vlanInsideMatches;
             }
             return false;
         };
@@ -443,7 +467,7 @@ public class TRexClient {
                 Thread.sleep(500);
                 pkts.addAll(getRxQueue(portIndex, arpReplyFilter));
                 if(pkts.size() > 0) {
-                    ArpPacket arpPacket = (ArpPacket) pkts.get(0).getPayload();
+                    ArpPacket arpPacket = getArpPkt(pkts.get(0));
                     return arpPacket.getHeader().getSrcHardwareAddr().toString();
                 }
             }
@@ -452,6 +476,20 @@ public class TRexClient {
         finally {
             removeRxQueue(portIndex);
         }
+        return null;
+    }
+
+    private static ArpPacket getArpPkt(Packet pkt) {
+        if (pkt.contains(ArpPacket.class))
+            return pkt.get(ArpPacket.class);
+        try {
+            Dot1qVlanTagPacket unwrapedFromVlanPkt = Dot1qVlanTagPacket.newPacket(pkt.getRawData(),
+                    pkt.getHeader().length(), pkt.getPayload().length());
+
+            return unwrapedFromVlanPkt.get(ArpPacket.class);
+        } catch (IllegalRawDataException ignored) {
+        }
+
         return null;
     }
 
