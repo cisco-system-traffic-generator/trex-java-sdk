@@ -526,7 +526,7 @@ public class TRexClient {
     private static Pair<EtherType, Packet.Builder> buildVlan(ArpPacket.Builder arpBuilder, PortVlan vlan) {
         Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
         Packet.Builder resultPayloadBuilder = arpBuilder;
-        EtherType resulEtherType = EtherType.ARP;
+        EtherType resultEtherType = EtherType.ARP;
 
         if (vlanTags.peek() != null) {
             Dot1qVlanTagPacket.Builder vlanInsideBuilder = new Dot1qVlanTagPacket.Builder();
@@ -535,7 +535,7 @@ public class TRexClient {
                     .payloadBuilder(arpBuilder);
 
             resultPayloadBuilder = vlanInsideBuilder;
-            resulEtherType = EtherType.DOT1Q_VLAN_TAGGED_FRAMES;
+            resultEtherType = EtherType.DOT1Q_VLAN_TAGGED_FRAMES;
 
             if(vlanTags.peek() != null) {
                 Dot1qVlanTagPacket.Builder vlanOutsideBuilder = new Dot1qVlanTagPacket.Builder();
@@ -543,11 +543,11 @@ public class TRexClient {
                         .vid(vlanTags.poll().shortValue())
                         .payloadBuilder(vlanInsideBuilder);
                 resultPayloadBuilder = vlanOutsideBuilder;
-                resulEtherType = QInQ;
+                resultEtherType = QInQ;
             }
         }
 
-        return new Pair<>(resulEtherType, resultPayloadBuilder);
+        return new Pair<>(resultEtherType, resultPayloadBuilder);
     }
 
     private Stream build1PktSingleBurstStream(Packet pkt) {
