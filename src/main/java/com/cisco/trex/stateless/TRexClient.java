@@ -468,7 +468,8 @@ public class TRexClient {
                 pkts.addAll(getRxQueue(portIndex, arpReplyFilter));
                 if(pkts.size() > 0) {
                     ArpPacket arpPacket = getArpPkt(pkts.get(0));
-                    return arpPacket.getHeader().getSrcHardwareAddr().toString();
+                    if (arpPacket != null)
+                        return arpPacket.getHeader().getSrcHardwareAddr().toString();
                 }
             }
             LOGGER.info("Unable to get ARP reply in {} seconds", steps);
@@ -511,7 +512,9 @@ public class TRexClient {
             throw new IllegalArgumentException(e);
         }
 
-        Pair<EtherType, Packet.Builder> payload = buildVlan(arpBuilder, vlan);
+        Pair<EtherType, Packet.Builder> payload = new Pair<>(EtherType.ARP, arpBuilder);
+        if(vlan.getTags().size() != 0)
+             payload = buildVlan(arpBuilder, vlan);
 
         EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
         etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
