@@ -3,7 +3,6 @@ package com.cisco.trex.stateless;
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.model.*;
 import com.google.common.net.InetAddresses;
-import com.cisco.trex.stateless.model.Stream.RuleType;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.IcmpV6CommonPacket.IpV6NeighborDiscoveryOption;
 import org.pcap4j.packet.IcmpV6NeighborAdvertisementPacket.IcmpV6NeighborAdvertisementHeader;
