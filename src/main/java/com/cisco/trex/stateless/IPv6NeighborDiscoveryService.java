@@ -75,15 +75,15 @@ public class IPv6NeighborDiscoveryService {
         }
         tRexClient.removeRxQueue(portIdx);
         return icmpNAReplies.stream()
-                .map(this::toIpv6Node)
-                .distinct()
-                .filter(ipv6Node -> {
-                    if(dstIP != null) {
-                        return InetAddresses.forString(dstIP).equals(InetAddresses.forString(ipv6Node.getIp()));
-                    }
-                    return true;
-                })
-                .collect(Collectors.toMap(Ipv6Node::getIp, node -> node));
+                            .map(this::toIpv6Node)
+                            .distinct()
+                            .filter(ipv6Node -> {
+                                if(dstIP != null) {
+                                    return InetAddresses.forString(dstIP).equals(InetAddresses.forString(ipv6Node.getIp()));
+                                }
+                                return true;
+                            })
+                            .collect(Collectors.toMap(Ipv6Node::getIp, node -> node));
     }
 
     private Ipv6Node toIpv6Node(EthernetPacket ethernetPacket) {
@@ -284,17 +284,17 @@ public class IPv6NeighborDiscoveryService {
         try {
 
             IpV6NeighborDiscoveryTargetLinkLayerAddressOption tLLAddr
-                = new IpV6NeighborDiscoveryTargetLinkLayerAddressOption.Builder()
-                    .correctLengthAtBuild(true)
-                    .linkLayerAddress(hexStringToByteArray(dstMac.replace(":", "")))
-                    .build();
-
+                    = new IpV6NeighborDiscoveryTargetLinkLayerAddressOption.Builder()
+                                                                            .correctLengthAtBuild(true)
+                                                                            .linkLayerAddress(hexStringToByteArray(dstMac.replace(":", "")))
+                                                                            .build();
+            
             IcmpV6NeighborAdvertisementPacket.Builder ipv6NABuilder = new IcmpV6NeighborAdvertisementPacket.Builder();
             ipv6NABuilder.routerFlag(false)
-                    .options(Arrays.asList(tLLAddr))
-                    .solicitedFlag(true)
-                    .overrideFlag(true)
-                    .targetAddress((Inet6Address) Inet6Address.getByName(specifiedSrcIP));
+                         .options(Arrays.asList(tLLAddr))
+                         .solicitedFlag(true)
+                         .overrideFlag(true)
+                         .targetAddress((Inet6Address) Inet6Address.getByName(specifiedSrcIP));
 
             IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
             icmpCommonPktBuilder
@@ -394,15 +394,15 @@ public class IPv6NeighborDiscoveryService {
     private static MacAddress multicastMacFromIPv6(String ipV6) {
         String expandedIPv6 = expandIPv6Address(ipV6);
         List<Long> ipv6Octets = Arrays.stream(expandedIPv6.split(":"))
-                .map(octet -> Long.parseLong(octet, 16))
-                .collect(Collectors.toList());
-
+                                      .map(octet -> Long.parseLong(octet, 16))
+                                      .collect(Collectors.toList());
+        
         int lastIdx = ipv6Octets.size() - 1;
         int preLastIdx = ipv6Octets.size() - 2;
-        String macAddressStr = String.format("33:33:%02x:%02x:%02x:%02x", divMod(ipv6Octets.get(preLastIdx), 256)[0],
-                divMod(ipv6Octets.get(preLastIdx), 256)[1],
-                divMod(ipv6Octets.get(lastIdx), 256)[0],
-                divMod(ipv6Octets.get(lastIdx), 256)[1]);
+        String macAddressStr =  String.format("33:33:%02x:%02x:%02x:%02x", divMod(ipv6Octets.get(preLastIdx), 256)[0],
+                                                                          divMod(ipv6Octets.get(preLastIdx), 256)[1],
+                                                                          divMod(ipv6Octets.get(lastIdx), 256)[0],
+                                                                          divMod(ipv6Octets.get(lastIdx), 256)[1]);
         return MacAddress.getByName(macAddressStr);
     }
     
