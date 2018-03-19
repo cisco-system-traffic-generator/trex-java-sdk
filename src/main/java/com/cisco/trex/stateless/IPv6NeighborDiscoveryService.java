@@ -122,7 +122,7 @@ public class IPv6NeighborDiscoveryService {
 
     }
 
-    private Map<String, EthernetPacket> sendNSandIcmpV6Req(int portIdx, int timeDuration, String dstIp) throws ServiceModeRequiredException {
+    private Map<String, EthernetPacket> sendNSandIcmpV6Req(int portIdx, int timeDuration, String dstIp)  throws ServiceModeRequiredException {
         endTs = System.currentTimeMillis() + timeDuration * 1000;
         TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
         PortStatus portStatus = portStatusResult.get();
@@ -441,7 +441,7 @@ public class IPv6NeighborDiscoveryService {
                 String[] right = new String[rightSize];
                 System.arraycopy(addressArray, i+1, right, 0, rightSize);
                 sb.append(Arrays.stream(right).collect(Collectors.joining(":")));
-
+                
                 return sb.toString();
             }
         }
