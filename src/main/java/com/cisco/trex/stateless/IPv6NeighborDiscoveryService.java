@@ -33,8 +33,8 @@ public class IPv6NeighborDiscoveryService {
     public IPv6NeighborDiscoveryService(TRexClient tRexClient) {
         this.tRexClient = tRexClient;
     }
-
-    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIP, String srcIP) throws ServiceModeRequiredException {
+    
+    public Map<String, Ipv6Node> scan(int portIdx, int timeDuration, String dstIP, String srcIP)  throws ServiceModeRequiredException {
         String broadcastIP = "ff02::1";
 
         long endTs = System.currentTimeMillis() + timeDuration/2 * 1000;
@@ -67,7 +67,7 @@ public class IPv6NeighborDiscoveryService {
         tRexClient.startStreamsIntermediate(portIdx, nsNaStreams);
 
         List<EthernetPacket> icmpNAReplies = new ArrayList<>();
-
+        
         Predicate<EthernetPacket> ipV6NAPktFilter = etherPkt -> etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class);
         endTs = System.currentTimeMillis() + timeDuration/2 * 1000;
         while (endTs > System.currentTimeMillis()) {
@@ -93,8 +93,8 @@ public class IPv6NeighborDiscoveryService {
         String nodeMac = ethernetPacket.getHeader().getSrcAddr().toString();
         return new Ipv6Node(nodeMac, nodeIp, isRouter);
     }
-
-    public EthernetPacket sendIcmpV6Echo(int portIdx, String dstIp, int icmpId, int icmpSeq, int timeOut) throws ServiceModeRequiredException {
+    
+    public EthernetPacket sendIcmpV6Echo(int portIdx, String dstIp,  int icmpId, int icmpSeq, int timeOut)  throws ServiceModeRequiredException {
         Map<String, EthernetPacket> stringEthernetPacketMap = sendNSandIcmpV6Req(portIdx, timeOut, dstIp);
 
         Optional<Map.Entry<String, EthernetPacket>> icmpMulticastResponse = stringEthernetPacketMap.entrySet()
@@ -102,7 +102,7 @@ public class IPv6NeighborDiscoveryService {
                 .findFirst();
 
         EthernetPacket icmpUnicastReply = null;
-
+        
         if (icmpMulticastResponse.isPresent()) {
             EthernetPacket etherPkt = icmpMulticastResponse.get().getValue();
             String nodeMac = etherPkt.getHeader().getSrcAddr().toString();
@@ -110,7 +110,7 @@ public class IPv6NeighborDiscoveryService {
             tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(pingPkt)));
             long endTs = System.currentTimeMillis() + timeOut * 1000/2;
 
-            while (endTs > System.currentTimeMillis()) {
+            while(endTs > System.currentTimeMillis()) {
                 List<EthernetPacket> rxQueue = tRexClient.getRxQueue(portIdx, pkt -> pkt.contains(IcmpV6EchoReplyPacket.class));
                 if (rxQueue.size() > 0) {
                     icmpUnicastReply = rxQueue.get(0);
@@ -126,9 +126,9 @@ public class IPv6NeighborDiscoveryService {
         endTs = System.currentTimeMillis() + timeDuration * 1000;
         TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
         PortStatus portStatus = portStatusResult.get();
-
+        
         srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
-
+        
         Packet pingPkt = buildICMPV6EchoReq(null, srcMac, null, dstIp);
         Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp, null);
 
@@ -137,7 +137,7 @@ public class IPv6NeighborDiscoveryService {
         tRexClient.startStreamsIntermediate(portIdx, stlStreams);
 
         Map<String, EthernetPacket> naIncomingRequests = new HashMap<>();
-
+        
         Predicate<EthernetPacket> ipV6NAPktFilter = etherPkt -> {
             if (!etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class)) {
                 return false;
@@ -156,7 +156,7 @@ public class IPv6NeighborDiscoveryService {
             } catch (UnknownHostException ignored) {}
             return false;
         };
-
+        
         while (endTs > System.currentTimeMillis()) {
             tRexClient.getRxQueue(portIdx, ipV6NAPktFilter).forEach(pkt -> {
                 IcmpV6NeighborAdvertisementHeader icmpV6NaHdr = pkt.get(IcmpV6NeighborAdvertisementPacket.class).getHeader();
@@ -182,7 +182,8 @@ public class IPv6NeighborDiscoveryService {
                         5,
                         1.0,
                         new StreamModeRate(StreamModeRate.Type.percentage, 100.0),
-                        StreamMode.Type.single_burst),
+                        StreamMode.Type.single_burst
+                ),
                 -1,
                 pkt,
                 new StreamRxStats(false, false, true, stream_id),
@@ -191,12 +192,12 @@ public class IPv6NeighborDiscoveryService {
                 false,
                 null);
     }
-
+    
     private Packet buildICMPV6NSPkt(String dstMac, String dstIp, String srcIp) {
         EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
         try {
 
-            IpV6NeighborDiscoverySourceLinkLayerAddressOption sourceLLAddr 
+            IpV6NeighborDiscoverySourceLinkLayerAddressOption sourceLLAddr
                     = new IpV6NeighborDiscoverySourceLinkLayerAddressOption.Builder()
                     .correctLengthAtBuild(true)
                     .linkLayerAddress(hexStringToByteArray(srcMac.replace(":", "")))
@@ -206,7 +207,7 @@ public class IPv6NeighborDiscoveryService {
             ipv6NSBuilder
                     .options(Arrays.asList(sourceLLAddr))
                     .targetAddress((Inet6Address) Inet6Address.getByName(dstIp));
-
+            
             final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMac);
 
             IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
@@ -249,7 +250,7 @@ public class IPv6NeighborDiscoveryService {
         }
         return null;
     }
-
+    
     /**
      *   IPv6 Neighbor Discovery Source Link Layer Address header
      *
@@ -266,7 +267,7 @@ public class IPv6NeighborDiscoveryService {
         final int LENGTH_SIZE = BYTE_SIZE_IN_BYTES;
         final int LINK_LAYER_ADDRESS_OFFSET = LENGTH_OFFSET + LENGTH_SIZE;
         final int LINK_LAYER_ADDRESS_LENGTH = 6; // MAC address
-
+        
         IcmpV6NeighborSolicitationPacket nsPkt = pkt.get(IcmpV6NeighborSolicitationPacket.class);
 
         IpV6NeighborDiscoveryOption linkLayerAddressOption = nsPkt.getHeader().getOptions().get(0);
@@ -277,12 +278,12 @@ public class IPv6NeighborDiscoveryService {
     }
 
     private Packet buildICMPV6NAPkt(String dstMac, String dstIp, String srcIP) {
-        final String specifiedSrcIP = srcIP != null ? srcIP : generateIPv6AddrFromMAC(srcMac);
+        final String specifiedSrcIP = srcIP != null ? srcIP :  generateIPv6AddrFromMAC(srcMac);
 
         EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
         try {
 
-            IpV6NeighborDiscoveryTargetLinkLayerAddressOption tLLAddr 
+            IpV6NeighborDiscoveryTargetLinkLayerAddressOption tLLAddr
                 = new IpV6NeighborDiscoveryTargetLinkLayerAddressOption.Builder()
                     .correctLengthAtBuild(true)
                     .linkLayerAddress(hexStringToByteArray(dstMac.replace(":", "")))
@@ -336,7 +337,7 @@ public class IPv6NeighborDiscoveryService {
         }
         return data;
     }
-
+    
     public static EthernetPacket buildICMPV6EchoReq(String srcIp, String srcMacString, String dstMacString, String dstIp, int icmpId, int icmpSeq) {
         final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMacString);
 
@@ -372,7 +373,7 @@ public class IPv6NeighborDiscoveryService {
             } else {
                 dstMac = dstIp == null ? MacAddress.getByName("33:33:00:00:00:01") : multicastMacFromIPv6(dstIp);
             }
-
+            
             EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
             ethBuilder
                     .type(EtherType.IPV6)
@@ -385,7 +386,7 @@ public class IPv6NeighborDiscoveryService {
         } catch (UnknownHostException ignore) {}
         return null;
     }
-
+    
     public static EthernetPacket buildICMPV6EchoReq(String srcIp, String srcMacString, String dstMacString, String dstIp) {
         return buildICMPV6EchoReq(srcIp, srcMacString, dstMacString, dstIp, 0, 0);
     }
@@ -404,16 +405,16 @@ public class IPv6NeighborDiscoveryService {
                 divMod(ipv6Octets.get(lastIdx), 256)[1]);
         return MacAddress.getByName(macAddressStr);
     }
-
+    
     private static long[] divMod(long a, long b) {
         long result[] = new long[2];
-
+        
         result[1] = a % b;
         result[0] = (a - result[1])/b;
-
+        
         return result;
     }
-
+    
     private static String expandIPv6Address(String shortAddress) {
         String[] addressArray = shortAddress.split(":");
         if (shortAddress.startsWith(":")) {
@@ -421,21 +422,21 @@ public class IPv6NeighborDiscoveryService {
         } else if(shortAddress.endsWith(":")) {
             addressArray[addressArray.length - 1] = "0";
         }
-
+        
         for(int i = 0; i< addressArray.length; i++) {
             if (addressArray[i] == null || addressArray[i].isEmpty()) {
                 StringBuilder sb = new StringBuilder();
-
+                
                 int leftSize = i +1;
                 String[] left = new String[i+1];
                 System.arraycopy(addressArray, 0, left, 0, leftSize);
-
+                
                 sb.append(Arrays.stream(left).collect(Collectors.joining(":")));
 
                 String[] expanded = Stream.generate(() -> "0").limit(9-addressArray.length).toArray(String[]::new);
                 sb.append(Arrays.stream(expanded).collect(Collectors.joining(":")));
                 sb.append(":");
-
+                
                 int rightSize = addressArray.length - i - 1;
                 String[] right = new String[rightSize];
                 System.arraycopy(addressArray, i+1, right, 0, rightSize);
@@ -451,6 +452,6 @@ public class IPv6NeighborDiscoveryService {
         String prefix = "fe80";
         String[] macOctets = mac.split(":");
         macOctets[0] = String.valueOf(Integer.parseInt(macOctets[0], 16) ^ 2);
-        return String.format("%s::%s%s:%sff:fe%s:%s%s", prefix, macOctets[0], macOctets[1], macOctets[2], macOctets[3], macOctets[4], macOctets[5]);
+        return String.format("%s::%s%s:%sff:fe%s:%s%s", prefix, macOctets[0],macOctets[1],macOctets[2],macOctets[3],macOctets[4],macOctets[5]);
     }
 }
