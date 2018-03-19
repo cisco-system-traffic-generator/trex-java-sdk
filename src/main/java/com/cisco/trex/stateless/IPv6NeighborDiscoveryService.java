@@ -285,9 +285,9 @@ public class IPv6NeighborDiscoveryService {
 
             IpV6NeighborDiscoveryTargetLinkLayerAddressOption tLLAddr
                     = new IpV6NeighborDiscoveryTargetLinkLayerAddressOption.Builder()
-                                                                            .correctLengthAtBuild(true)
-                                                                            .linkLayerAddress(hexStringToByteArray(dstMac.replace(":", "")))
-                                                                            .build();
+                                                                           .correctLengthAtBuild(true)
+                                                                           .linkLayerAddress(hexStringToByteArray(dstMac.replace(":", "")))
+                                                                           .build();
             
             IcmpV6NeighborAdvertisementPacket.Builder ipv6NABuilder = new IcmpV6NeighborAdvertisementPacket.Builder();
             ipv6NABuilder.routerFlag(false)
@@ -400,9 +400,9 @@ public class IPv6NeighborDiscoveryService {
         int lastIdx = ipv6Octets.size() - 1;
         int preLastIdx = ipv6Octets.size() - 2;
         String macAddressStr =  String.format("33:33:%02x:%02x:%02x:%02x", divMod(ipv6Octets.get(preLastIdx), 256)[0],
-                                                                          divMod(ipv6Octets.get(preLastIdx), 256)[1],
-                                                                          divMod(ipv6Octets.get(lastIdx), 256)[0],
-                                                                          divMod(ipv6Octets.get(lastIdx), 256)[1]);
+                                                                           divMod(ipv6Octets.get(preLastIdx), 256)[1],
+                                                                           divMod(ipv6Octets.get(lastIdx), 256)[0],
+                                                                           divMod(ipv6Octets.get(lastIdx), 256)[1]);
         return MacAddress.getByName(macAddressStr);
     }
     
