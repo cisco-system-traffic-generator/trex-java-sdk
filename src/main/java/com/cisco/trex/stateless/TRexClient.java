@@ -7,8 +7,11 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
+import com.cisco.trex.stateless.model.port.PortVlan;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.gson.*;
+import javafx.util.Pair;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
@@ -31,7 +34,9 @@ import static java.lang.Math.abs;
 public class TRexClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TRexClient.class);
-    
+
+    private static final EtherType QInQ = new EtherType((short)0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
+
     private static String JSON_RPC_VERSION = "2.0";
 
     private static Integer API_VERSION_MAJOR = 4;
@@ -63,6 +68,7 @@ public class TRexClient {
         this.userName = userName;
         supportedCmds.add("api_sync");
         supportedCmds.add("get_supported_cmds");
+        EtherType.register(QInQ);
     }
     
     public String callMethod(String methodName, Map<String, Object> payload) {
@@ -381,7 +387,6 @@ public class TRexClient {
         mul.put("type", "pps");
         mul.put("value", 1.0);
         startTraffic(portIndex, 1, true, mul, 1);
-        stopTraffic(portIndex);
     }
     synchronized public void startStreamsIntermediate(int portIndex, List<Stream> streams) {
         removeRxQueue(portIndex);
@@ -415,15 +420,40 @@ public class TRexClient {
         setRxQueue(portIndex, 1000);
 
         String srcMac = getPorts().get(portIndex).hw_mac;
-        EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp);
+	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+        EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
 
         Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
-            if(etherPkt.contains(ArpPacket.class)) {
-                ArpPacket arp = (ArpPacket) etherPkt.getPayload();
+            Queue<Integer> vlanTags = new LinkedList<>(vlan.getTags());
+            Packet next_pkt = etherPkt;
+
+            boolean vlanOutsideMatches = true;
+            if (etherPkt.getHeader().getType() == QInQ) {
+                try {
+                    Dot1qVlanTagPacket QInQPkt = Dot1qVlanTagPacket.newPacket(etherPkt.getRawData(),
+                            etherPkt.getHeader().length(), etherPkt.getPayload().length());
+                    vlanOutsideMatches = QInQPkt.getHeader().getVidAsInt() == vlanTags.poll();
+
+                    next_pkt = QInQPkt.getPayload();
+                } catch (IllegalRawDataException e) {
+                    return false;
+                }
+            }
+
+            boolean vlanInsideMatches = true;
+            if(next_pkt.contains(Dot1qVlanTagPacket.class)) {
+                Dot1qVlanTagPacket dot1qVlanTagPacket = next_pkt.get(Dot1qVlanTagPacket.class);
+                vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
+            }
+
+            if(next_pkt.contains(ArpPacket.class)) {
+                ArpPacket arp = next_pkt.get(ArpPacket.class);
                 ArpOperation arpOp = arp.getHeader().getOperation();
                 String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
-                return ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+                boolean arpMatches = ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+
+                return arpMatches && vlanOutsideMatches && vlanInsideMatches;
             }
             return false;
         };
@@ -437,8 +467,9 @@ public class TRexClient {
                 Thread.sleep(500);
                 pkts.addAll(getRxQueue(portIndex, arpReplyFilter));
                 if(pkts.size() > 0) {
-                    ArpPacket arpPacket = (ArpPacket) pkts.get(0).getPayload();
-                    return arpPacket.getHeader().getSrcHardwareAddr().toString();
+                    ArpPacket arpPacket = getArpPkt(pkts.get(0));
+                    if (arpPacket != null)
+                        return arpPacket.getHeader().getSrcHardwareAddr().toString();
                 }
             }
             LOGGER.info("Unable to get ARP reply in {} seconds", steps);
@@ -449,7 +480,21 @@ public class TRexClient {
         return null;
     }
 
-    private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp) {
+    private static ArpPacket getArpPkt(Packet pkt) {
+        if (pkt.contains(ArpPacket.class))
+            return pkt.get(ArpPacket.class);
+        try {
+            Dot1qVlanTagPacket unwrapedFromVlanPkt = Dot1qVlanTagPacket.newPacket(pkt.getRawData(),
+                    pkt.getHeader().length(), pkt.getPayload().length());
+
+            return unwrapedFromVlanPkt.get(ArpPacket.class);
+        } catch (IllegalRawDataException ignored) {
+        }
+
+        return null;
+    }
+
+    private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp, PortVlan vlan) {
         ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
         MacAddress srcMacAddress = MacAddress.getByName(srcMac);
         try {
@@ -467,16 +512,47 @@ public class TRexClient {
             throw new IllegalArgumentException(e);
         }
 
+        Pair<EtherType, Packet.Builder> payload = new Pair<>(EtherType.ARP, arpBuilder);
+        if(vlan.getTags().size() != 0)
+             payload = buildVlan(arpBuilder, vlan);
+
         EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
         etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
                 .srcAddr(srcMacAddress)
-                .type(EtherType.ARP)
-                .payloadBuilder(arpBuilder)
+                .type(payload.getKey())
+                .payloadBuilder(payload.getValue())
                 .paddingAtBuild(true);
 
         return etherBuilder.build();
     }
-    
+
+    private static Pair<EtherType, Packet.Builder> buildVlan(ArpPacket.Builder arpBuilder, PortVlan vlan) {
+        Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
+        Packet.Builder resultPayloadBuilder = arpBuilder;
+        EtherType resultEtherType = EtherType.ARP;
+
+        if (vlanTags.peek() != null) {
+            Dot1qVlanTagPacket.Builder vlanInsideBuilder = new Dot1qVlanTagPacket.Builder();
+            vlanInsideBuilder.type(EtherType.ARP)
+                    .vid(vlanTags.poll().shortValue())
+                    .payloadBuilder(arpBuilder);
+
+            resultPayloadBuilder = vlanInsideBuilder;
+            resultEtherType = EtherType.DOT1Q_VLAN_TAGGED_FRAMES;
+
+            if(vlanTags.peek() != null) {
+                Dot1qVlanTagPacket.Builder vlanOutsideBuilder = new Dot1qVlanTagPacket.Builder();
+                vlanOutsideBuilder.type(EtherType.DOT1Q_VLAN_TAGGED_FRAMES)
+                        .vid(vlanTags.poll().shortValue())
+                        .payloadBuilder(vlanInsideBuilder);
+                resultPayloadBuilder = vlanOutsideBuilder;
+                resultEtherType = QInQ;
+            }
+        }
+
+        return new Pair<>(resultEtherType, resultPayloadBuilder);
+    }
+
     private Stream build1PktSingleBurstStream(Packet pkt) {
         int stream_id = (int) (Math.random() * 1000);
         return new Stream(
