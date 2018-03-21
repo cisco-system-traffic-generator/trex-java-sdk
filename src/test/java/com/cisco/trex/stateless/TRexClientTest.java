@@ -30,7 +30,7 @@ import static java.lang.Thread.sleep;
 
 public class TRexClientTest {
     public static final String CLIENT_USER = "unit-tests-user";
-    private static final Packet SIMPLE_PACKET = buildArpPkt();
+    private static final Packet SIMPLE_PACKET = buildArpPkt("00:50:56:94:21:df");
     private static final Integer STREAM_ID = 100500;
     public static TRexClient client;
 
@@ -272,7 +272,7 @@ public class TRexClientTest {
         client.removeRxQueue(port.getIndex());
         client.setRxQueue(port.getIndex(), 5);
             
-        EthernetPacket pkt = buildArpPkt();
+        Packet pkt = SIMPLE_PACKET;
         client.sendPacket(port.getIndex(), pkt);
 
         Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
@@ -320,9 +320,9 @@ public class TRexClientTest {
     private TRexClientResult<CaptureMonitor> startMonitor() {
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        return client.captureMonitorStart(rxPorts, txPorts);
+        return client.captureMonitorStart(rxPorts, txPorts, "");
     }
-    
+
     @Test
     public void startRecorderTest() {
         List<Port> ports = client.getPorts();
@@ -335,7 +335,7 @@ public class TRexClientTest {
         
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 100);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 100);
         
         Assert.assertFalse(result.isFailed());
 
@@ -380,7 +380,7 @@ public class TRexClientTest {
 
         List<Integer> rxPorts = Arrays.asList(0);
         List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, 1000);
+        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 1000);
         
         CaptureMonitor recordMonitor = result.get();
 
@@ -409,7 +409,7 @@ public class TRexClientTest {
         client.serviceMode(ports.get(1).getIndex(), true);
         
         List<Integer> rxPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>());
+        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>(), "");
         sleep(3000);
         TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
         
@@ -419,7 +419,7 @@ public class TRexClientTest {
         Assert.assertTrue(capturedPkts.getPkts().size() > 0);
         
     }
-    
+
     @Test
     public void iPV6ScanTest() {
         List<Port> ports = client.getPorts();
@@ -480,7 +480,7 @@ public class TRexClientTest {
         client.disconnect();
     }
 
-    private Stream buildStream(Packet pkt) {
+    public static Stream buildStream(Packet pkt) {
         return new Stream(
                 (int) (Math.random() * 1000),
                 true,
@@ -495,7 +495,7 @@ public class TRexClientTest {
         );
     }
 
-    private StreamMode createStreamMode() {
+    private static StreamMode createStreamMode() {
         return new StreamMode(
                 10000,
                 200,
@@ -509,9 +509,9 @@ public class TRexClientTest {
         );
     }
 
-    private static EthernetPacket buildArpPkt() {
+    public static EthernetPacket buildArpPkt(String srcMacStr) {
         ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
-        MacAddress srcMac = MacAddress.getByName("00:50:56:94:21:df");
+        MacAddress srcMac = MacAddress.getByName(srcMacStr);
         try {
             String strSrcIpAddress = "192.168.9.27";
             String strDstIpAddress = "192.168.9.28";
