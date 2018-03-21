@@ -6,59 +6,59 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RPCResponse {
-    @JsonProperty("id")
-    private String id;
-    
-    @JsonProperty("jsonrpc")
-    private String jsonrpc;
-    
-    @JsonProperty("result")
-    private String result;
-    
-    @JsonProperty("error")
-    private RPCResponseError error;
+  @JsonProperty("id")
+  private String id;
 
-    @JsonProperty("id")
-    public String getId() {
-        return id;
-    }
+  @JsonProperty("jsonrpc")
+  private String jsonrpc;
 
-    @JsonProperty("id")
-    public void setId(final String id) {
-        this.id = id;
-    }
+  @JsonProperty("result")
+  private String result;
 
-    @JsonProperty("jsonrpc")
-    public String getJsonrpc() {
-        return jsonrpc;
-    }
+  @JsonProperty("error")
+  private RPCResponseError error;
 
-    @JsonProperty("jsonrpc")
-    public void setJsonrpc(final String jsonrpc) {
-        this.jsonrpc = jsonrpc;
-    }
+  @JsonProperty("id")
+  public String getId() {
+    return id;
+  }
 
-    @JsonProperty("result")
-    public String getResult() {
-        return result;
-    }
+  @JsonProperty("id")
+  public void setId(final String id) {
+    this.id = id;
+  }
 
-    @JsonProperty("result")
-    public void setResult(final JsonNode result) {
-        this.result = result.toString();
-    }
+  @JsonProperty("jsonrpc")
+  public String getJsonrpc() {
+    return jsonrpc;
+  }
 
-    @JsonProperty("error")
-    public RPCResponseError getError() {
-        return error;
-    }
+  @JsonProperty("jsonrpc")
+  public void setJsonrpc(final String jsonrpc) {
+    this.jsonrpc = jsonrpc;
+  }
 
-    @JsonProperty("error")
-    public void setError(RPCResponseError error) {
-        this.error = error;
-    }
+  @JsonProperty("result")
+  public String getResult() {
+    return result;
+  }
 
-    public boolean isFailed() {
-        return error != null;
-    }
+  @JsonProperty("result")
+  public void setResult(final JsonNode result) {
+    this.result = result.toString();
+  }
+
+  @JsonProperty("error")
+  public RPCResponseError getError() {
+    return error;
+  }
+
+  @JsonProperty("error")
+  public void setError(RPCResponseError error) {
+    this.error = error;
+  }
+
+  public boolean isFailed() {
+    return error != null;
+  }
 }

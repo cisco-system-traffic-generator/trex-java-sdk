@@ -2,71 +2,73 @@ package com.cisco.trex.stateless.model.stats;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.HashMap;
 import java.util.Map;
 
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatencyStatLat {
-    @JsonProperty("average")
-    private double average = 0;
-    @JsonProperty("histogram")
-    private Map<String, Long> histogram = new HashMap<>();
-    @JsonProperty("jit")
-    private long jit = 0;
-    @JsonProperty("last_max")
-    private long lastMax = 0;
-    @JsonProperty("total_max")
-    private long totalMax = 0;
+  @JsonProperty("average")
+  private double average = 0;
 
-    @JsonProperty("average")
-    public double getAverage() {
-        return average;
-    }
+  @JsonProperty("histogram")
+  private Map<String, Long> histogram = new HashMap<>();
 
-    @JsonProperty("average")
-    public void setAverage(final double average) {
-        this.average = average;
-    }
+  @JsonProperty("jit")
+  private long jit = 0;
 
-    @JsonProperty("histogram")
-    public Map<String, Long> getHistogram() {
-        return histogram;
-    }
+  @JsonProperty("last_max")
+  private long lastMax = 0;
 
-    @JsonProperty("histogram")
-    public void setHistogram(final Map<String, Long> histogram) {
-        this.histogram = histogram;
-    }
+  @JsonProperty("total_max")
+  private long totalMax = 0;
 
-    @JsonProperty("jit")
-    public long getJit() {
-        return jit;
-    }
+  @JsonProperty("average")
+  public double getAverage() {
+    return average;
+  }
 
-    @JsonProperty("jit")
-    public void setJit(final long jit) {
-        this.jit = jit;
-    }
+  @JsonProperty("average")
+  public void setAverage(final double average) {
+    this.average = average;
+  }
 
-    @JsonProperty("last_max")
-    public long getLastMax() {
-        return lastMax;
-    }
+  @JsonProperty("histogram")
+  public Map<String, Long> getHistogram() {
+    return histogram;
+  }
 
-    @JsonProperty("last_max")
-    public void setLastMax(final long lastMax) {
-        this.lastMax = lastMax;
-    }
+  @JsonProperty("histogram")
+  public void setHistogram(final Map<String, Long> histogram) {
+    this.histogram = histogram;
+  }
 
-    @JsonProperty("total_max")
-    public long getTotalMax() {
-        return totalMax;
-    }
+  @JsonProperty("jit")
+  public long getJit() {
+    return jit;
+  }
 
-    @JsonProperty("total_max")
-    public void setTotalMax(final long totalMax) {
-        this.totalMax = totalMax;
-    }
+  @JsonProperty("jit")
+  public void setJit(final long jit) {
+    this.jit = jit;
+  }
+
+  @JsonProperty("last_max")
+  public long getLastMax() {
+    return lastMax;
+  }
+
+  @JsonProperty("last_max")
+  public void setLastMax(final long lastMax) {
+    this.lastMax = lastMax;
+  }
+
+  @JsonProperty("total_max")
+  public long getTotalMax() {
+    return totalMax;
+  }
+
+  @JsonProperty("total_max")
+  public void setTotalMax(final long totalMax) {
+    this.totalMax = totalMax;
+  }
 }
