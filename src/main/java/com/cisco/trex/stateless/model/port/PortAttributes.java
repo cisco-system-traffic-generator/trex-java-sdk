@@ -6,107 +6,107 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortAttributes {
-    @JsonProperty("fc")
-    private PortFCAttribute flowControl;
+  @JsonProperty("fc")
+  private PortFCAttribute flowControl;
 
-    @JsonProperty("layer_cfg")
-    private LayerConfigurationMode layerConiguration;
+  @JsonProperty("layer_cfg")
+  private LayerConfigurationMode layerConiguration;
 
-    @JsonProperty("link")
-    private PortLinkAttribute link;
+  @JsonProperty("link")
+  private PortLinkAttribute link;
 
-    @JsonProperty("promiscuous")
-    private PortPromiscuousAttribute promiscuous;
+  @JsonProperty("promiscuous")
+  private PortPromiscuousAttribute promiscuous;
 
-    @JsonProperty("multicast")
-    private PortMulticastAttribute multicast;
+  @JsonProperty("multicast")
+  private PortMulticastAttribute multicast;
 
-    @JsonProperty("rx_filter_mode")
-    private String rxFilterMode;
+  @JsonProperty("rx_filter_mode")
+  private String rxFilterMode;
 
-    @JsonProperty("speed")
-    private int speed;
-    
-    @JsonProperty("vlan")
-    private PortVlan vlan;
+  @JsonProperty("speed")
+  private int speed;
 
-    @JsonProperty("fc")
-    public PortFCAttribute getFlowControl() {
-        return flowControl;
-    }
+  @JsonProperty("vlan")
+  private PortVlan vlan;
 
-    @JsonProperty("fc")
-    public void setFlowControl(PortFCAttribute flowControl) {
-        this.flowControl = flowControl;
-    }
+  @JsonProperty("fc")
+  public PortFCAttribute getFlowControl() {
+    return flowControl;
+  }
 
-    @JsonProperty("layer_cfg")
-    public LayerConfigurationMode getLayerConiguration() {
-        return layerConiguration;
-    }
+  @JsonProperty("fc")
+  public void setFlowControl(PortFCAttribute flowControl) {
+    this.flowControl = flowControl;
+  }
 
-    @JsonProperty("layer_cfg")
-    public void setLayerConiguration(LayerConfigurationMode layerConiguration) {
-        this.layerConiguration = layerConiguration;
-    }
+  @JsonProperty("layer_cfg")
+  public LayerConfigurationMode getLayerConiguration() {
+    return layerConiguration;
+  }
 
-    @JsonProperty("link")
-    public PortLinkAttribute getLink() {
-        return link;
-    }
+  @JsonProperty("layer_cfg")
+  public void setLayerConiguration(LayerConfigurationMode layerConiguration) {
+    this.layerConiguration = layerConiguration;
+  }
 
-    @JsonProperty("link")
-    public void setLink(PortLinkAttribute link) {
-        this.link = link;
-    }
+  @JsonProperty("link")
+  public PortLinkAttribute getLink() {
+    return link;
+  }
 
-    @JsonProperty("promiscuous")
-    public PortPromiscuousAttribute getPromiscuous() {
-        return promiscuous;
-    }
+  @JsonProperty("link")
+  public void setLink(PortLinkAttribute link) {
+    this.link = link;
+  }
 
-    @JsonProperty("promiscuous")
-    public void setPromiscuous(PortPromiscuousAttribute promiscuous) {
-        this.promiscuous = promiscuous;
-    }
+  @JsonProperty("promiscuous")
+  public PortPromiscuousAttribute getPromiscuous() {
+    return promiscuous;
+  }
 
-    @JsonProperty("multicast")
-    public PortMulticastAttribute getMulticast() {
-        return multicast;
-    }
+  @JsonProperty("promiscuous")
+  public void setPromiscuous(PortPromiscuousAttribute promiscuous) {
+    this.promiscuous = promiscuous;
+  }
 
-    @JsonProperty("multicast")
-    public void setMulticast(PortMulticastAttribute multicast) {
-        this.multicast = multicast;
-    }
+  @JsonProperty("multicast")
+  public PortMulticastAttribute getMulticast() {
+    return multicast;
+  }
 
-    @JsonProperty("rx_filter_mode")
-    public String getRxFilterMode() {
-        return rxFilterMode;
-    }
+  @JsonProperty("multicast")
+  public void setMulticast(PortMulticastAttribute multicast) {
+    this.multicast = multicast;
+  }
 
-    @JsonProperty("rx_filter_mode")
-    public void setRxFilterMode(String rxFilterMode) {
-        this.rxFilterMode = rxFilterMode;
-    }
+  @JsonProperty("rx_filter_mode")
+  public String getRxFilterMode() {
+    return rxFilterMode;
+  }
 
-    @JsonProperty("speed")
-    public int getSpeed() {
-        return speed;
-    }
+  @JsonProperty("rx_filter_mode")
+  public void setRxFilterMode(String rxFilterMode) {
+    this.rxFilterMode = rxFilterMode;
+  }
 
-    @JsonProperty("speed")
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-    
-    @JsonProperty("vlan")
-    public PortVlan getVlan() {
-        return vlan;
-    }
+  @JsonProperty("speed")
+  public int getSpeed() {
+    return speed;
+  }
 
-    @JsonProperty("vlan")
-    public void setVlan(PortVlan vlan) {
-        this.vlan = vlan;
-    }
+  @JsonProperty("speed")
+  public void setSpeed(int speed) {
+    this.speed = speed;
+  }
+
+  @JsonProperty("vlan")
+  public PortVlan getVlan() {
+    return vlan;
+  }
+
+  @JsonProperty("vlan")
+  public void setVlan(PortVlan vlan) {
+    this.vlan = vlan;
+  }
 }

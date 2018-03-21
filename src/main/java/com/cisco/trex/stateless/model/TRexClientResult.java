@@ -1,28 +1,27 @@
 package com.cisco.trex.stateless.model;
 
-
 public class TRexClientResult<T> {
-    private String error;
-    
-    private T resultObj;
+  private String error;
 
-    public String getError() {
-        return error;
-    }
+  private T resultObj;
 
-    public void setError(String error) {
-        this.error = error;
-    }
+  public String getError() {
+    return error;
+  }
 
-    public T get() {
-        return resultObj;
-    }
+  public void setError(String error) {
+    this.error = error;
+  }
 
-    public void set(T resultObj) {
-        this.resultObj = resultObj;
-    }
+  public T get() {
+    return resultObj;
+  }
 
-    public boolean isFailed() {
-        return error != null;
-    }
+  public void set(T resultObj) {
+    this.resultObj = resultObj;
+  }
+
+  public boolean isFailed() {
+    return error != null;
+  }
 }

@@ -1,15 +1,16 @@
 package com.cisco.trex.stateless.model.capture;
 
 public enum CaptureActions {
-    START("start"), STOP("stop");
-    
-    private String command;
+  START("start"),
+  STOP("stop");
 
-    CaptureActions(String command) {
-        this.command = command;
-    }
-    
-    public String getCommand() {
-        return command;
-    }
+  private String command;
+
+  CaptureActions(String command) {
+    this.command = command;
+  }
+
+  public String getCommand() {
+    return command;
+  }
 }
