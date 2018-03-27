@@ -187,8 +187,9 @@ public class IPv6NeighborDiscoveryService {
                 pkt,
                 new StreamRxStats(false, false, true, stream_id),
                 new StreamVM("", Collections.emptyList()),
-                true
-        );
+                true,
+                false,
+                null);
     }
     
     private Packet buildICMPV6NSPkt(String dstMac, String dstIp, String srcIp) {

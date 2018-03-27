@@ -491,7 +491,9 @@ public class TRexClientTest {
                 pkt,
                 new StreamRxStats(true, true, true, STREAM_ID),
                 new StreamVM("", Collections.<VMInstruction>emptyList()),
-                true
+                true,
+                false,
+                null
         );
     }
 
