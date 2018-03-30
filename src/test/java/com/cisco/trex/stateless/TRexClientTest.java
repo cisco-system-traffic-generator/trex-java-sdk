@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
 
@@ -295,15 +296,14 @@ public class TRexClientTest {
     public void getCapturesTest() {
         List<Port> ports = client.getPorts();
 
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
-
-        client.acquirePort(ports.get(1).getIndex(), true);
-        client.serviceMode(ports.get(1).getIndex(), true);
+        for(Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
 
         client.removeAllCaptures();
         
-        TRexClientResult<CaptureMonitor> result = startMonitor();
+        TRexClientResult<CaptureMonitor> result = startMonitor(ports);
         Assert.assertFalse(result.isFailed());
 
         CaptureMonitor monitor = result.get();
@@ -317,9 +317,12 @@ public class TRexClientTest {
         Assert.assertTrue(monitorInfoResult.isPresent());
     }
     
-    private TRexClientResult<CaptureMonitor> startMonitor() {
-        List<Integer> rxPorts = Arrays.asList(0);
-        List<Integer> txPorts = Arrays.asList(0, 1);
+    private TRexClientResult<CaptureMonitor> startMonitor(List<Port> portList) {
+        List<Integer> rxPorts = new LinkedList<Integer>();
+        if (portList.size()>0) {
+            rxPorts.add(portList.get(0).getIndex());
+        }
+        List<Integer> txPorts = portList.stream().map(Port::getIndex).collect(Collectors.toList());
         return client.captureMonitorStart(rxPorts, txPorts, "");
     }
 
@@ -327,15 +330,12 @@ public class TRexClientTest {
     public void startRecorderTest() {
         List<Port> ports = client.getPorts();
 
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
+        for(Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
 
-        client.acquirePort(ports.get(1).getIndex(), true);
-        client.serviceMode(ports.get(1).getIndex(), true);
-        
-        List<Integer> rxPorts = Arrays.asList(0);
-        List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 100);
+        TRexClientResult<CaptureMonitor> result = startMonitor(ports);
         
         Assert.assertFalse(result.isFailed());
 
@@ -375,12 +375,12 @@ public class TRexClientTest {
     public void captureRecordStopTest() {
         List<Port> ports = client.getPorts();
 
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
+        for(Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
 
-        List<Integer> rxPorts = Arrays.asList(0);
-        List<Integer> txPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureRecorderStart(rxPorts, txPorts, "", 1000);
+        TRexClientResult<CaptureMonitor> result = startMonitor(client.getPorts());
         
         CaptureMonitor recordMonitor = result.get();
 
@@ -403,14 +403,25 @@ public class TRexClientTest {
     public void fetchCapturedPKtsTest() throws InterruptedException {
         List<Port> ports = client.getPorts();
 
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
-        client.acquirePort(ports.get(1).getIndex(), true);
-        client.serviceMode(ports.get(1).getIndex(), true);
-        
-        List<Integer> rxPorts = Arrays.asList(0, 1);
-        TRexClientResult<CaptureMonitor> result = client.captureMonitorStart(rxPorts, new ArrayList<>(), "");
+        for (Port port: ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
+
+        Stream s = buildStream(SIMPLE_PACKET);
+        client.addStream(ports.get(0).getIndex(), s);
+
+
+        TRexClientResult<CaptureMonitor> result = startMonitor(ports);
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 1.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
         sleep(3000);
+        client.stopTraffic(ports.get(0).getIndex());
+
         TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
         
         Assert.assertFalse(capturedPktsResult.isFailed());
@@ -428,7 +439,7 @@ public class TRexClientTest {
         client.serviceMode(ports.get(0).getIndex(), true);
 
         try {
-            Map<String, Ipv6Node> ipv6Nodes = client.scanIPv6(0);
+            Map<String, Ipv6Node> ipv6Nodes = client.scanIPv6(ports.get(0).getIndex());
             Assert.assertTrue(ipv6Nodes.size() > 0);
         } catch (ServiceModeRequiredException e) {
             Assert.fail("Port 0 is not in service mode");
@@ -446,7 +457,7 @@ public class TRexClientTest {
             // fe80:0:0:0:822a:a8ff:fe56:1517
             // fe80:0:0:0:bc:18ff:fe6a:c570
             // fe80:0:0:0:250:56ff:fe9b:2ef7
-            Assert.assertTrue(client.sendIcmpV6Echo(0, "fe80::822a:a8ff:fec0:5495", 0, 0, 2) != null);
+            Assert.assertTrue(client.sendIcmpV6Echo(ports.get(0).getIndex(), "fe80::822a:a8ff:fec0:5495", 0, 0, 2) != null);
         } catch (ServiceModeRequiredException e) {
             Assert.fail("Port 0 is not in service mode");
         }
