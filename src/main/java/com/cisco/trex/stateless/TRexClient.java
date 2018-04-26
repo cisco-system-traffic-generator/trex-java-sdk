@@ -237,6 +237,17 @@ public class TRexClient {
         return ports;
     }
 
+    public Port getPortByIndex(int portIndex) {
+        List<Port> ports = getPorts();
+        if (ports.stream().noneMatch(p -> p.getIndex() == portIndex)) {
+            LOGGER.error(String.format("Port with index %s was not found. Returning empty port", portIndex));
+        }
+        return getPorts().stream()
+                .filter(p -> p.getIndex() == portIndex)
+                .findFirst()
+                .orElse(new Port());
+    }
+
     public TRexClientResult<PortStatus> getPortStatus(int portIdx) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
@@ -419,7 +430,7 @@ public class TRexClient {
         removeRxQueue(portIndex);
         setRxQueue(portIndex, 1000);
 
-        String srcMac = getPorts().get(portIndex).hw_mac;
+        String srcMac = getPortByIndex(portIndex).hw_mac;
 	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
         EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
@@ -575,7 +586,9 @@ public class TRexClient {
                 pkt,
                 new StreamRxStats(true, true, true, stream_id),
                 new StreamVM("", Collections.<VMInstruction>emptyList()),
-                true
+                true,
+                false,
+                null
         );
     }
     
@@ -626,7 +639,7 @@ public class TRexClient {
 
     // TODO: move to upper layer
     public EthernetPacket sendIcmpEcho(int portIndex, String host, int reqId, int seqNumber, long waitResponse) throws UnknownHostException {
-        Port port = getPorts().get(portIndex);
+        Port port = getPortByIndex(portIndex);
         PortStatus portStatus = getPortStatus(portIndex).get();
         String srcIp = portStatus.getAttr().getLayerConiguration().getL3Configuration().getSrc();
 

@@ -20,7 +20,7 @@ public class Stream {
     private Boolean self_start;
     private Map<String, Object> flow_stats = new HashMap<>();
 
-    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type) {
         this.id = id;
         this.flags = flags;
         this.enabled = enabled;
@@ -32,8 +32,11 @@ public class Stream {
         this.rx_stats = rx_stats;
         this.vm = vm;
         this.self_start = self_start;
-        flow_stats.put("enabled", false);
+        flow_stats.put("enabled", use_flow_stats);
         flow_stats.put("stream_id", id);
+        if (rule_type != null) {
+            flow_stats.put("rule_type", rule_type.toString());
+        }
     }
 
     public Integer getId() {
@@ -109,6 +112,21 @@ public class Stream {
     
         public String getMeta() {
             return meta;
+        }
+    }
+    
+    public enum RuleType {
+        STATS("stats"),
+        LATENCY("latency");
+        String type;
+
+        RuleType(String type) {
+            this.type = type;
+        }
+        
+        @Override
+        public String toString() {
+            return type;
         }
     }
 }

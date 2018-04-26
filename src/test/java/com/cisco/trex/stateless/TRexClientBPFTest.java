@@ -11,6 +11,7 @@ import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.Packet;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
 
@@ -28,8 +29,8 @@ public class TRexClientBPFTest {
     @Test
     public void captureMonitorFilterTest() throws InterruptedException, IllegalRawDataException {
         filterTestBase((f) -> {
-            List<Integer> rxPorts = Arrays.asList(0, 1);
-            List<Integer> txPorts = Arrays.asList(0, 1);
+            List<Integer> rxPorts = client.getPorts().stream().map(Port::getIndex).collect(Collectors.toList());
+            List<Integer> txPorts = client.getPorts().stream().map(Port::getIndex).collect(Collectors.toList());
             return client.captureMonitorStart(rxPorts, txPorts, f);
         });
     }
@@ -37,8 +38,8 @@ public class TRexClientBPFTest {
     @Test
     public void captureRecorderFilterTest() throws InterruptedException, IllegalRawDataException {
         filterTestBase((f) -> {
-            List<Integer> rxPorts = Arrays.asList(0, 1);
-            List<Integer> txPorts = Arrays.asList(0, 1);
+            List<Integer> rxPorts = client.getPorts().stream().map(Port::getIndex).collect(Collectors.toList());
+            List<Integer> txPorts = client.getPorts().stream().map(Port::getIndex).collect(Collectors.toList());
             return client.captureRecorderStart(rxPorts, txPorts, f, 1000);
         });
     }
