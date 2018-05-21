@@ -321,7 +321,14 @@ public class TRexClient {
         payload.put("stream", stream);
         callMethod("add_stream", payload);
     }
-    
+
+    public void addStream(int portIndex, int streamId, JsonObject stream) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_id", streamId);
+        payload.put("stream", stream);
+        callMethod("add_stream", payload);
+    }
+
     public Stream getStream(int portIndex, int streamId) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("get_pkt", true);
