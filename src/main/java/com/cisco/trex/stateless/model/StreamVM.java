@@ -2,6 +2,8 @@ package com.cisco.trex.stateless.model;
 
 import java.util.List;
 
+import com.cisco.trex.stateless.model.vm.VMInstruction;
+
 public class StreamVM {
     private String split_by_var;
     private List<VMInstruction> instructions;
