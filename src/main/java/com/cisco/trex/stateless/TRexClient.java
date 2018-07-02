@@ -1,8 +1,65 @@
 package com.cisco.trex.stateless;
 
+import static java.lang.Math.abs;
+
+import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Random;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import org.pcap4j.packet.ArpPacket;
+import org.pcap4j.packet.Dot1qVlanTagPacket;
+import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.IcmpV4CommonPacket;
+import org.pcap4j.packet.IcmpV4EchoPacket;
+import org.pcap4j.packet.IcmpV4EchoReplyPacket;
+import org.pcap4j.packet.IllegalRawDataException;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.IpV4Rfc791Tos;
+import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.namednumber.ArpHardwareType;
+import org.pcap4j.packet.namednumber.ArpOperation;
+import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.packet.namednumber.IcmpV4Code;
+import org.pcap4j.packet.namednumber.IcmpV4Type;
+import org.pcap4j.packet.namednumber.IpNumber;
+import org.pcap4j.packet.namednumber.IpVersion;
+import org.pcap4j.util.ByteArrays;
+import org.pcap4j.util.MacAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeromq.ZMQException;
+
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.ApiVersion;
+import com.cisco.trex.stateless.model.Ipv6Node;
+import com.cisco.trex.stateless.model.L2Configuration;
+import com.cisco.trex.stateless.model.Port;
+import com.cisco.trex.stateless.model.PortStatus;
+import com.cisco.trex.stateless.model.RPCResponse;
+import com.cisco.trex.stateless.model.Stream;
+import com.cisco.trex.stateless.model.StreamMode;
+import com.cisco.trex.stateless.model.StreamModeRate;
+import com.cisco.trex.stateless.model.StreamRxStats;
+import com.cisco.trex.stateless.model.StreamVM;
+import com.cisco.trex.stateless.model.StubResult;
+import com.cisco.trex.stateless.model.SystemInfo;
+import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
@@ -11,26 +68,13 @@ import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import javafx.util.Pair;
-import org.pcap4j.packet.*;
-import org.pcap4j.packet.namednumber.*;
-import org.pcap4j.util.ByteArrays;
-import org.pcap4j.util.MacAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQException;
-
-import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static java.lang.Math.abs;
 
 public class TRexClient {
 
@@ -439,7 +483,7 @@ public class TRexClient {
         setRxQueue(portIndex, 1000);
 
         String srcMac = getPortByIndex(portIndex).hw_mac;
-	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+        PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
         EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
 
@@ -495,6 +539,10 @@ public class TRexClient {
         } catch (InterruptedException ignored) {}
         finally {
             removeRxQueue(portIndex);
+            if (getPortStatus(portIndex).get().getState().equals("TX")) {
+                stopTraffic(portIndex);
+            }
+            removeAllStreams(portIndex);
         }
         return null;
     }
