@@ -1,55 +1,25 @@
 package com.cisco.trex.stateless;
 
-import static org.pcap4j.util.ByteArrays.BYTE_SIZE_IN_BYTES;
-
-import java.net.Inet6Address;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IcmpV6CommonPacket;
+import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
+import com.cisco.trex.stateless.model.*;
+import com.google.common.net.InetAddresses;
+import org.pcap4j.packet.*;
 import org.pcap4j.packet.IcmpV6CommonPacket.IpV6NeighborDiscoveryOption;
-import org.pcap4j.packet.IcmpV6EchoReplyPacket;
-import org.pcap4j.packet.IcmpV6EchoRequestPacket;
-import org.pcap4j.packet.IcmpV6NeighborAdvertisementPacket;
 import org.pcap4j.packet.IcmpV6NeighborAdvertisementPacket.IcmpV6NeighborAdvertisementHeader;
-import org.pcap4j.packet.IcmpV6NeighborSolicitationPacket;
-import org.pcap4j.packet.IllegalRawDataException;
-import org.pcap4j.packet.IpV6NeighborDiscoverySourceLinkLayerAddressOption;
-import org.pcap4j.packet.IpV6NeighborDiscoveryTargetLinkLayerAddressOption;
-import org.pcap4j.packet.IpV6Packet;
-import org.pcap4j.packet.IpV6SimpleFlowLabel;
-import org.pcap4j.packet.IpV6SimpleTrafficClass;
-import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.namednumber.EtherType;
-import org.pcap4j.packet.namednumber.IcmpV6Code;
-import org.pcap4j.packet.namednumber.IcmpV6Type;
-import org.pcap4j.packet.namednumber.IpNumber;
-import org.pcap4j.packet.namednumber.IpVersion;
+import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
-import com.cisco.trex.stateless.model.Ipv6Node;
-import com.cisco.trex.stateless.model.PortStatus;
-import com.cisco.trex.stateless.model.StreamMode;
-import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
-import com.cisco.trex.stateless.model.StreamVM;
-import com.cisco.trex.stateless.model.TRexClientResult;
-import com.google.common.net.InetAddresses;
+import java.net.Inet6Address;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.pcap4j.util.ByteArrays.BYTE_SIZE_IN_BYTES;
 
 public class IPv6NeighborDiscoveryService {
 
