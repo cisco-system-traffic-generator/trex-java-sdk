@@ -439,7 +439,7 @@ public class TRexClient {
         setRxQueue(portIndex, 1000);
 
         String srcMac = getPortByIndex(portIndex).hw_mac;
-	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+        PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
         EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
 
@@ -495,6 +495,10 @@ public class TRexClient {
         } catch (InterruptedException ignored) {}
         finally {
             removeRxQueue(portIndex);
+            if (getPortStatus(portIndex).get().getState().equals("TX")) {
+                stopTraffic(portIndex);
+            }
+            removeAllStreams(portIndex);
         }
         return null;
     }
