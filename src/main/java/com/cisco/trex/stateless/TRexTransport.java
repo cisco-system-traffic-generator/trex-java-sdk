@@ -1,11 +1,12 @@
 package com.cisco.trex.stateless;
 
 import com.cisco.trex.stateless.model.RPCResponse;
+import com.cisco.trex.stateless.util.IDataCompressor;
+import com.cisco.trex.stateless.util.TRexDataCompressor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMQException;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,6 +21,8 @@ public class TRexTransport {
     
     private final String connectionString;
 
+    private final IDataCompressor dataCompressor;
+
     private ZMQ.Context zmqCtx = ZMQ.context(1);
 
     private ZMQ.Socket zmqSocket;
@@ -30,7 +33,7 @@ public class TRexTransport {
 
     private String port;
 
-    public TRexTransport(String host, String port, int timeout) {
+    public TRexTransport(String host, String port, int timeout, IDataCompressor dataCompressor) {
         this.host = host;
         this.port = port;
         zmqSocket = zmqCtx.socket(ZMQ.REQ);
@@ -39,11 +42,17 @@ public class TRexTransport {
         zmqSocket.setSendTimeOut(actualTimeout);
         connectionString = protocol + "://"+ this.host +":" + this.port;
         zmqSocket.connect(connectionString);
+        this.dataCompressor = dataCompressor;
+    }
+
+    public TRexTransport(String host, String port, int timeout) {
+        this(host, port, timeout, new TRexDataCompressor());
     }
 
     public RPCResponse sendCommand(TRexCommand command) throws IOException {
         String json = new ObjectMapper().writeValueAsString(command.getParameters());
-        RPCResponse[] rpcResult = doSend(json);
+        String response = sendJson(json);
+        RPCResponse[] rpcResult = new ObjectMapper().readValue(response, RPCResponse[].class);
         return rpcResult[0];
     }
 
@@ -55,20 +64,7 @@ public class TRexTransport {
         }
         
         String json = new ObjectMapper().writeValueAsString(commandList);
-        return doSend(json);
-    }
-
-    synchronized private RPCResponse[] doSend(String json) throws IOException {
-        LOGGER.info("JSON Req: " + json);
-        zmqSocket.send(json);
-        byte[] msg = zmqSocket.recv(0);
-        if (msg == null) {
-            int errNumber = zmqSocket.base().errno();
-            throw new ZMQException("Unable to receive message from socket", errNumber);
-        }
-        String response = new String(msg);
-        LOGGER.info("JSON Resp: " + response);
-        
+        String response = sendJson(json);
         return new ObjectMapper().readValue(response, RPCResponse[].class);
     }
     
@@ -90,8 +86,16 @@ public class TRexTransport {
         return zmqSocket;
     }
 
-    synchronized public byte[] sendJson(String json) {
-        zmqSocket.send(json);
-        return zmqSocket.recv(0);
+    synchronized public String sendJson(String json) {
+        LOGGER.debug("JSON Req: " + json);
+
+        byte[] compressed = this.dataCompressor.compressStringToBytes(json);
+
+        zmqSocket.send(compressed);
+        byte[] msg = zmqSocket.recv();
+
+        String response = this.dataCompressor.decompressBytesToString(msg);
+        LOGGER.debug("JSON Resp: " + response);
+        return response;
     }
 }
