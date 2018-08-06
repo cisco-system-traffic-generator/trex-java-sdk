@@ -19,7 +19,6 @@ import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQException;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -98,18 +97,7 @@ public class TRexClient {
     }
 
     private String call(String json) {
-        LOGGER.info("JSON Req: " + json);
-        byte[] msg = transport.sendJson(json);
-        if (msg == null) {
-            int errNumber = transport.getSocket().base().errno();
-            String errMsg = "Unable to receive message from socket";
-            ZMQException zmqException = new ZMQException(errMsg, errNumber);
-            LOGGER.error(errMsg, zmqException);
-            throw zmqException;
-        }
-        String response = new String(msg);
-        LOGGER.info("JSON Resp: " + response);
-        return response;
+        return transport.sendJson(json);
     }
 
     public <T> TRexClientResult<T> callMethod(String methodName, Map<String, Object> parameters, Class<T> responseType) {
