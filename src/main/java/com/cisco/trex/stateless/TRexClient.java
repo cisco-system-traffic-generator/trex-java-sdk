@@ -240,7 +240,8 @@ public class TRexClient {
     public TRexClientResult<PortStatus> getPortStatus(int portIdx) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
-        
+        parameters.put("block", false);
+
         return callMethod("get_port_status", parameters, PortStatus.class);
     }
 
@@ -625,6 +626,7 @@ public class TRexClient {
         if (nextHopMac != null) {
             payload.put("resolved_mac", nextHopMac);
         }
+        payload.put("block", false);
         callMethod("set_l3", payload);
         return true;
     }
@@ -803,6 +805,7 @@ public class TRexClient {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
         parameters.put("vlan", vlanIds);
+        parameters.put("block", false);
 
         return callMethod("set_vlan", parameters, StubResult.class);
     }
