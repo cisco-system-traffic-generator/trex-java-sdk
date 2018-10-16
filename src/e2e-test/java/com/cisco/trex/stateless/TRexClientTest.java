@@ -10,6 +10,8 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.vm.VMInstruction;
+
 import org.junit.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;

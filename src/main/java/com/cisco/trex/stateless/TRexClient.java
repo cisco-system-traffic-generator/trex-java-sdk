@@ -8,6 +8,7 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
@@ -18,7 +19,6 @@ import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQException;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -97,18 +97,7 @@ public class TRexClient {
     }
 
     private String call(String json) {
-        LOGGER.info("JSON Req: " + json);
-        byte[] msg = transport.sendJson(json);
-        if (msg == null) {
-            int errNumber = transport.getSocket().base().errno();
-            String errMsg = "Unable to receive message from socket";
-            ZMQException zmqException = new ZMQException(errMsg, errNumber);
-            LOGGER.error(errMsg, zmqException);
-            throw zmqException;
-        }
-        String response = new String(msg);
-        LOGGER.info("JSON Resp: " + response);
-        return response;
+        return transport.sendJson(json);
     }
 
     public <T> TRexClientResult<T> callMethod(String methodName, Map<String, Object> parameters, Class<T> responseType) {
@@ -251,7 +240,8 @@ public class TRexClient {
     public TRexClientResult<PortStatus> getPortStatus(int portIdx) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
-        
+        parameters.put("block", false);
+
         return callMethod("get_port_status", parameters, PortStatus.class);
     }
 
@@ -321,7 +311,14 @@ public class TRexClient {
         payload.put("stream", stream);
         callMethod("add_stream", payload);
     }
-    
+
+    public void addStream(int portIndex, int streamId, JsonObject stream) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_id", streamId);
+        payload.put("stream", stream);
+        callMethod("add_stream", payload);
+    }
+
     public Stream getStream(int portIndex, int streamId) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("get_pkt", true);
@@ -431,7 +428,7 @@ public class TRexClient {
         setRxQueue(portIndex, 1000);
 
         String srcMac = getPortByIndex(portIndex).hw_mac;
-	PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+        PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
         EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
         sendPacket(portIndex, pkt);
 
@@ -487,6 +484,10 @@ public class TRexClient {
         } catch (InterruptedException ignored) {}
         finally {
             removeRxQueue(portIndex);
+            if (getPortStatus(portIndex).get().getState().equals("TX")) {
+                stopTraffic(portIndex);
+            }
+            removeAllStreams(portIndex);
         }
         return null;
     }
@@ -625,6 +626,7 @@ public class TRexClient {
         if (nextHopMac != null) {
             payload.put("resolved_mac", nextHopMac);
         }
+        payload.put("block", false);
         callMethod("set_l3", payload);
         return true;
     }
@@ -803,6 +805,7 @@ public class TRexClient {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
         parameters.put("vlan", vlanIds);
+        parameters.put("block", false);
 
         return callMethod("set_vlan", parameters, StubResult.class);
     }

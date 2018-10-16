@@ -116,7 +116,12 @@ public class IPv6NeighborDiscoveryService {
                 }
             }
         }
+
         tRexClient.removeRxQueue(portIdx);
+        if (tRexClient.getPortStatus(portIdx).get().getState().equals("TX")) {
+            tRexClient.stopTraffic(portIdx);
+        }
+        tRexClient.removeAllStreams(portIdx);
         return icmpUnicastReply;
 
     }
