@@ -10,6 +10,7 @@ public class Stream {
     private Integer flags = 1;
     private Integer action_count = 0;
     private Integer random_seed = 0;
+    private Integer core_id = -1;
     private Boolean enabled;
     private Double isg;
     private StreamMode mode;
@@ -20,8 +21,9 @@ public class Stream {
     private Boolean self_start;
     private Map<String, Object> flow_stats = new HashMap<>();
 
-    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type) {
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type, int core_id) {
         this.id = id;
+        this.core_id = core_id;
         this.flags = flags;
         this.enabled = enabled;
         this.isg = isg;
@@ -41,6 +43,10 @@ public class Stream {
 
     public Integer getId() {
         return id;
+    }
+    
+    public Integer getCore_id() {
+        return core_id;
     }
 
     public Boolean getEnabled() {
