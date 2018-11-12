@@ -617,7 +617,8 @@ public class TRexClient {
                 new StreamVM("", Collections.<VMInstruction>emptyList()),
                 true,
                 false,
-                null
+                null,
+                -1
         );
     }
     
