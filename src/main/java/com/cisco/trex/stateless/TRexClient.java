@@ -369,6 +369,16 @@ public class TRexClient {
         callMethod("start_traffic", payload);
     }
 
+    public void pauseTraffic(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        callMethod("pause_traffic", payload);
+    }
+
+    public void resumeTraffic(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        callMethod("resume_traffic", payload);
+    }
+    
     public void setRxQueue(int portIndex, int size) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("type", "queue");
