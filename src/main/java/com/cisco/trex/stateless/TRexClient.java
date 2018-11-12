@@ -354,6 +354,27 @@ public class TRexClient {
                 .collect(Collectors.toList());
     }
     
+    public void pauseStreams(int portIndex, List<Integer> streams) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_ids", streams);
+        callMethod("pause_streams", payload);
+    }
+
+    public void resumeStreams(int portIndex, List<Integer> streams) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_ids", streams);
+        callMethod("resume_streams", payload);
+    }
+
+    public void updateStreams(int portIndex, List<Integer> streams, boolean force,
+            Map<String, Object> multiplier) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("force", force);
+        payload.put("mul", multiplier);
+        payload.put("stream_ids", streams);
+        callMethod("update_streams", payload);
+    }
+    
     public SystemInfo getSystemInfo() {
         String json = callMethod("get_system_info", null);
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
