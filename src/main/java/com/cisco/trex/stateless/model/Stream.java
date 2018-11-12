@@ -40,6 +40,14 @@ public class Stream {
             flow_stats.put("rule_type", rule_type.toString());
         }
     }
+    
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type) {
+        this(id, enabled, flags, isg, mode, next_stream_id, packet, rx_stats, vm, self_start, use_flow_stats, rule_type, -1);
+    }
+    
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
+        this(id, enabled, flags, isg, mode, next_stream_id, packet, rx_stats, vm, self_start, true, RuleType.STATS, -1);
+    }
 
     public Integer getId() {
         return id;
