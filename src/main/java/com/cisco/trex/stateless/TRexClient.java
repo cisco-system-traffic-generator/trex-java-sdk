@@ -12,7 +12,7 @@ import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
-import javafx.util.Pair;
+
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
@@ -51,8 +51,6 @@ public class TRexClient {
     
     private String port;
     
-    private String asyncPort;
-    
     private String apiH;
     
     private String userName = "";
@@ -60,7 +58,6 @@ public class TRexClient {
     private Map<Integer, String> portHandlers = new HashMap<>();
     private List<String> supportedCmds = new ArrayList<>();
     private Random randomizer = new Random();
-    private int currentCaptureMonitorId = 0;
 
     public TRexClient(String host, String port, String userName) {
         this.host = host;
@@ -281,7 +278,7 @@ public class TRexClient {
         Map<String, Object> payload = createPayload(portIndex);
         
         payload.put("user", userName);
-        String result = callMethod("release", payload);
+        callMethod("release", payload);
         portHandlers.remove(portIndex);
         return getPortStatus(portIndex).get();
     }
@@ -301,7 +298,7 @@ public class TRexClient {
         LOGGER.info("Set service mode : {}", isOn ? "on" : "off");
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("enabled", isOn);
-        String result = callMethod("service", payload);
+        callMethod("service", payload);
         return getPortStatus(portIndex).get();
     }
     
@@ -354,6 +351,27 @@ public class TRexClient {
                 .collect(Collectors.toList());
     }
     
+    public void pauseStreams(int portIndex, List<Integer> streams) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_ids", streams);
+        callMethod("pause_streams", payload);
+    }
+
+    public void resumeStreams(int portIndex, List<Integer> streams) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("stream_ids", streams);
+        callMethod("resume_streams", payload);
+    }
+
+    public void updateStreams(int portIndex, List<Integer> streams, boolean force,
+            Map<String, Object> multiplier) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("force", force);
+        payload.put("mul", multiplier);
+        payload.put("stream_ids", streams);
+        callMethod("update_streams", payload);
+    }
+    
     public SystemInfo getSystemInfo() {
         String json = callMethod("get_system_info", null);
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
@@ -369,6 +387,16 @@ public class TRexClient {
         callMethod("start_traffic", payload);
     }
 
+    public void pauseTraffic(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        callMethod("pause_traffic", payload);
+    }
+
+    public void resumeTraffic(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        callMethod("resume_traffic", payload);
+    }
+    
     public void setRxQueue(int portIndex, int size) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("type", "queue");
@@ -474,7 +502,7 @@ public class TRexClient {
                 steps -= 1;
                 Thread.sleep(500);
                 pkts.addAll(getRxQueue(portIndex, arpReplyFilter));
-                if(pkts.size() > 0) {
+                if(!pkts.isEmpty()) {
                     ArpPacket arpPacket = getArpPkt(pkts.get(0));
                     if (arpPacket != null)
                         return arpPacket.getHeader().getSrcHardwareAddr().toString();
@@ -524,8 +552,8 @@ public class TRexClient {
             throw new IllegalArgumentException(e);
         }
 
-        Pair<EtherType, Packet.Builder> payload = new Pair<>(EtherType.ARP, arpBuilder);
-        if(vlan.getTags().size() != 0)
+        AbstractMap.SimpleEntry<EtherType, Packet.Builder> payload = new AbstractMap.SimpleEntry<>(EtherType.ARP, arpBuilder);
+        if(!vlan.getTags().isEmpty())
              payload = buildVlan(arpBuilder, vlan);
 
         EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
@@ -538,7 +566,7 @@ public class TRexClient {
         return etherBuilder.build();
     }
 
-    private static Pair<EtherType, Packet.Builder> buildVlan(ArpPacket.Builder arpBuilder, PortVlan vlan) {
+    private static AbstractMap.SimpleEntry<EtherType, Packet.Builder> buildVlan(ArpPacket.Builder arpBuilder, PortVlan vlan) {
         Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
         Packet.Builder resultPayloadBuilder = arpBuilder;
         EtherType resultEtherType = EtherType.ARP;
@@ -562,10 +590,10 @@ public class TRexClient {
             }
         }
 
-        return new Pair<>(resultEtherType, resultPayloadBuilder);
+        return new AbstractMap.SimpleEntry<>(resultEtherType, resultPayloadBuilder);
     }
 
-    private Stream build1PktSingleBurstStream(Packet pkt) {
+    private static Stream build1PktSingleBurstStream(Packet pkt) {
         int stream_id = (int) (Math.random() * 1000);
         return new Stream(
                 stream_id,
@@ -589,7 +617,8 @@ public class TRexClient {
                 new StreamVM("", Collections.<VMInstruction>emptyList()),
                 true,
                 false,
-                null
+                null,
+                -1
         );
     }
     
@@ -707,8 +736,7 @@ public class TRexClient {
     public TRexClientResult<CaptureInfo[]> getActiveCaptures() {
         Map<String, Object> payload = new HashMap<>();
         payload.put("command", "status");
-        TRexClientResult<CaptureInfo[]> result = callMethod("capture", payload, CaptureInfo[].class);
-        return result;
+        return callMethod("capture", payload, CaptureInfo[].class);
     }
 
     public TRexClientResult<CaptureMonitor> captureMonitorStart(
@@ -773,7 +801,6 @@ public class TRexClient {
     public boolean captureMonitorRemove(int captureId) {
 
         List<TRexCommand> commands = buildRemoveCaptureCommand(Collections.singletonList(captureId));
-        TRexCommand tRexCommand = commands.get(0);
 
         TRexClientResult<List<RPCResponse>> result = callMethods(commands);
         if (result.isFailed()) {
@@ -808,34 +835,6 @@ public class TRexClient {
         parameters.put("block", false);
 
         return callMethod("set_vlan", parameters, StubResult.class);
-    }
-
-    private class ApiVersionResponse {
-        private String id;
-        private String jsonrpc;
-        private ApiVersionResult result;
-
-        private class ApiVersionResult {
-            private List<Map<String, String>> api_vers;
-
-            public ApiVersionResult(List<Map<String, String>> api_vers) {
-                this.api_vers = api_vers;
-            }
-
-            public String getApi_h() {
-                return api_vers.get(0).get("api_h");
-            }
-        }
-
-        public ApiVersionResponse(String id, String jsonrpc, ApiVersionResult result) {
-            this.id = id;
-            this.jsonrpc = jsonrpc;
-            this.result = result;
-        }
-        
-        public String getApi_h() {
-            return result.getApi_h();
-        }
     }
 
     private class SystemInfoResponse {
