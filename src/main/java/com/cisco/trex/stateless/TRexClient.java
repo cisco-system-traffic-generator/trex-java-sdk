@@ -354,19 +354,19 @@ public class TRexClient {
                 .collect(Collectors.toList());
     }
     
-    public void pauseStreams(int portIndex, ArrayList<Integer> streams) {
+    public void pauseStreams(int portIndex, List<Integer> streams) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("stream_ids", streams);
         callMethod("pause_streams", payload);
     }
 
-    public void resumeStreams(int portIndex, ArrayList<Integer> streams) {
+    public void resumeStreams(int portIndex, List<Integer> streams) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("stream_ids", streams);
         callMethod("resume_streams", payload);
     }
 
-    public void updateStreams(int portIndex, ArrayList<Integer> streams, boolean force,
+    public void updateStreams(int portIndex, List<Integer> streams, boolean force,
             Map<String, Object> multiplier) {
         Map<String, Object> payload = createPayload(portIndex);
         payload.put("force", force);
