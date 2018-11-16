@@ -159,7 +159,11 @@ public class TRexClient {
     }
     
     public void connect() throws TRexConnectionException {
-        transport = new TRexTransport(this.host, this.port, 3000);
+        connect(3000);
+    }
+
+    public void connect(int timeout) throws TRexConnectionException {
+        transport = new TRexTransport(this.host, this.port, timeout);
         serverAPISync();
         supportedCmds.addAll(getSupportedCommands());
     }
