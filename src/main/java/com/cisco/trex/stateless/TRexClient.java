@@ -340,6 +340,21 @@ public class TRexClient {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("remove_all_streams", payload);
     }
+
+    public List<Stream> getAllStreams(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        String json = callMethod("get_all_streams", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonObject streams = response.getAsJsonArray().get(0)
+                .getAsJsonObject().get("result")
+                .getAsJsonObject().get("streams")
+                .getAsJsonObject();
+        ArrayList<Stream> streamList = new ArrayList<>();
+        for (Entry<String, JsonElement> stream : streams.entrySet()) {
+            streamList.add(gson.fromJson(stream.getValue(), Stream.class));
+        }
+        return streamList;
+    }
     
     public List<Integer> getStreamIds(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
