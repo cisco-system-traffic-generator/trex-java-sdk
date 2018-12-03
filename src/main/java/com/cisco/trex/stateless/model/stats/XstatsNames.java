@@ -1,4 +1,4 @@
-package com.ericsson.commonlibrary.trex;
+package com.cisco.trex.stateless.model.stats;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
