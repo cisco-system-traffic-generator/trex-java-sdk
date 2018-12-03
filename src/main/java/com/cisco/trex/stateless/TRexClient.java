@@ -7,7 +7,7 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
-import com.cisco.trex.stateless.model.port.PortStatistics;
+import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
