@@ -12,6 +12,10 @@ import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
