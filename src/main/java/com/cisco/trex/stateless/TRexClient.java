@@ -8,6 +8,8 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.ActivePGIds;
+import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -376,6 +378,12 @@ public class TRexClient {
         String json = callMethod("get_system_info", null);
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
         return response.getResult();
+    }
+    
+    public ActivePGIds getActivePgids() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("pgids", "");
+        return callMethod("get_active_pgids", parameters, ActivePGIdsRPCResult.class).get().getIds();
     }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
