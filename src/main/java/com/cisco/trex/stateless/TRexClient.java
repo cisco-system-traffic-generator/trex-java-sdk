@@ -8,6 +8,8 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
+import com.cisco.trex.stateless.model.stats.XstatsNames;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -281,6 +283,19 @@ public class TRexClient {
         callMethod("release", payload);
         portHandlers.remove(portIndex);
         return getPortStatus(portIndex).get();
+    }
+    
+    public ExtendedPortStatistics getExtendedPortStatistics(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_xstats_values", parameters, ExtendedPortStatistics.class).get()
+                .setValueNames(getPortStatNames(portIndex));
+    }
+
+    private XstatsNames getPortStatNames(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
     }
 
     public List<String> getSupportedCommands() {
