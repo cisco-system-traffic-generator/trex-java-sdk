@@ -377,6 +377,12 @@ public class TRexClient {
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
         return response.getResult();
     }
+    
+    public PGIdStatsRPCResult getPgidStats(int[] ids) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("pgids", ids);
+        return callMethod("get_pgid_stats", parameters, PGIdStatsRPCResult.class).get();
+    }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
         Map<String, Object> payload = createPayload(portIndex);
