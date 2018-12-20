@@ -7,6 +7,7 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
+import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -289,6 +290,12 @@ public class TRexClient {
         callMethod("release", payload);
         portHandlers.remove(portIndex);
         return getPortStatus(portIndex).get();
+    }
+    
+    public PortStatistics getPortStatistics(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_stats", parameters, PortStatistics.class).get();
     }
 
     public List<String> getSupportedCommands() {
