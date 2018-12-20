@@ -358,7 +358,7 @@ public class TRexClient {
                 .getAsJsonObject().get("streams")
                 .getAsJsonObject();
         ArrayList<Stream> streamList = new ArrayList<>();
-        for (Entry<String, JsonElement> stream : streams.entrySet()) {
+        for (Map.Entry<String, JsonElement> stream : streams.entrySet()) {
             streamList.add(gson.fromJson(stream.getValue(), Stream.class));
         }
         return streamList;

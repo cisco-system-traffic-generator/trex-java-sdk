@@ -434,6 +434,33 @@ public class TRexClientTest {
     }
 
     @Test
+    public void getAllStreamsTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        Stream stream1 = buildStream(SIMPLE_PACKET);
+        Stream stream2 = buildStream(SIMPLE_PACKET);
+        client.acquirePort(port.getIndex(), true);
+        client.addStream(port.getIndex(), stream1);
+        client.addStream(port.getIndex(), stream2);
+
+        List<Stream> allStreams = client.getAllStreams(port.getIndex());
+
+
+        for (Stream str :
+                allStreams) {
+            Optional<Stream> found = allStreams.stream().filter(stream -> stream.getId().equals(str.getId())).findFirst();
+            if (!found.isPresent()) {
+                Assert.fail(String.format("Stream with id %s was not found", str.getId()));
+            }
+
+            Stream foundStream = found.get();
+            Assert.assertEquals(foundStream, str);
+        }
+
+        client.releasePort(port.getIndex());
+    }
+
+    @Test
     public void iPV6ScanTest() {
         List<Port> ports = client.getPorts();
 
