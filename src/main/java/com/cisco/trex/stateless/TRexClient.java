@@ -7,12 +7,19 @@ import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
+import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
+import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
+import com.google.gson.reflect.TypeToken;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
@@ -45,8 +52,14 @@ public class TRexClient {
 
     private TRexTransport transport;
     
-    private Gson gson = new Gson();
-    
+    private Gson gson = buildGson();
+
+    private Gson buildGson() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(new TypeToken<Map <String, Object>>(){}.getType(),  new DoubleAsIntDeserializer());
+        return gsonBuilder.create();
+    }
+
     private String host;
     
     private String port;
@@ -286,6 +299,12 @@ public class TRexClient {
         portHandlers.remove(portIndex);
         return getPortStatus(portIndex).get();
     }
+    
+    public PortStatistics getPortStatistics(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_stats", parameters, PortStatistics.class).get();
+    }
 
     public List<String> getSupportedCommands() {
         Map<String, Object> payload = new HashMap<>();
@@ -343,6 +362,21 @@ public class TRexClient {
     public void removeAllStreams(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("remove_all_streams", payload);
+    }
+
+    public List<Stream> getAllStreams(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        String json = callMethod("get_all_streams", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonObject streams = response.getAsJsonArray().get(0)
+                .getAsJsonObject().get("result")
+                .getAsJsonObject().get("streams")
+                .getAsJsonObject();
+        ArrayList<Stream> streamList = new ArrayList<>();
+        for (Map.Entry<String, JsonElement> stream : streams.entrySet()) {
+            streamList.add(gson.fromJson(stream.getValue(), Stream.class));
+        }
+        return streamList;
     }
     
     public List<Integer> getStreamIds(int portIndex) {

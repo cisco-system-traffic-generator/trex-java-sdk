@@ -1,5 +1,7 @@
 package com.cisco.trex.stateless.model;
 
+import java.util.Objects;
+
 public class StreamRxStats {
     private Boolean enabled;
     private Boolean latency_enabled;
@@ -27,5 +29,27 @@ public class StreamRxStats {
 
     public Integer getStream_id() {
         return stream_id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (!(obj instanceof StreamRxStats)) {
+            return false;
+        }
+
+        StreamRxStats rhs = (StreamRxStats) obj;
+
+        return Objects.equals(this.enabled, rhs.enabled) &&
+                Objects.equals(this.latency_enabled, rhs.latency_enabled) &&
+                Objects.equals(this.seq_enabled, rhs.seq_enabled) &&
+                Objects.equals(this.stream_id, rhs.stream_id);
     }
 }

@@ -10,6 +10,7 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
 import org.junit.*;
@@ -425,15 +426,83 @@ public class TRexClientTest {
         client.stopTraffic(ports.get(0).getIndex());
 
         TRexClientResult<CapturedPackets> capturedPktsResult = client.captureFetchPkts(result.get().getCaptureId(), 10);
-        
+
         Assert.assertFalse(capturedPktsResult.isFailed());
         CapturedPackets capturedPkts = capturedPktsResult.get();
-        
+
         Assert.assertTrue(capturedPkts.getPkts().size() > 0);
-        
+
     }
 
     @Test
+    public void getAllStreamsTest() {
+        List<Port> ports = client.getPorts();
+        Port port = ports.get(0);
+        Stream stream1 = buildStream(SIMPLE_PACKET);
+        Stream stream2 = buildStream(SIMPLE_PACKET);
+        client.acquirePort(port.getIndex(), true);
+        client.addStream(port.getIndex(), stream1);
+        client.addStream(port.getIndex(), stream2);
+
+        List<Stream> allStreams = client.getAllStreams(port.getIndex());
+
+
+        for (Stream str :
+                allStreams) {
+            Optional<Stream> found = allStreams.stream().filter(stream -> stream.getId().equals(str.getId())).findFirst();
+            if (!found.isPresent()) {
+                Assert.fail(String.format("Stream with id %s was not found", str.getId()));
+            }
+
+            Stream foundStream = found.get();
+            Assert.assertEquals(foundStream, str);
+        }
+
+        client.releasePort(port.getIndex());
+    }
+
+    @Test
+    public void getPortStatsTest() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+
+        Stream s = buildStream(SIMPLE_PACKET);
+        client.addStream(ports.get(0).getIndex(), s);
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 100.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
+        sleep(100);
+
+
+        PortStatistics ps0 = client.getPortStatistics(ports.get(0).getIndex());
+        PortStatistics ps1 = client.getPortStatistics(ports.get(1).getIndex());
+        client.stopTraffic(ports.get(0).getIndex());
+
+        Assert.assertTrue(ps0.getTotalTxBytes() > 0);
+        Assert.assertTrue(ps0.getTotalTxPackets() > 0);
+        Assert.assertTrue(ps1.getTotalRxBytes() > 0);
+        Assert.assertTrue(ps1.getTotalRxPackets() > 0);
+
+        double thershold = 0.1;
+
+        Assert.assertTrue(equalWithRelativeEps(ps0.getTotalTxBytes(), ps1.getTotalRxBytes(), thershold));
+        Assert.assertTrue(equalWithRelativeEps(ps0.getTotalTxPackets(), ps1.getTotalRxPackets(), thershold));
+    }
+
+    private boolean equalWithRelativeEps(long a, long b, double relativeEps) {
+        long max = a > b? a : b;
+        double eps = max * relativeEps;
+
+        return Math.abs(a-b) <= eps;
+    }
+
+        @Test
     public void iPV6ScanTest() {
         List<Port> ports = client.getPorts();
 
