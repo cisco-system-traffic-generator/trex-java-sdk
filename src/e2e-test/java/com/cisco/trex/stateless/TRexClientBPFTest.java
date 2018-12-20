@@ -66,7 +66,7 @@ public class TRexClientBPFTest {
         CaptureTester unfiltered = new CaptureTester(monitorStarter, "");
         CaptureTester filteredA = new CaptureTester(monitorStarter, "ether src " + srcMacA);
         CaptureTester filteredB = new CaptureTester(monitorStarter, "ether src " + srcMacB);
-        Assert.assertTrue(client.getActiveCaptures().get().length == 3);
+        Assert.assertEquals(3, client.getActiveCaptures().get().length);
 
         client.startTraffic(port.getIndex(), -1.0, true, mul, 1);
 
@@ -81,13 +81,13 @@ public class TRexClientBPFTest {
         Assert.assertTrue(filteredA.PacketsCount() != 0);
         Assert.assertTrue(filteredB.PacketsCount() != 0);
 
-        Assert.assertTrue(filteredA.PacketsWithSrcCount(srcMacA) == filteredA.PacketsCount());
-        Assert.assertTrue(filteredB.PacketsWithSrcCount(srcMacB) == filteredB.PacketsCount());
-        Assert.assertTrue(filteredA.PacketsWithSrcCount(srcMacB) == 0);
-        Assert.assertTrue(filteredB.PacketsWithSrcCount(srcMacA) == 0);
+        Assert.assertEquals(filteredA.PacketsWithSrcCount(srcMacA), filteredA.PacketsCount());
+        Assert.assertEquals(filteredB.PacketsWithSrcCount(srcMacB), filteredB.PacketsCount());
+        Assert.assertEquals(0, filteredA.PacketsWithSrcCount(srcMacB));
+        Assert.assertEquals(0, filteredB.PacketsWithSrcCount(srcMacA));
 
         int ABInUnfiltered = unfiltered.PacketsWithSrcCount(srcMacA) + unfiltered.PacketsWithSrcCount(srcMacB);
-        Assert.assertTrue(ABInUnfiltered == filteredA.PacketsCount() + filteredB.PacketsCount());
+        Assert.assertEquals(ABInUnfiltered, filteredA.PacketsCount() + filteredB.PacketsCount());
     }
 
     @FunctionalInterface

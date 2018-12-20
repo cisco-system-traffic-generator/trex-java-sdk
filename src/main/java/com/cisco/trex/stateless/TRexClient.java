@@ -10,6 +10,7 @@ import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
+import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
@@ -18,6 +19,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import com.google.gson.reflect.TypeToken;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
@@ -50,8 +52,14 @@ public class TRexClient {
 
     private TRexTransport transport;
     
-    private Gson gson = new Gson();
-    
+    private Gson gson = buildGson();
+
+    private Gson buildGson() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(new TypeToken<Map <String, Object>>(){}.getType(),  new DoubleAsIntDeserializer());
+        return gsonBuilder.create();
+    }
+
     private String host;
     
     private String port;
