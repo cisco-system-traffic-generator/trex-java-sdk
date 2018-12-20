@@ -1,6 +1,7 @@
 package com.cisco.trex.stateless.model;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
@@ -19,5 +20,25 @@ public class StreamVM {
 
     public List<VMInstruction> getInstructions() {
         return instructions;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (!(obj instanceof StreamVM)) {
+            return false;
+        }
+
+        StreamVM rhs = (StreamVM) obj;
+
+        return Objects.equals(this.split_by_var, rhs.split_by_var) &&
+                Objects.equals(this.instructions, rhs.instructions);
     }
 }

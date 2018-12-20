@@ -4,6 +4,7 @@ import org.pcap4j.packet.Packet;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Stream {
     private Integer id;
@@ -91,12 +92,34 @@ public class Stream {
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
         if (!(obj instanceof Stream)) {
             return false;
         }
         
         Stream s2 = (Stream) obj;
-        return id.equals(s2.getId()) || super.equals(obj);
+
+        return Objects.equals(this.id, s2.id) &&
+                Objects.equals(this.flags, s2.flags) &&
+                Objects.equals(this.action_count, s2.action_count) &&
+                Objects.equals(this.random_seed, s2.random_seed) &&
+                Objects.equals(this.core_id, s2.core_id) &&
+                Objects.equals(this.enabled, s2.enabled) &&
+                Objects.equals(this.isg, s2.isg) &&
+                Objects.equals(this.mode, s2.mode) &&
+                Objects.equals(this.next_stream_id, s2.next_stream_id) &&
+                Objects.equals(this.packet, s2.packet) &&
+                Objects.equals(this.rx_stats, s2.rx_stats) &&
+                Objects.equals(this.vm, s2.vm) &&
+                Objects.equals(this.self_start, s2.self_start) &&
+                Objects.equals(this.flow_stats, s2.flow_stats);
     }
 
     public static class StreamPacket {
@@ -126,6 +149,26 @@ public class Stream {
     
         public String getMeta() {
             return meta;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj == null) {
+                return false;
+            }
+
+            if (!(obj instanceof StreamPacket)) {
+                return false;
+            }
+
+            StreamPacket rhs = (StreamPacket) obj;
+
+            return Objects.equals(this.binary, rhs.binary) &&
+                    Objects.equals(this.meta, rhs.meta);
         }
     }
     
