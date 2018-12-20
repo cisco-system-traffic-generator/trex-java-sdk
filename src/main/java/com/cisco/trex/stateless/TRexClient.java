@@ -12,6 +12,10 @@ import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.namednumber.*;
@@ -343,6 +347,21 @@ public class TRexClient {
     public void removeAllStreams(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("remove_all_streams", payload);
+    }
+
+    public List<Stream> getAllStreams(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        String json = callMethod("get_all_streams", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonObject streams = response.getAsJsonArray().get(0)
+                .getAsJsonObject().get("result")
+                .getAsJsonObject().get("streams")
+                .getAsJsonObject();
+        ArrayList<Stream> streamList = new ArrayList<>();
+        for (Entry<String, JsonElement> stream : streams.entrySet()) {
+            streamList.add(gson.fromJson(stream.getValue(), Stream.class));
+        }
+        return streamList;
     }
     
     public List<Integer> getStreamIds(int portIndex) {
