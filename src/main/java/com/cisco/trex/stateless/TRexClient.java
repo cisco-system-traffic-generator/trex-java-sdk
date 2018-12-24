@@ -9,6 +9,11 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
+import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
+import com.cisco.trex.stateless.model.stats.XstatsNames;
+import com.cisco.trex.stateless.model.stats.ActivePGIds;
+import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +64,7 @@ public class TRexClient {
         gsonBuilder.registerTypeAdapter(new TypeToken<Map <String, Object>>(){}.getType(),  new DoubleAsIntDeserializer());
         return gsonBuilder.create();
     }
-
+    
     private String host;
     
     private String port;
@@ -299,7 +304,20 @@ public class TRexClient {
         portHandlers.remove(portIndex);
         return getPortStatus(portIndex).get();
     }
-    
+
+    public ExtendedPortStatistics getExtendedPortStatistics(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_xstats_values", parameters, ExtendedPortStatistics.class).get()
+                .setValueNames(getPortStatNames(portIndex));
+    }
+
+    private XstatsNames getPortStatNames(int portIndex) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIndex);
+        return callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
+    }
+
     public PortStatistics getPortStatistics(int portIndex) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIndex);
@@ -363,7 +381,7 @@ public class TRexClient {
         Map<String, Object> payload = createPayload(portIndex);
         callMethod("remove_all_streams", payload);
     }
-
+    
     public List<Stream> getAllStreams(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
         String json = callMethod("get_all_streams", payload);
@@ -414,6 +432,18 @@ public class TRexClient {
         String json = callMethod("get_system_info", null);
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
         return response.getResult();
+    }
+    
+    public ActivePGIds getActivePgids() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("pgids", "");
+        return callMethod("get_active_pgids", parameters, ActivePGIdsRPCResult.class).get().getIds();
+    }
+
+    public PGIdStatsRPCResult getPgidStats(int[] ids) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("pgids", ids);
+        return callMethod("get_pgid_stats", parameters, PGIdStatsRPCResult.class).get();
     }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
