@@ -10,9 +10,7 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
-import com.cisco.trex.stateless.model.stats.ActivePGIds;
-import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
-import com.cisco.trex.stateless.model.stats.PortStatistics;
+import com.cisco.trex.stateless.model.stats.*;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
 import org.junit.*;
@@ -570,6 +568,51 @@ public class TRexClientTest {
 
         Assert.assertArrayEquals(new int[]{25, 255, 434}, Arrays.stream(activePgids.getFlowStats()).sorted().toArray());
         Assert.assertArrayEquals(new int[]{78, 1315, 9801}, Arrays.stream(activePgids.getLatency()).sorted().toArray());
+    }
+
+    @Test
+    public void getPgIdStats() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 333, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 444, false));
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 1.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
+        sleep(3000);
+        client.stopTraffic(ports.get(0).getIndex());
+
+        PGIdStatsRPCResult pgidStats = client.getPgidStats(new int[]{333, 444});
+
+        Map<String, FlowStat> flowStats = pgidStats.getFlowStats();
+
+        String port0 = String.valueOf(ports.get(0).getIndex());
+        String port1 = String.valueOf(ports.get(1).getIndex());
+        for (int pgId: Arrays.asList(333,444)) {
+            String pgIdStr = String.valueOf(pgId);
+            Assert.assertTrue(flowStats.containsKey(pgIdStr));
+
+            Assert.assertTrue(flowStats.get(pgIdStr).getRb().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRbs().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRp().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRps().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTb().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTbs().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTp().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTps().get(port0) > 0);
+
+            Assert.assertEquals(flowStats.get(pgIdStr).getRb().get(port1), flowStats.get(pgIdStr).getTb().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRbs().get(port1), flowStats.get(pgIdStr).getTbs().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRp().get(port1), flowStats.get(pgIdStr).getTp().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRps().get(port1), flowStats.get(pgIdStr).getTps().get(port0));
+        }
     }
 
 
