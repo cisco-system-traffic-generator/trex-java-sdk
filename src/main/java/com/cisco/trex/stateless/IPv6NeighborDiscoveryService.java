@@ -343,6 +343,19 @@ public class IPv6NeighborDiscoveryService {
     }
     
     public static EthernetPacket buildICMPV6EchoReq(String srcIp, String srcMacString, String dstMacString, String dstIp, int icmpId, int icmpSeq) {
+        /*
+
+        mld_pkt = (Ether(src = self.src_mac, dst = self.dst_mld_mac) /
+                   IPv6(src = self.src_ip, dst = self.dst_mld_ip, hlim = 1) /
+                   IPv6ExtHdrHopByHop(options = [RouterAlert(), PadN()]) /
+                   ICMPv6MLReportV2() /
+                   MLDv2Addr(type = 4, len = 0, multicast_addr = 'ff02::2'))
+        ping_pkt = (Ether(src = self.src_mac, dst = dst_mac) /
+                    IPv6(src = self.src_ip, dst = self.dst_ip, hlim = 1) /
+                    ICMPv6EchoRequest())
+        return [self.vlan.embed(mld_pkt), self.vlan.embed(ping_pkt)]
+         */
+
         final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMacString);
 
         IcmpV6EchoRequestPacket.Builder icmpV6ERBuilder = new IcmpV6EchoRequestPacket.Builder();
@@ -454,8 +467,17 @@ public class IPv6NeighborDiscoveryService {
 
     private static String generateIPv6AddrFromMAC(String mac) {
         String prefix = "fe80";
-        String[] macOctets = mac.split(":");
-        macOctets[0] = String.valueOf(Integer.parseInt(macOctets[0], 16) ^ 2);
-        return String.format("%s::%s%s:%sff:fe%s:%s%s", prefix, macOctets[0],macOctets[1],macOctets[2],macOctets[3],macOctets[4],macOctets[5]);
+        List<Integer> macOctets = Arrays.stream(mac.split(":")).map(octet -> Integer.parseInt(octet, 16)).collect(Collectors.toList());
+        // insert ff fe in the middle
+        macOctets.add(3, 0xfe);
+        macOctets.add(3, 0xff);
+
+        // invert second bind
+        macOctets.set(0, macOctets.get(0) ^ 0b1 << 1);
+        List<String> strOctets = new ArrayList<>();
+        for (int i=0; i< macOctets.size(); i+=2) {
+            strOctets.add(String.format("%s%s", Integer.toHexString(macOctets.get(i)), Integer.toHexString(macOctets.get(i+1))));
+        }
+        return String.format("%s::%s", prefix, String.join(":", strOctets));
     }
 }

@@ -24,6 +24,10 @@ public class TRexClientBPFTest {
     public static void setUp() throws TRexConnectionException, TRexTimeoutException {
         client = new TRexClient("trex-host", "4501", CLIENT_USER);
         client.connect();
+        client.getPorts().forEach(p -> {
+            client.acquirePort(p.getIndex(), true);
+            client.serviceMode(p.getIndex(), true);
+        });
     }
 
     @Test
@@ -102,7 +106,7 @@ public class TRexClientBPFTest {
 
         public CaptureTester(CaptureMonitorStarter s, String filter) {
             TRexClientResult<CaptureMonitor> startResult = s.start(filter);
-            Assert.assertFalse(startResult.isFailed());
+            Assert.assertFalse(startResult.getError(), startResult.isFailed());
             monitor = startResult.get();
         }
 

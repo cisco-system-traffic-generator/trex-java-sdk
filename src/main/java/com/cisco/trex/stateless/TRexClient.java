@@ -313,6 +313,7 @@ public class TRexClient {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIndex);
         return callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
+    }
 
     public PortStatistics getPortStatistics(int portIndex) {
         Map<String, Object> parameters = new HashMap<>();
