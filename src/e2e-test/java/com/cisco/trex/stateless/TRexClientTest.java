@@ -10,6 +10,7 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
 import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
@@ -503,6 +504,51 @@ public class TRexClientTest {
         Assert.assertTrue(equalWithRelativeEps(
                 ps0.getTotalTxPackets() - ps0_initial.getTotalTxPackets(),
                 ps1.getTotalRxPackets() - ps1_initial.getTotalRxPackets(),
+                threshold
+        ));
+    }
+
+    @Test
+    public void getExtendedPortStatisticsTest() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+        Stream s = buildStream(SIMPLE_PACKET);
+        client.addStream(ports.get(0).getIndex(), s);
+
+        ExtendedPortStatistics xs0_initial = client.getExtendedPortStatistics(ports.get(0).getIndex());
+        ExtendedPortStatistics xs1_initial = client.getExtendedPortStatistics(ports.get(1).getIndex());
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 100.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
+        sleep(100);
+
+
+        ExtendedPortStatistics xs0 = client.getExtendedPortStatistics(ports.get(0).getIndex());
+        ExtendedPortStatistics xs1 = client.getExtendedPortStatistics(ports.get(1).getIndex());
+        client.stopTraffic(ports.get(0).getIndex());
+
+        Assert.assertTrue(xs0.getTxGoodPackets() > 0);
+        Assert.assertTrue(xs0.getTxGoodBytes() > 0);
+        Assert.assertTrue(xs1.getRxGoodPackets() > 0);
+        Assert.assertTrue(xs1.getRxGoodBytes() > 0);
+
+        double threshold = 0.5;
+
+        Assert.assertTrue(equalWithRelativeEps(
+                xs0.getTxGoodBytes() - xs0_initial.getTxGoodBytes(),
+                xs1.getRxGoodBytes() - xs1_initial.getRxGoodBytes(),
+                threshold
+        ));
+
+        Assert.assertTrue(equalWithRelativeEps(
+                xs0.getTxGoodPackets() - xs0_initial.getTxGoodPackets(),
+                xs1.getRxGoodPackets() - xs1_initial.getRxGoodPackets(),
                 threshold
         ));
     }
