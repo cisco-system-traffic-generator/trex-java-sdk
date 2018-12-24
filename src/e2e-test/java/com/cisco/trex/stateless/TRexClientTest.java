@@ -531,6 +531,7 @@ public class TRexClientTest {
     }
 
     @Test
+    @Ignore
     public void sendIcmpV6EchoTest() {
         List<Port> ports = client.getPorts();
         for (Port port : ports) {
