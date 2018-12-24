@@ -10,21 +10,18 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.ActivePGIds;
 import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
 import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
 import org.junit.*;
-import org.pcap4j.packet.ArpPacket;
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IllegalRawDataException;
-import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.namednumber.ArpHardwareType;
-import org.pcap4j.packet.namednumber.ArpOperation;
-import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.packet.*;
+import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -553,6 +550,29 @@ public class TRexClientTest {
         ));
     }
 
+    @Test
+    public void getActivePgIds() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 434, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 25, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 255, false));
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 9801, true));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 1315, true));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 78, true));
+
+        ActivePGIds activePgids = client.getActivePgids();
+
+        Assert.assertArrayEquals(new int[]{25, 255, 434}, Arrays.stream(activePgids.getFlowStats()).sorted().toArray());
+        Assert.assertArrayEquals(new int[]{78, 1315, 9801}, Arrays.stream(activePgids.getLatency()).sorted().toArray());
+    }
+
+
     private boolean equalWithRelativeEps(long a, long b, double relativeEps) {
         long max = a > b ? a : b;
         double eps = max * relativeEps;
@@ -657,6 +677,23 @@ public class TRexClientTest {
         );
     }
 
+    public static Stream buildFlowStatsStream(Packet pkt, int id, boolean isLatencyStats) {
+        return new Stream(
+                id,
+                true,
+                0,
+                0.0,
+                createStreamMode(),
+                -1,
+                pkt,
+                null,
+                new StreamVM("", Collections.<VMInstruction>emptyList()),
+                true,
+                true,
+                isLatencyStats? Stream.RuleType.LATENCY : Stream.RuleType.STATS
+        );
+    }
+
     private static StreamMode createStreamMode() {
         return new StreamMode(
                 10000,
@@ -669,6 +706,50 @@ public class TRexClientTest {
                 ),
                 StreamMode.Type.continuous
         );
+    }
+
+    public static EthernetPacket buildUdpPacket() {
+        UdpPacket.Builder udpBuilder = new UdpPacket.Builder();
+        IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
+        EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+
+        Inet4Address srcAddr = null;
+        Inet4Address dstAddr = null;
+        try {
+            srcAddr = (Inet4Address) InetAddress.getByName("1.1.1.1");
+            dstAddr = (Inet4Address) InetAddress.getByName("2.2.2.2");
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        udpBuilder
+                .srcAddr(srcAddr)
+                .dstAddr(dstAddr)
+                .srcPort(UdpPort.HELLO_PORT)
+                .dstPort(UdpPort.HELLO_PORT)
+                .correctChecksumAtBuild(true)
+                .correctLengthAtBuild(true);
+
+        IpV4Rfc791Tos.Builder tosBuilder = new IpV4Rfc791Tos.Builder();
+        tosBuilder
+                .precedence(IpV4TosPrecedence.ROUTINE);
+        ipv4Builder
+                .srcAddr(srcAddr)
+                .dstAddr(dstAddr)
+                .protocol(IpNumber.UDP)
+                .tos(tosBuilder.build())
+                .correctChecksumAtBuild(true)
+                .version(IpVersion.IPV4)
+                .payloadBuilder(udpBuilder);
+
+        etherBuilder
+                .srcAddr(MacAddress.getByName("aa:bb:cc:dd:ee:ff"))
+                .dstAddr(MacAddress.getByName("ff:ee:dd:cc:bb:aa"))
+                .type(EtherType.IPV4)
+                .payloadBuilder(ipv4Builder)
+                .paddingAtBuild(true);
+
+        return etherBuilder.build();
     }
 
     public static EthernetPacket buildArpPkt(String srcMacStr) {

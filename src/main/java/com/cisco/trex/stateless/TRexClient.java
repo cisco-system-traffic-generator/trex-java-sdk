@@ -11,6 +11,8 @@ import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
 import com.cisco.trex.stateless.model.stats.XstatsNames;
+import com.cisco.trex.stateless.model.stats.ActivePGIds;
+import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -429,6 +431,12 @@ public class TRexClient {
         String json = callMethod("get_system_info", null);
         SystemInfoResponse response = gson.fromJson(json, SystemInfoResponse[].class)[0];
         return response.getResult();
+    }
+    
+    public ActivePGIds getActivePgids() {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("pgids", "");
+        return callMethod("get_active_pgids", parameters, ActivePGIdsRPCResult.class).get().getIds();
     }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
