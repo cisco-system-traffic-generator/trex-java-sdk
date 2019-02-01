@@ -10,20 +10,16 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.port.PortVlan;
-import com.cisco.trex.stateless.model.stats.PortStatistics;
+import com.cisco.trex.stateless.model.stats.*;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 
 import org.junit.*;
-import org.pcap4j.packet.ArpPacket;
-import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IllegalRawDataException;
-import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.namednumber.ArpHardwareType;
-import org.pcap4j.packet.namednumber.ArpOperation;
-import org.pcap4j.packet.namednumber.EtherType;
+import org.pcap4j.packet.*;
+import org.pcap4j.packet.namednumber.*;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -85,7 +81,7 @@ public class TRexClientTest {
     }
 
     private PortStatus getPortStatus(int portIdx) {
-        try{
+        try {
             TRexClientResult<PortStatus> result = client.getPortStatus(portIdx);
             if (result.isFailed()) {
                 Assert.fail(result.getError());
@@ -119,11 +115,11 @@ public class TRexClientTest {
     public void serviceModeOnOffTest() {
         List<Port> ports = client.getPorts();
         Port port = ports.get(0);
-        
+
         client.acquirePort(port.getIndex(), true);
         PortStatus serviceModePortStatus = client.serviceMode(port.getIndex(), true);
         Assert.assertTrue(serviceModePortStatus.service);
-        
+
         client.serviceMode(port.getIndex(), false);
         PortStatus normalModePortStatus = client.serviceMode(port.getIndex(), false);
         Assert.assertFalse(normalModePortStatus.service);
@@ -136,26 +132,26 @@ public class TRexClientTest {
         Stream stream = buildStream(SIMPLE_PACKET);
         client.acquirePort(port.getIndex(), true);
         client.addStream(port.getIndex(), stream);
-        
+
         List<Integer> streamIds = client.getStreamIds(port.getIndex());
         Assert.assertTrue(streamIds.contains(stream.getId()));
         client.releasePort(port.getIndex());
     }
-    
+
 
     @Test
     public void removeStreamTest() {
         List<Port> ports = client.getPorts();
         Port port = ports.get(0);
         Stream stream = buildStream(SIMPLE_PACKET);
-        
+
         client.acquirePort(port.getIndex(), true);
         client.addStream(port.getIndex(), stream);
         client.removeStream(port.getIndex(), stream.getId());
-        
+
         List<Integer> streamIds = client.getStreamIds(port.getIndex());
         Assert.assertTrue(!streamIds.contains(stream.getId()));
-        
+
         client.releasePort(port.getIndex());
     }
 
@@ -163,16 +159,16 @@ public class TRexClientTest {
     public void removeAllStreamsTest() {
         List<Port> ports = client.getPorts();
         Port port = ports.get(0);
-        
+
         Stream s = buildStream(SIMPLE_PACKET);
-        
+
         client.acquirePort(port.getIndex(), true);
         client.addStream(port.getIndex(), s);
         client.removeAllStreams(port.getIndex());
-        
+
         List<Integer> streamIds = client.getStreamIds(port.getIndex());
         Assert.assertTrue(streamIds.isEmpty());
-        
+
         client.releasePort(port.getIndex());
     }
 
@@ -180,14 +176,14 @@ public class TRexClientTest {
     public void getStreamTest() {
         List<Port> ports = client.getPorts();
         Port port = ports.get(0);
-        
+
         Stream s = buildStream(SIMPLE_PACKET);
         client.acquirePort(port.getIndex(), true);
         client.addStream(port.getIndex(), s);
-        
+
         Stream streamFromTrex = client.getStream(port.getIndex(), s.getId());
         Assert.assertTrue(s.equals(streamFromTrex));
-        
+
         client.releasePort(port.getIndex());
     }
 
@@ -232,7 +228,7 @@ public class TRexClientTest {
             client.releasePort(port.getIndex());
         }
     }
-    
+
     @Test
     public void startStopTrafficTest() {
         List<Port> ports = client.getPorts();
@@ -247,14 +243,14 @@ public class TRexClientTest {
         mul.put("type", "pps");
         mul.put("value", 1.0);
         client.startTraffic(port.getIndex(), -1.0, true, mul, 1);
-        
+
         PortStatus portStatusTX = client.getPortStatus(port.getIndex()).get();
         Assert.assertTrue(portStatusTX.state.equals("TX"));
         client.stopTraffic(port.getIndex());
 
         PortStatus portStatusStream = client.getPortStatus(port.getIndex()).get();
         Assert.assertTrue(portStatusStream.state.equals("STREAMS"));
-        
+
         client.releasePort(port.getIndex());
     }
 
@@ -269,18 +265,18 @@ public class TRexClientTest {
         Port port1 = ports.get(1);
         client.acquirePort(port.getIndex(), true);
         client.acquirePort(port1.getIndex(), true);
-        
+
         client.serviceMode(port.getIndex(), true);
         client.serviceMode(port1.getIndex(), true);
 
         client.removeRxQueue(port.getIndex());
         client.setRxQueue(port.getIndex(), 5);
-            
+
         Packet pkt = SIMPLE_PACKET;
         client.sendPacket(port.getIndex(), pkt);
 
         Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
-            if(etherPkt.contains(ArpPacket.class)) {
+            if (etherPkt.contains(ArpPacket.class)) {
                 ArpPacket arp = (ArpPacket) etherPkt.getPayload();
                 if (ArpOperation.REPLY.equals(arp.getHeader().getOperation())) {
                     return true;
@@ -299,13 +295,13 @@ public class TRexClientTest {
     public void getCapturesTest() {
         List<Port> ports = client.getPorts();
 
-        for(Port port : ports) {
+        for (Port port : ports) {
             client.acquirePort(port.getIndex(), true);
             client.serviceMode(port.getIndex(), true);
         }
 
         client.removeAllCaptures();
-        
+
         TRexClientResult<CaptureMonitor> result = startMonitor(ports);
         Assert.assertFalse(result.isFailed());
 
@@ -319,10 +315,10 @@ public class TRexClientTest {
 
         Assert.assertTrue(monitorInfoResult.isPresent());
     }
-    
+
     private TRexClientResult<CaptureMonitor> startMonitor(List<Port> portList) {
         List<Integer> rxPorts = new LinkedList<Integer>();
-        if (portList.size()>0) {
+        if (portList.size() > 0) {
             rxPorts.add(portList.get(0).getIndex());
         }
         List<Integer> txPorts = portList.stream().map(Port::getIndex).collect(Collectors.toList());
@@ -333,13 +329,13 @@ public class TRexClientTest {
     public void startRecorderTest() {
         List<Port> ports = client.getPorts();
 
-        for(Port port : ports) {
+        for (Port port : ports) {
             client.acquirePort(port.getIndex(), true);
             client.serviceMode(port.getIndex(), true);
         }
 
         TRexClientResult<CaptureMonitor> result = startMonitor(ports);
-        
+
         Assert.assertFalse(result.isFailed());
 
         CaptureMonitor capture = result.get();
@@ -348,43 +344,43 @@ public class TRexClientTest {
         Optional<CaptureInfo> recordMonitor = Arrays.stream(activeCaptures.get())
                 .filter(info -> info.getId() == capture.getCaptureId())
                 .findFirst();
-        
+
         Assert.assertTrue(recordMonitor.isPresent());
         Assert.assertEquals("ACTIVE", recordMonitor.get().getState());
     }
-    
+
     @Test
     public void removeAllRecorderTest() {
         TRexClientResult<List<RPCResponse>> result = client.removeAllCaptures();
         Assert.assertFalse(result.isFailed());
     }
-    
+
     @Test
     public void sendMultipleCmdsTest() {
         List<TRexCommand> commands = new ArrayList<>();
-        
+
         for (int i = 1; i <= 10; i++) {
             commands.add(client.buildCommand("sendIcmpV6Request", new HashMap<>()));
         }
 
         TRexClientResult<List<RPCResponse>> result = client.callMethods(commands);
-        
+
         Assert.assertFalse(result.isFailed());
-        
+
         Assert.assertEquals(commands.size(), result.get().size());
     }
-    
+
     @Test
     public void captureRecordStopTest() {
         List<Port> ports = client.getPorts();
 
-        for(Port port : ports) {
+        for (Port port : ports) {
             client.acquirePort(port.getIndex(), true);
             client.serviceMode(port.getIndex(), true);
         }
 
         TRexClientResult<CaptureMonitor> result = startMonitor(client.getPorts());
-        
+
         CaptureMonitor recordMonitor = result.get();
 
         TRexClientResult<CaptureMonitorStop> stopResult = client.captureMonitorStop(result.get().getCaptureId());
@@ -396,17 +392,17 @@ public class TRexClientTest {
         Optional<CaptureInfo> stoppedMonitor = Arrays.stream(activeCapturesResult.get())
                 .filter(captureInfo -> captureInfo.getId() == recordMonitor.getCaptureId())
                 .findFirst();
-        
+
         Assert.assertTrue(stoppedMonitor.isPresent());
-        
+
         Assert.assertEquals("STOPPED", stoppedMonitor.get().getState());
     }
-    
+
     @Test
     public void fetchCapturedPKtsTest() throws InterruptedException {
         List<Port> ports = client.getPorts();
 
-        for (Port port: ports) {
+        for (Port port : ports) {
             client.acquirePort(port.getIndex(), true);
             client.serviceMode(port.getIndex(), true);
         }
@@ -468,9 +464,12 @@ public class TRexClientTest {
         for (Port port : ports) {
             client.acquirePort(port.getIndex(), true);
         }
-
         Stream s = buildStream(SIMPLE_PACKET);
         client.addStream(ports.get(0).getIndex(), s);
+
+        PortStatistics ps0_initial = client.getPortStatistics(ports.get(0).getIndex());
+        PortStatistics ps1_initial = client.getPortStatistics(ports.get(1).getIndex());
+
 
         Map<String, Object> mul = new HashMap<>();
         mul.put("op", "abs");
@@ -489,25 +488,148 @@ public class TRexClientTest {
         Assert.assertTrue(ps1.getTotalRxBytes() > 0);
         Assert.assertTrue(ps1.getTotalRxPackets() > 0);
 
-        double thershold = 0.1;
+        double threshold = 0.1;
 
-        Assert.assertTrue(equalWithRelativeEps(ps0.getTotalTxBytes(), ps1.getTotalRxBytes(), thershold));
-        Assert.assertTrue(equalWithRelativeEps(ps0.getTotalTxPackets(), ps1.getTotalRxPackets(), thershold));
+        Assert.assertTrue(equalWithRelativeEps(
+                ps0.getTotalTxBytes() - ps0_initial.getTotalTxBytes(),
+                ps1.getTotalRxBytes() - ps1_initial.getTotalRxBytes(),
+                threshold
+        ));
+
+        Assert.assertTrue(equalWithRelativeEps(
+                ps0.getTotalTxPackets() - ps0_initial.getTotalTxPackets(),
+                ps1.getTotalRxPackets() - ps1_initial.getTotalRxPackets(),
+                threshold
+        ));
     }
 
-    private boolean equalWithRelativeEps(long a, long b, double relativeEps) {
-        long max = a > b? a : b;
-        double eps = max * relativeEps;
-
-        return Math.abs(a-b) <= eps;
-    }
-
-        @Test
-    public void iPV6ScanTest() {
+    @Test
+    public void getExtendedPortStatisticsTest() throws InterruptedException {
         List<Port> ports = client.getPorts();
 
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+        Stream s = buildStream(SIMPLE_PACKET);
+        client.addStream(ports.get(0).getIndex(), s);
+
+        ExtendedPortStatistics xs0_initial = client.getExtendedPortStatistics(ports.get(0).getIndex());
+        ExtendedPortStatistics xs1_initial = client.getExtendedPortStatistics(ports.get(1).getIndex());
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 100.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
+        sleep(100);
+
+
+        ExtendedPortStatistics xs0 = client.getExtendedPortStatistics(ports.get(0).getIndex());
+        ExtendedPortStatistics xs1 = client.getExtendedPortStatistics(ports.get(1).getIndex());
+        client.stopTraffic(ports.get(0).getIndex());
+
+        Assert.assertTrue(xs0.getTxGoodPackets() > 0);
+        Assert.assertTrue(xs0.getTxGoodBytes() > 0);
+        Assert.assertTrue(xs1.getRxGoodPackets() > 0);
+        Assert.assertTrue(xs1.getRxGoodBytes() > 0);
+
+        double threshold = 0.5;
+
+        Assert.assertTrue(equalWithRelativeEps(
+                xs0.getTxGoodBytes() - xs0_initial.getTxGoodBytes(),
+                xs1.getRxGoodBytes() - xs1_initial.getRxGoodBytes(),
+                threshold
+        ));
+
+        Assert.assertTrue(equalWithRelativeEps(
+                xs0.getTxGoodPackets() - xs0_initial.getTxGoodPackets(),
+                xs1.getRxGoodPackets() - xs1_initial.getRxGoodPackets(),
+                threshold
+        ));
+    }
+
+    @Test
+    public void getActivePgIds() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 434, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 25, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 255, false));
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 9801, true));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 1315, true));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 78, true));
+
+        ActivePGIds activePgids = client.getActivePgids();
+
+        Assert.assertArrayEquals(new int[]{25, 255, 434}, Arrays.stream(activePgids.getFlowStats()).sorted().toArray());
+        Assert.assertArrayEquals(new int[]{78, 1315, 9801}, Arrays.stream(activePgids.getLatency()).sorted().toArray());
+    }
+
+    @Test
+    public void getPgIdStats() throws InterruptedException {
+        List<Port> ports = client.getPorts();
+
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+        }
+
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 333, false));
+        client.addStream(ports.get(0).getIndex(), buildFlowStatsStream(buildUdpPacket(), 444, false));
+
+        Map<String, Object> mul = new HashMap<>();
+        mul.put("op", "abs");
+        mul.put("type", "pps");
+        mul.put("value", 1.0);
+        client.startTraffic(ports.get(0).getIndex(), -1.0, true, mul, 1);
+        sleep(3000);
+        client.stopTraffic(ports.get(0).getIndex());
+
+        PGIdStatsRPCResult pgidStats = client.getPgidStats(new int[]{333, 444});
+
+        Map<String, FlowStat> flowStats = pgidStats.getFlowStats();
+
+        String port0 = String.valueOf(ports.get(0).getIndex());
+        String port1 = String.valueOf(ports.get(1).getIndex());
+        for (int pgId: Arrays.asList(333,444)) {
+            String pgIdStr = String.valueOf(pgId);
+            Assert.assertTrue(flowStats.containsKey(pgIdStr));
+
+            Assert.assertTrue(flowStats.get(pgIdStr).getRb().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRbs().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRp().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getRps().get(port1) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTb().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTbs().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTp().get(port0) > 0);
+            Assert.assertTrue(flowStats.get(pgIdStr).getTps().get(port0) > 0);
+
+            Assert.assertEquals(flowStats.get(pgIdStr).getRb().get(port1), flowStats.get(pgIdStr).getTb().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRbs().get(port1), flowStats.get(pgIdStr).getTbs().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRp().get(port1), flowStats.get(pgIdStr).getTp().get(port0));
+            Assert.assertEquals(flowStats.get(pgIdStr).getRps().get(port1), flowStats.get(pgIdStr).getTps().get(port0));
+        }
+    }
+
+
+    private boolean equalWithRelativeEps(long a, long b, double relativeEps) {
+        long max = a > b ? a : b;
+        double eps = max * relativeEps;
+
+        return Math.abs(a - b) <= eps;
+    }
+
+    @Test
+    public void iPV6ScanTest() {
+        List<Port> ports = client.getPorts();
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
 
         try {
             Map<String, Ipv6Node> ipv6Nodes = client.scanIPv6(ports.get(0).getIndex());
@@ -516,36 +638,38 @@ public class TRexClientTest {
             Assert.fail("Port 0 is not in service mode");
         }
     }
-    
+
     @Test
+    @Ignore
     public void sendIcmpV6EchoTest() {
         List<Port> ports = client.getPorts();
-
-        client.acquirePort(ports.get(0).getIndex(), true);
-        client.serviceMode(ports.get(0).getIndex(), true);
-
+        for (Port port : ports) {
+            client.acquirePort(port.getIndex(), true);
+            client.serviceMode(port.getIndex(), true);
+        }
         try {
-            // fe80:0:0:0:822a:a8ff:fe56:1517
-            // fe80:0:0:0:bc:18ff:fe6a:c570
-            // fe80:0:0:0:250:56ff:fe9b:2ef7
-            Assert.assertTrue(client.sendIcmpV6Echo(ports.get(0).getIndex(), "fe80::822a:a8ff:fec0:5495", 0, 0, 2) != null);
+            Map<String, Ipv6Node> ipv6Nodes = client.scanIPv6(ports.get(0).getIndex());
+            Assert.assertTrue(ipv6Nodes.size() > 0);
+            for (String ipv6Addr : ipv6Nodes.keySet()) {
+                Assert.assertNotNull(client.sendIcmpV6Echo(ports.get(0).getIndex(), ipv6Addr, 0, 0, 2));
+            }
         } catch (ServiceModeRequiredException e) {
             Assert.fail("Port 0 is not in service mode");
         }
     }
-    
+
     @Test
     @Ignore
-    public void sendPacketTest() throws TRexTimeoutException{
+    public void sendPacketTest() throws TRexTimeoutException {
         List<Port> ports = client.getPorts();
         Port port = ports.get(0);
-        
+
         client.acquirePort(port.getIndex(), true);
         client.serviceMode(port.getIndex(), true);
         client.setRxQueue(port.getIndex(), 10);
         List<EthernetPacket> pkts = client.getRxQueue(port.getIndex(), p -> true);
     }
-    
+
     private static EthernetPacket buildIdealPkt(String pkt) {
         byte[] pktBin = Base64.getDecoder().decode(pkt);
         try {
@@ -555,11 +679,28 @@ public class TRexClientTest {
         }
         return null;
     }
-    
+
     @AfterClass
     public static void tierDown() {
-        client.getPorts().stream().forEach(port -> client.stopTraffic(port.getIndex()));
+        client.getPorts().stream().forEach(port -> {
+            client.stopTraffic(port.getIndex());
+            client.resetPort(port.getIndex());
+            client.setVlan(port.getIndex(), new ArrayList<>());
+        });
         client.disconnect();
+    }
+
+    @After
+    public void tearDownMethod() {
+        client.removeAllCaptures();
+        client.getPorts().stream().forEach(port ->
+        {
+            client.stopTraffic(port.getIndex());
+            client.resetPort(port.getIndex());
+            client.setVlan(port.getIndex(), new ArrayList<>());
+            client.serviceMode(port.getIndex(), false);
+            client.releasePort(port.getIndex());
+        });
     }
 
     public static Stream buildStream(Packet pkt) {
@@ -579,6 +720,23 @@ public class TRexClientTest {
         );
     }
 
+    public static Stream buildFlowStatsStream(Packet pkt, int id, boolean isLatencyStats) {
+        return new Stream(
+                id,
+                true,
+                0,
+                0.0,
+                createStreamMode(),
+                -1,
+                pkt,
+                null,
+                new StreamVM("", Collections.<VMInstruction>emptyList()),
+                true,
+                true,
+                isLatencyStats? Stream.RuleType.LATENCY : Stream.RuleType.STATS
+        );
+    }
+
     private static StreamMode createStreamMode() {
         return new StreamMode(
                 10000,
@@ -591,6 +749,50 @@ public class TRexClientTest {
                 ),
                 StreamMode.Type.continuous
         );
+    }
+
+    public static EthernetPacket buildUdpPacket() {
+        UdpPacket.Builder udpBuilder = new UdpPacket.Builder();
+        IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
+        EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+
+        Inet4Address srcAddr = null;
+        Inet4Address dstAddr = null;
+        try {
+            srcAddr = (Inet4Address) InetAddress.getByName("1.1.1.1");
+            dstAddr = (Inet4Address) InetAddress.getByName("2.2.2.2");
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        udpBuilder
+                .srcAddr(srcAddr)
+                .dstAddr(dstAddr)
+                .srcPort(UdpPort.HELLO_PORT)
+                .dstPort(UdpPort.HELLO_PORT)
+                .correctChecksumAtBuild(true)
+                .correctLengthAtBuild(true);
+
+        IpV4Rfc791Tos.Builder tosBuilder = new IpV4Rfc791Tos.Builder();
+        tosBuilder
+                .precedence(IpV4TosPrecedence.ROUTINE);
+        ipv4Builder
+                .srcAddr(srcAddr)
+                .dstAddr(dstAddr)
+                .protocol(IpNumber.UDP)
+                .tos(tosBuilder.build())
+                .correctChecksumAtBuild(true)
+                .version(IpVersion.IPV4)
+                .payloadBuilder(udpBuilder);
+
+        etherBuilder
+                .srcAddr(MacAddress.getByName("aa:bb:cc:dd:ee:ff"))
+                .dstAddr(MacAddress.getByName("ff:ee:dd:cc:bb:aa"))
+                .type(EtherType.IPV4)
+                .payloadBuilder(ipv4Builder)
+                .paddingAtBuild(true);
+
+        return etherBuilder.build();
     }
 
     public static EthernetPacket buildArpPkt(String srcMacStr) {
