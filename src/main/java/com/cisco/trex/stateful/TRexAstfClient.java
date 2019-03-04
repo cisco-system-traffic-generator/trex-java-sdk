@@ -232,9 +232,9 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * Stop Lantency Streams
+     * Stop Latency Streams
      */
-    public void stopLantencyStreams() {
+    public void stopLatencyStreams() {
         Map<String, Object> payload = this.createPayload();
         this.callMethod("stop_latency", payload);
     }
