@@ -212,5 +212,49 @@ public class TRexAstfClient extends ClientBase {
         Map<String, Object> payload = createPayload();
         this.callMethod("profile_clear", payload);
     }
+    
+    /**
+     * Get Counter Metadata
+     * Not finished, needs to return counter object
+     */
+    public void getCounterMetadata() {
+        Map<String, Object> payload = createPayload();
+        this.callMethod("get_counter_desc", payload);
+    }
+
+    /**
+     * Get Astf Counters
+     * Not finished, needs to return counter object
+     */
+    public void getAstfCounters() {
+        Map<String, Object> payload = this.createPayload();
+        this.callMethod("get_counter_values", payload);
+    }
+
+    /**
+     * Stop Lantency Streams
+     */
+    public void stopLantencyStreams() {
+        Map<String, Object> payload = this.createPayload();
+        this.callMethod("stop_latency", payload);
+    }
+
+    /**
+     * Get Latency Stats
+     * Not finished, needs to return counter object
+     */
+    public void getLatencyStats() {
+        Map<String, Object> payload = this.createPayload();
+        this.callMethod("get_latency_stats", payload);
+    }
+
+    /**
+     * Get Version
+     * Not finished, needs to return version
+     */
+    public void getVersion() {
+        Map<String, Object> payload = this.createPayload();
+        this.callMethod("get_version", payload);
+    }
 
 }
