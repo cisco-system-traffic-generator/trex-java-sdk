@@ -1,5 +1,7 @@
 package com.cisco.trex.stateless.model;
 
+import java.util.Objects;
+
 public class StreamModeRate {
     
     private Type type;
@@ -26,5 +28,25 @@ public class StreamModeRate {
         Type(String name) {
             this.name = name;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (!(obj instanceof  StreamModeRate)) {
+            return false;
+        }
+
+        StreamModeRate rhs = (StreamModeRate) obj;
+
+        return Objects.equals(this.value, rhs.value) &&
+                Objects.equals(this.type, rhs.type);
     }
 }

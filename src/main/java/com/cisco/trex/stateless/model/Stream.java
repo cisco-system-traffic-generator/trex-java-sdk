@@ -4,12 +4,14 @@ import org.pcap4j.packet.Packet;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Stream {
     private Integer id;
     private Integer flags = 1;
     private Integer action_count = 0;
     private Integer random_seed = 0;
+    private Integer core_id = -1;
     private Boolean enabled;
     private Double isg;
     private StreamMode mode;
@@ -20,8 +22,9 @@ public class Stream {
     private Boolean self_start;
     private Map<String, Object> flow_stats = new HashMap<>();
 
-    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type) {
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type, int core_id) {
         this.id = id;
+        this.core_id = core_id;
         this.flags = flags;
         this.enabled = enabled;
         this.isg = isg;
@@ -38,9 +41,21 @@ public class Stream {
             flow_stats.put("rule_type", rule_type.toString());
         }
     }
+    
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start, boolean use_flow_stats, RuleType rule_type) {
+        this(id, enabled, flags, isg, mode, next_stream_id, packet, rx_stats, vm, self_start, use_flow_stats, rule_type, -1);
+    }
+    
+    public Stream(Integer id, Boolean enabled, int flags, Double isg, StreamMode mode, Integer next_stream_id, Packet packet, StreamRxStats rx_stats, StreamVM vm, Boolean self_start) {
+        this(id, enabled, flags, isg, mode, next_stream_id, packet, rx_stats, vm, self_start, true, RuleType.STATS, -1);
+    }
 
     public Integer getId() {
         return id;
+    }
+    
+    public Integer getCore_id() {
+        return core_id;
     }
 
     public Boolean getEnabled() {
@@ -77,12 +92,34 @@ public class Stream {
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
         if (!(obj instanceof Stream)) {
             return false;
         }
         
         Stream s2 = (Stream) obj;
-        return id.equals(s2.getId()) || super.equals(obj);
+
+        return Objects.equals(this.id, s2.id) &&
+                Objects.equals(this.flags, s2.flags) &&
+                Objects.equals(this.action_count, s2.action_count) &&
+                Objects.equals(this.random_seed, s2.random_seed) &&
+                Objects.equals(this.core_id, s2.core_id) &&
+                Objects.equals(this.enabled, s2.enabled) &&
+                Objects.equals(this.isg, s2.isg) &&
+                Objects.equals(this.mode, s2.mode) &&
+                Objects.equals(this.next_stream_id, s2.next_stream_id) &&
+                Objects.equals(this.packet, s2.packet) &&
+                Objects.equals(this.rx_stats, s2.rx_stats) &&
+                Objects.equals(this.vm, s2.vm) &&
+                Objects.equals(this.self_start, s2.self_start) &&
+                Objects.equals(this.flow_stats, s2.flow_stats);
     }
 
     public static class StreamPacket {
@@ -112,6 +149,26 @@ public class Stream {
     
         public String getMeta() {
             return meta;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj == null) {
+                return false;
+            }
+
+            if (!(obj instanceof StreamPacket)) {
+                return false;
+            }
+
+            StreamPacket rhs = (StreamPacket) obj;
+
+            return Objects.equals(this.binary, rhs.binary) &&
+                    Objects.equals(this.meta, rhs.meta);
         }
     }
     
