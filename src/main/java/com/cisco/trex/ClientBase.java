@@ -493,6 +493,38 @@ public abstract class ClientBase {
         SystemInfoResponse response = GSON.fromJson(json, SystemInfoResponse[].class)[0];
         return response.getResult();
     }
+    
+    /**
+     * Release Port
+     *
+     * @param portIndex
+     * @return PortStatus
+     */
+    public PortStatus releasePort(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        payload.put("user", userName);
+        String result = callMethod("release", payload);
+        if (result.contains("must acquire the context")) {
+            LOGGER.info("Port is not owned by this session, already released or never acquired");
+        }
+        portHandlers.remove(portIndex);
+        return getPortStatus(portIndex).get();
+    }
+
+    protected Map<String, Object> createPayload(int portIndex) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("port_id", portIndex);
+        payload.put("api_h", apiH);
+        if (!StringUtils.isEmpty(masterHandler)) {
+            payload.put("handler", masterHandler);
+        } else {
+            String handler = portHandlers.get(portIndex);
+            if (handler != null) {
+                payload.put("handler", handler);
+            }
+        }
+        return payload;
+    }
 
     protected abstract void serverAPISync() throws TRexConnectionException;
 
@@ -504,13 +536,5 @@ public abstract class ClientBase {
      * @return PortStatus
      */
     public abstract PortStatus acquirePort(int port, Boolean force);
-
-    /**
-     * Release Port
-     *
-     * @param portIndex
-     * @return PortStatus
-     */
-    public abstract PortStatus releasePort(int portIndex);
 
 }
