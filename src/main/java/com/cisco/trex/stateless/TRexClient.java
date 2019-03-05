@@ -124,26 +124,6 @@ public class TRexClient extends ClientBase {
         releasePort(portIndex);
     }
 
-    private Map<String, Object> createPayload(int portIndex) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("port_id", portIndex);
-        payload.put("api_h", apiH);
-        String handler = portHandlers.get(portIndex);
-        if (handler != null) {
-            payload.put("handler", handler);
-        }
-        return payload;
-    }
-
-    @Override
-    public PortStatus releasePort(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
-        payload.put("user", userName);
-        callMethod("release", payload);
-        portHandlers.remove(portIndex);
-        return getPortStatus(portIndex).get();
-    }
-
     public PortStatus serviceMode(int portIndex, Boolean isOn) {
         LOGGER.info("Set service mode : {}", isOn ? "on" : "off");
         Map<String, Object> payload = createPayload(portIndex);
