@@ -114,7 +114,7 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * Stop active latency streams
+     * Stop active latency traffic
      */
     public void stopLatencyTraffic() {
         Map<String, Object> payload = createPayload();
@@ -177,15 +177,6 @@ public class TRexAstfClient extends ClientBase {
         return getPortStatus(portIndex).get();
     }
 
-    @Override
-    public PortStatus releasePort(int portIndex) {
-        Map<String, Object> payload = createPayload();
-        payload.put("port_id", portIndex);
-        callMethod("release", payload);
-        portHandlers.remove(portIndex);
-        return getPortStatus(portIndex).get();
-    }
-
     /**
      * @param fragFirst
      * @param fragLast
@@ -229,14 +220,6 @@ public class TRexAstfClient extends ClientBase {
     public void getAstfCounters() {
         Map<String, Object> payload = this.createPayload();
         this.callMethod("get_counter_values", payload);
-    }
-
-    /**
-     * Stop Latency Streams
-     */
-    public void stopLatencyStreams() {
-        Map<String, Object> payload = this.createPayload();
-        this.callMethod("stop_latency", payload);
     }
 
     /**
