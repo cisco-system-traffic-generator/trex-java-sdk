@@ -233,11 +233,19 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get Version
-     * Not finished, needs to return version
+     * 
+     * @return version
      */
-    public void getVersion() {
+    public String getVersion() {
         Map<String, Object> payload = this.createPayload();
-        this.callMethod("get_version", payload);
+        String json = callMethod("get_version", payload);
+        JsonElement response = new JsonParser().parse(json);
+        try {
+            return response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+                    .get("version").getAsString();
+        } catch (NullPointerException e) {
+            throw new IllegalStateException("could not parse version", e);
+        }
     }
 
 }
