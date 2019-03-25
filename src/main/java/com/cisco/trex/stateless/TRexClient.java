@@ -3,9 +3,9 @@ package com.cisco.trex.stateless;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.MessageFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.cisco.trex.stateless.model.*;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.Dot1qVlanTagPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -40,16 +41,6 @@ import org.pcap4j.util.MacAddress;
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.ApiVersion;
-import com.cisco.trex.stateless.model.Ipv6Node;
-import com.cisco.trex.stateless.model.Port;
-import com.cisco.trex.stateless.model.PortStatus;
-import com.cisco.trex.stateless.model.Stream;
-import com.cisco.trex.stateless.model.StreamMode;
-import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
-import com.cisco.trex.stateless.model.StreamVM;
-import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.stats.ActivePGIds;
 import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
@@ -65,14 +56,14 @@ public class TRexClient extends ClientBase {
 
     private static final EtherType QInQ = new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
     private static Integer API_VERSION_MAJOR = 4;
-    private static Integer API_VERSION_MINOR = 0;
+    private static Integer API_VERSION_MINOR = 5;
     private Integer session_id = 123456789;
 
     public TRexClient(String host, String port, String userName) {
         this.host = host;
         this.port = port;
         this.userName = userName;
-        supportedCmds.add("api_sync");
+        supportedCmds.add("api_sync_v2");
         supportedCmds.add("get_supported_cmds");
         EtherType.register(QInQ);
     }
@@ -81,20 +72,20 @@ public class TRexClient extends ClientBase {
     protected void serverAPISync() throws TRexConnectionException {
         LOGGER.info("Sync API with the TRex");
 
-        Map<String, Object> apiVers = new HashMap<>();
-        apiVers.put("type", "core");
-        apiVers.put("major", API_VERSION_MAJOR);
-        apiVers.put("minor", API_VERSION_MINOR);
-
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("api_vers", Arrays.asList(apiVers));
+        parameters.put("name", "STL");
+        parameters.put("major", API_VERSION_MAJOR);
+        parameters.put("minor", API_VERSION_MINOR);
 
-        TRexClientResult<ApiVersion> result = callMethod("api_sync", parameters, ApiVersion.class);
+        TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    "Unable to connect to TRex server. Required API version is " + API_VERSION_MAJOR + "."
-                            + API_VERSION_MINOR);
+                    MessageFormat.format("Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
+                            API_VERSION_MAJOR,
+                            API_VERSION_MINOR,
+                            result.getError()
+                    ));
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
         }

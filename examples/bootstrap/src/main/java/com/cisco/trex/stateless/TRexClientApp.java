@@ -22,16 +22,21 @@ public class TRexClientApp {
     // https://github.com/cisco-system-traffic-generator/trex-java-sdk/blob/master/src/test/java/com/cisco/trex/stateless/TRexClientTest.java
 
     public static void main(String[] args) {
-        client = new TRexClient("tcp", trex_host, trex_port, client_name);
-        client.connect();
-        List<Port> ports = client.getPorts();
-        System.out.println("Found " + ports.size() + " ports");
-        List<String> cmds = client.getSupportedCommands();
-        logger.info("List of available commands:");
-        for (String cmd: cmds) {
-            logger.info(" - " + cmd);
+        client = new TRexClient(trex_host, trex_port, client_name);
+        try {
+            client.connect();
+            List<Port> ports = client.getPorts();
+            System.out.println("Found " + ports.size() + " ports");
+            List<String> cmds = client.getSupportedCommands();
+            logger.info("List of available commands:");
+            for (String cmd : cmds) {
+                logger.info(" - " + cmd);
+            }
+        } catch (TRexConnectionException e) {
+            e.printStackTrace();
+        } finally {
+            client.disconnect();
         }
-        client.disconnect();
     }
 }
 

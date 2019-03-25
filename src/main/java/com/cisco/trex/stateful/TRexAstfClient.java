@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.cisco.trex.stateless.model.ApiVersionHandler;
 import org.apache.commons.lang.StringUtils;
 
 import com.cisco.trex.ClientBase;
@@ -20,7 +21,7 @@ import com.google.gson.JsonParser;
 public class TRexAstfClient extends ClientBase {
 
     private static final Integer API_VERSION_MAJOR = 1;
-    private static final Integer API_VERSION_MINOR = 1;
+    private static final Integer API_VERSION_MINOR = 5;
     private static final String ASTF = "ASTF";
 
     /**
@@ -43,7 +44,7 @@ public class TRexAstfClient extends ClientBase {
         apiVers.put("major", API_VERSION_MAJOR);
         apiVers.put("minor", API_VERSION_MINOR);
         apiVers.put("name", ASTF);
-        TRexClientResult<ApiAstfVersion> result = callMethod("api_sync_v2", apiVers, ApiAstfVersion.class);
+        TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
                     "Unable to connect to TRex server. Required API version is " + API_VERSION_MAJOR + "."
