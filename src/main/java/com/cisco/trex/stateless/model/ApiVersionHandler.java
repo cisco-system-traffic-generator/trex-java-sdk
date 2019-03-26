@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true) 
-public class ApiVersionHolder {
+public class ApiVersionHandler {
     @JsonProperty("type")
     private String type;
 
