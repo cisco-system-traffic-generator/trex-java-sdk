@@ -5,13 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class L2Configuration {
+
     @JsonProperty("dst")
     private String dst;
 
     @JsonProperty("src")
     private String src;
 
-    @JsonProperty("status")
+    @JsonProperty("state")
     private String state;
 
     @JsonProperty("dst")
@@ -34,13 +35,13 @@ public class L2Configuration {
         this.src = src;
     }
 
-    @JsonProperty("status")
-    public String getStatus() {
+    @JsonProperty("state")
+    public String getState() {
         return state;
     }
 
-    @JsonProperty("status")
-    public void setStatus(String status) {
-        this.state = status;
+    @JsonProperty("state")
+    public void setState(String state) {
+        this.state = state;
     }
 }
