@@ -1,19 +1,18 @@
 package com.cisco.trex.stateful;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import com.cisco.trex.stateless.model.ApiVersionHandler;
-import org.apache.commons.lang.StringUtils;
-
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
+import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * TRex Astf Client class
@@ -76,7 +75,7 @@ public class TRexAstfClient extends ClientBase {
      * @param nc
      */
     public void startTraffic(long clientMask, double duration, boolean ipv6,
-            int latencyPps, int mult, boolean nc) {
+                             int latencyPps, int mult, boolean nc) {
         Map<String, Object> payload = createPayload();
         payload.put("client_mask", clientMask);
         payload.put("duration", duration);
@@ -204,7 +203,7 @@ public class TRexAstfClient extends ClientBase {
         Map<String, Object> payload = createPayload();
         this.callMethod("profile_clear", payload);
     }
-    
+
     /**
      * Get Counter Metadata
      * Not finished, needs to return counter object
@@ -234,7 +233,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get Version
-     * 
+     *
      * @return version
      */
     public String getVersion() {
@@ -248,5 +247,4 @@ public class TRexAstfClient extends ClientBase {
             throw new IllegalStateException("could not parse version", e);
         }
     }
-
 }

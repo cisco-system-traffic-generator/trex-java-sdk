@@ -9,51 +9,53 @@ import org.apache.commons.lang.StringUtils;
 public class AstfAssociationRule {
     private String ipStart;
     private String ipEnd;
-    private JsonObject fields=new JsonObject();
+    private JsonObject fields = new JsonObject();
     private int port;
 
     /**
      * construct
-     * @param ipStart ip start
-     * @param ipEnd ip end
-     * @param port port
+     *
+     * @param ipStart
+     * @param ipEnd
+     * @param port
      */
-    public AstfAssociationRule(String ipStart,String ipEnd,int port){
-        this.port=port;
-        this.ipStart=ipStart;
-        this.ipEnd=ipEnd;
+    public AstfAssociationRule(String ipStart, String ipEnd, int port) {
+        this.port = port;
+        this.ipStart = ipStart;
+        this.ipEnd = ipEnd;
         fields.addProperty("port", port);
-        if (!StringUtils.isEmpty(ipStart)){
+        if (!StringUtils.isEmpty(ipStart)) {
             fields.addProperty("ip_start", ipStart);
         }
-        if (!StringUtils.isEmpty(ipStart)){
+        if (!StringUtils.isEmpty(ipStart)) {
             fields.addProperty("ip_end", ipEnd);
         }
     }
 
     /**
      * construct
+     *
      * @param port
      */
-    public AstfAssociationRule(int port){
-        this.port=port;
-        fields.addProperty("port", port);
+    public AstfAssociationRule(int port) {
+        this(null, null, port);
     }
 
     /**
      * get port
+     *
      * @return port
      */
-    public int getPort(){
+    public int getPort() {
         return this.port;
     }
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         return fields;
     }
-
 }

@@ -1,20 +1,18 @@
 package com.cisco.trex.stateful;
 
 /**
- * Astf Cmd Delay
+ * Astf Cmd Close Msg
  */
-public class AstfCmdDelay extends AstfCmd {
-    private static final String NAME = "delay";
+public class AstfCmdCloseMsg extends AstfCmd {
+    private static final String NAME = "close_msg";
 
     /**
      * construct
-     *
-     * @param usec
      */
-    public AstfCmdDelay(int usec) {
+    public AstfCmdCloseMsg() {
         super();
         fields.addProperty("name", NAME);
-        fields.addProperty("usec", usec);
+        stream = false;
     }
 
     @Override

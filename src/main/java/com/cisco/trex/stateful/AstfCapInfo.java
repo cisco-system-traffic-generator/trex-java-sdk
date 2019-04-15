@@ -1,6 +1,5 @@
 package com.cisco.trex.stateful;
 
-
 /**
  * Astf Cap Info,for pcap file usage
  */
@@ -30,13 +29,14 @@ public class AstfCapInfo {
 
     /**
      * new AstfCapInfo builder
+     *
      * @return new builder
      */
-    public static AstfCapInfoBuilder newBuilder(){
+    public static AstfCapInfoBuilder newBuilder() {
         return new AstfCapInfoBuilder();
     }
 
-    private void paramCheck(){
+    private void paramCheck() {
         if (l7Percent > 0) {
             if (cps > 0) {
                 throw new IllegalStateException(String.format("bad param combination,l7Percent %s ,cps %s ", l7Percent, cps));
@@ -61,6 +61,7 @@ public class AstfCapInfo {
 
     /**
      * getFilePath
+     *
      * @return filePath
      */
     public String getFilePath() {
@@ -69,6 +70,7 @@ public class AstfCapInfo {
 
     /**
      * getCps
+     *
      * @return cps
      */
     public float getCps() {
@@ -77,6 +79,7 @@ public class AstfCapInfo {
 
     /**
      * getAssoc
+     *
      * @return assoc
      */
     public AstfAssociation getAssoc() {
@@ -85,6 +88,7 @@ public class AstfCapInfo {
 
     /**
      * getAstfIpGen
+     *
      * @return astfIpGen
      */
     public AstfIpGen getAstfIpGen() {
@@ -93,6 +97,7 @@ public class AstfCapInfo {
 
     /**
      * getPort
+     *
      * @return port
      */
     public int getPort() {
@@ -101,6 +106,7 @@ public class AstfCapInfo {
 
     /**
      * getL7Percent
+     *
      * @return l7Percent
      */
     public float getL7Percent() {
@@ -109,6 +115,7 @@ public class AstfCapInfo {
 
     /**
      * getServerGlobInfo
+     *
      * @return serverGlobInfo
      */
     public AstfGlobalInfoPerTemplate getServerGlobInfo() {
@@ -117,6 +124,7 @@ public class AstfCapInfo {
 
     /**
      * getClientGlobInfo
+     *
      * @return clientGlobInfo
      */
     public AstfGlobalInfoPerTemplate getClientGlobInfo() {
@@ -125,6 +133,7 @@ public class AstfCapInfo {
 
     /**
      * getLimit
+     *
      * @return limit
      */
     public int getLimit() {

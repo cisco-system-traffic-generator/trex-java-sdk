@@ -21,51 +21,42 @@ public class AstfIpGenDist {
 
     /**
      * construct
+     *
      * @param ipStart
      * @param ipEnd
      */
-    public AstfIpGenDist(String ipStart, String ipEnd){
-        this.ipStart=ipStart;
-        this.ipEnd=ipEnd;
-        this.distribution= Distribution.SEQ;
-        this.perCoreDistributionVals=null;
-        this.newInner=new Inner(ipStart,ipEnd,distribution,perCoreDistributionVals);
-        for (int i=0;i<inList.size();i++){
-            if (newInner.equals(inList.get(i))){
-                this.index=i;
-                return;
-            }
-        }
-        this.inList.add(newInner);
-        this.index= inList.size()-1;
+    public AstfIpGenDist(String ipStart, String ipEnd) {
+        this(ipStart, ipEnd, Distribution.SEQ, null);
     }
 
     /**
      * construct
+     *
      * @param ipStart
      * @param ipEnd
      * @param distribution
      * @param perCoreDistributionVals
      */
-    public AstfIpGenDist(String ipStart,String ipEnd,Distribution distribution,PerCoreDistributionVals perCoreDistributionVals){
-        this.ipStart=ipStart;
-        this.ipEnd=ipEnd;
-        this.distribution=distribution;
-        this.perCoreDistributionVals=perCoreDistributionVals;
-        this.newInner=new Inner(ipStart,ipEnd,distribution,perCoreDistributionVals);
+    public AstfIpGenDist(String ipStart, String ipEnd, Distribution distribution, PerCoreDistributionVals perCoreDistributionVals) {
+        this.ipStart = ipStart;
+        this.ipEnd = ipEnd;
+        this.distribution = distribution;
+        this.perCoreDistributionVals = perCoreDistributionVals;
+        this.newInner = new Inner(ipStart, ipEnd, distribution, perCoreDistributionVals);
 
-        for (int i=0;i<inList.size();i++){
-            if (newInner.equals(inList.get(i))){
-                this.index=i;
+        for (int i = 0; i < inList.size(); i++) {
+            if (newInner.equals(inList.get(i))) {
+                this.index = i;
                 return;
             }
         }
         this.inList.add(newInner);
-        this.index= inList.size()-1;
+        this.index = inList.size() - 1;
     }
 
     /**
      * getIpStart
+     *
      * @return ip start
      */
     public String getIpStart() {
@@ -74,6 +65,7 @@ public class AstfIpGenDist {
 
     /**
      * getIpEnd
+     *
      * @return ip end
      */
     public String getIpEnd() {
@@ -82,6 +74,7 @@ public class AstfIpGenDist {
 
     /**
      * getDistribution
+     *
      * @return distribution
      */
     public Distribution getDistribution() {
@@ -90,6 +83,7 @@ public class AstfIpGenDist {
 
     /**
      * getPerCoreDistributionVals
+     *
      * @return perCoreDistributionVals
      */
     public PerCoreDistributionVals getPerCoreDistributionVals() {
@@ -98,6 +92,7 @@ public class AstfIpGenDist {
 
     /**
      * setDirection
+     *
      * @param direction direction
      */
     public void setDirection(String direction) {
@@ -106,6 +101,7 @@ public class AstfIpGenDist {
 
     /**
      * setIpOffset
+     *
      * @param ipOffset ipOffset
      */
     public void setIpOffset(String ipOffset) {
@@ -114,21 +110,23 @@ public class AstfIpGenDist {
 
     /**
      * to json format
-     * @return json string
+     *
+     * @return JsonObject
      */
-    public JsonObject toJson(){
-        JsonObject jsonObject=new JsonObject();
+    public JsonObject toJson() {
+        JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("index", this.index);
         return jsonObject;
     }
 
     /**
      * including all cached gen dist json string
-     * @return json format
+     *
+     * @return JsonArray
      */
-    public static JsonArray clssToJson(){
-        JsonArray jsonArray=new JsonArray();
-        for (Inner inner:inList){
+    public static JsonArray clssToJson() {
+        JsonArray jsonArray = new JsonArray();
+        for (Inner inner : inList) {
             jsonArray.add(inner.toJson());
         }
         return jsonArray;
@@ -137,7 +135,7 @@ public class AstfIpGenDist {
     /**
      * Inner class
      */
-    class Inner{
+    class Inner {
         private String ipStart;
         private String ipEnd;
         private Distribution distribution;
@@ -146,20 +144,21 @@ public class AstfIpGenDist {
         private String direction;
         private String ipOffset;
 
-        private JsonObject fields=new JsonObject();
+        private JsonObject fields = new JsonObject();
 
         /**
          * Inner Construct
+         *
          * @param ipStart
          * @param ipEnd
          * @param distribution
          * @param perCoreDistributionVals
          */
-        Inner(String ipStart,String ipEnd,Distribution distribution,PerCoreDistributionVals perCoreDistributionVals){
+        Inner(String ipStart, String ipEnd, Distribution distribution, PerCoreDistributionVals perCoreDistributionVals) {
             fields.addProperty("ip_start", ipStart);
             fields.addProperty("ip_end", ipEnd);
             fields.addProperty("distribution", distribution.getType());
-            if (perCoreDistributionVals!=null){
+            if (perCoreDistributionVals != null) {
                 fields.addProperty("per_core_distribution", perCoreDistributionVals.getType());
             }
         }
@@ -190,7 +189,7 @@ public class AstfIpGenDist {
             this.ipOffset = ipOffset;
         }
 
-        JsonObject toJson(){
+        JsonObject toJson() {
             return fields;
         }
 
@@ -223,6 +222,7 @@ public class AstfIpGenDist {
 
         /**
          * get type
+         *
          * @return
          */
         public String getType() {
@@ -244,6 +244,7 @@ public class AstfIpGenDist {
 
         /**
          * get type
+         *
          * @return
          */
         public String getType() {

@@ -8,47 +8,50 @@ import com.google.gson.JsonObject;
 public abstract class AstfCmd {
 
     protected JsonObject fields;
-    protected boolean stream;
-    protected boolean buffer;
+    protected boolean stream = false;
+    protected boolean buffer = false;
 
     /**
      * construct
      */
-    public AstfCmd(){
-        fields=new JsonObject();
-        stream=false;
-        buffer=false;
+    public AstfCmd() {
+        fields = new JsonObject();
     }
 
     /**
      * get AstfCmd name
+     *
      * @return Astf cmd name
      */
     public abstract String getName();
 
     /**
      * isStream
+     *
      * @return true if it's stream
      */
-    public boolean isStream(){
+    public boolean isStream() {
         return stream;
     }
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         return fields;
     }
 
     /**
      * isBuffer
+     *
      * @return true if it's buffer
      */
-    public boolean isBuffer(){
+    public boolean isBuffer() {
         return buffer;
     }
+
 }
 
 

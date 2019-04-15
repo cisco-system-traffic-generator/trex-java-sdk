@@ -11,24 +11,26 @@ abstract class AstfClientTemplate extends AstfTemplateBase {
     private AstfProgram astfProgram;
 
     /**
-     * Construct
-     * @param iPGen AstfIpGen type
-     * @param astfCluster AstfCluster type
-     * @param astfProgram AstfProgram type
+     * construct
+     *
+     * @param iPGen
+     * @param astfCluster
+     * @param astfProgram
      */
-    public AstfClientTemplate(AstfIpGen iPGen,AstfCluster astfCluster,AstfProgram astfProgram){
+    public AstfClientTemplate(AstfIpGen iPGen, AstfCluster astfCluster, AstfProgram astfProgram) {
         super(astfProgram);
-        this.iPGen=iPGen;
-        this.astfCluster = astfCluster==null?new AstfCluster():astfCluster;
-        this.astfProgram=astfProgram;
+        this.iPGen = iPGen;
+        this.astfCluster = astfCluster == null ? new AstfCluster() : astfCluster;
+        this.astfProgram = astfProgram;
     }
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
     @Override
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         JsonObject json = super.toJson();
         json.add("ip_gen", iPGen.toJson());
         json.add("cluster", astfCluster.toJson());

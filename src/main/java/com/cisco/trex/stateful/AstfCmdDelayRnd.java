@@ -4,14 +4,15 @@ package com.cisco.trex.stateful;
  * Astf Cmd Delay Rnd
  */
 public class AstfCmdDelayRnd extends AstfCmd {
-    private static final String NAME="delay_rnd";
+    private static final String NAME = "delay_rnd";
 
     /**
-     * Construct
+     * construct
+     *
      * @param minSec minimum delay seconds
      * @param maxSec maximum delay seconds
      */
-    public AstfCmdDelayRnd(int minSec,int maxSec){
+    public AstfCmdDelayRnd(int minSec, int maxSec) {
         super();
         fields.addProperty("name", NAME);
         fields.addProperty("min_usec", minSec);
@@ -19,13 +20,8 @@ public class AstfCmdDelayRnd extends AstfCmd {
     }
 
     @Override
-    public String getName(){
+    public String getName() {
         return NAME;
-    }
-
-    @Override
-    public boolean isStream() {
-        return super.isStream();
     }
 
 }

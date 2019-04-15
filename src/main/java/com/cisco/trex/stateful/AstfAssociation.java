@@ -14,28 +14,31 @@ public class AstfAssociation {
 
     /**
      * construct
+     *
      * @param astfAssociationRuleList
      */
-    public AstfAssociation(List<AstfAssociationRule> astfAssociationRuleList){
-        this.astfAssociationRuleList=astfAssociationRuleList;
+    public AstfAssociation(List<AstfAssociationRule> astfAssociationRuleList) {
+        this.astfAssociationRuleList = astfAssociationRuleList;
     }
 
     /**
      * construct
+     *
      * @param astfAssociationRule
      */
-    public AstfAssociation(AstfAssociationRule astfAssociationRule){
-        astfAssociationRuleList=new ArrayList();
+    public AstfAssociation(AstfAssociationRule astfAssociationRule) {
+        astfAssociationRuleList = new ArrayList();
         astfAssociationRuleList.add(astfAssociationRule);
     }
 
     /**
      * to json format
+     *
      * @return JsonArray
      */
-    public JsonArray toJson(){
-        JsonArray jsonArray=new JsonArray();
-        for(AstfAssociationRule rule:astfAssociationRuleList){
+    public JsonArray toJson() {
+        JsonArray jsonArray = new JsonArray();
+        for (AstfAssociationRule rule : astfAssociationRuleList) {
             jsonArray.add(rule.toJson());
         }
         return jsonArray;

@@ -30,7 +30,7 @@ public class AstfProgram {
     private static final int MAX_DELAY = 700000;
     private static final int MAX_KEEPALIVE = 500000;
     public static final Charset UTF_8 = Charset.forName("UTF-8");
-    private static final String COMMANDS="commands";
+    private static final String COMMANDS = "commands";
 
     private Map<String, Integer> vars = new HashMap();
     private Map<String, Integer> labels = new HashMap();
@@ -41,30 +41,23 @@ public class AstfProgram {
     private File file;
     private SideType side;
     private List<AstfCmd> commands;
-    private boolean stream = false;
+    private boolean stream = true;
     private static BufferList bufList = new BufferList();
 
     /**
      * default construct
      */
     public AstfProgram() {
-        this.file = null;
-        this.side = SideType.Client;
-        this.commands = null;
-        this.stream = true;
-        fields.put(COMMANDS, new ArrayList<AstfCmd>());
+        this(SideType.Client);
     }
 
     /**
      * construct
+     *
      * @param side
      */
-    public AstfProgram(SideType side){
-        this.file = null;
-        this.side = side;
-        this.commands = null;
-        this.stream = true;
-        fields.put(COMMANDS, new ArrayList<AstfCmd>());
+    public AstfProgram(SideType side) {
+        this(null, side, null, true);
     }
 
     /**
@@ -90,17 +83,17 @@ public class AstfProgram {
         }
     }
 
-    private void setCmds(List<AstfCmd> commands){
-        for (AstfCmd cmd:commands){
-            if(cmd.isBuffer()){
-                if (cmd instanceof AstfCmdTxPkt){
-                    AstfCmdTxPkt txPktCmd=(AstfCmdTxPkt) cmd;
-                    totalSendBytes+=txPktCmd.getBufLen();
+    private void setCmds(List<AstfCmd> commands) {
+        for (AstfCmd cmd : commands) {
+            if (cmd.isBuffer()) {
+                if (cmd instanceof AstfCmdTxPkt) {
+                    AstfCmdTxPkt txPktCmd = (AstfCmdTxPkt) cmd;
+                    totalSendBytes += txPktCmd.getBufLen();
                     txPktCmd.setbufIndex(AstfProgram.bufList.add(txPktCmd.buf()));
                 }
-                if (cmd instanceof AstfCmdSend){
-                    AstfCmdSend sendCmd=(AstfCmdSend)cmd;
-                    totalSendBytes+=sendCmd.getBufLen();
+                if (cmd instanceof AstfCmdSend) {
+                    AstfCmdSend sendCmd = (AstfCmdSend) cmd;
+                    totalSendBytes += sendCmd.getBufLen();
                     sendCmd.setbufIndex(AstfProgram.bufList.add(sendCmd.buf()));
                 }
             }
@@ -110,13 +103,14 @@ public class AstfProgram {
 
     /**
      * in case of pcap file need to copy the keepalive command from client to server side
+     *
      * @param progS AstfProgram server
      */
-    public void updateKeepAlive(AstfProgram progS){
-        if (fields.get(COMMANDS).size()>0){
+    public void updateKeepAlive(AstfProgram progS) {
+        if (fields.get(COMMANDS).size() > 0) {
             AstfCmd cmd = fields.get(COMMANDS).get(0);
-            if (cmd instanceof AstfCmdKeepaliveMsg){
-                progS.fields.get(COMMANDS).set(0, cmd);
+            if (cmd instanceof AstfCmdKeepaliveMsg) {
+                progS.fields.get(COMMANDS).add(0, cmd);
             }
         }
     }
@@ -136,10 +130,11 @@ public class AstfProgram {
 
     /**
      * delay cmd
+     *
      * @param usec delay seconds
      */
-    public void delay(int usec){
-        if (usec<0){
+    public void delay(int usec) {
+        if (usec < 0) {
             throw new IllegalStateException(String.format("usec %d is less than 0", usec));
         }
         fields.get(COMMANDS).add(new AstfCmdDelay(usec));
@@ -167,7 +162,7 @@ public class AstfProgram {
         try {
             cmd = new AstfCmdSend(buf.getBytes("ascii"));
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unsupported Encoding Exception",e);
+            throw new IllegalStateException("Unsupported Encoding Exception", e);
         }
         this.totalSendBytes += cmd.getBufLen();
 
@@ -177,20 +172,49 @@ public class AstfProgram {
 
     /**
      * send UDP message
+     *
      * @param buf l7 stream as string
      */
-    public void sendMsg(String buf){
-        AstfCmdTxPkt cmd=null;
+    public void sendMsg(String buf) {
+        AstfCmdTxPkt cmd = null;
         try {
-            cmd=new AstfCmdTxPkt(buf.getBytes("ascii"));
+            cmd = new AstfCmdTxPkt(buf.getBytes("ascii"));
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unsupported Encoding Exception",e);
+            throw new IllegalStateException("Unsupported Encoding Exception", e);
         }
         this.totalSendBytes += cmd.getBufLen();
         cmd.setbufIndex(bufList.add(cmd.buf()));
         fields.get(COMMANDS).add(cmd);
     }
 
+    /**
+     * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk.
+     * This is a utility  command that works on top of send/delay command
+     * <p>
+     * example1:
+     * send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of 10usec
+     *
+     * @param l7Buf     l7 stream as string
+     * @param chunkSize size of each chunk
+     * @param delayUsec the delay in usec to insert betwean each write
+     */
+    public void sendChunk(String l7Buf, int chunkSize, int delayUsec) {
+        int size = l7Buf.length();
+        int cnt = 0;
+        while (size > 0) {
+            if (cnt + chunkSize < size) {
+                this.send(l7Buf.substring(cnt, cnt + chunkSize));
+            } else {
+                this.send(l7Buf.substring(cnt, l7Buf.length()));
+            }
+
+            if (delayUsec > 0) {
+                this.delay(delayUsec);
+            }
+            cnt += chunkSize;
+            size -= chunkSize;
+        }
+    }
 
     /**
      * recv bytes command
@@ -214,22 +238,68 @@ public class AstfProgram {
 
     /**
      * recv msg, works for UDP flow
+     *
      * @param pkts wait until the rx packet watermark is reached on flow counter.
      */
-    public void recvMsg(int pkts){
-        recvMsg(pkts,false);
+    public void recvMsg(int pkts) {
+        recvMsg(pkts, false);
     }
 
     /**
      * recv Msg cmd
-     * @param pkts wait until the rx packet watermark is reached on flow counter.
+     *
+     * @param pkts  wait until the rx packet watermark is reached on flow counter.
      * @param clear when reach the watermark clear the flow counter
      */
-    public void recvMsg(int pkts,boolean clear){
-        this.totalRcvBytes+=pkts;
+    public void recvMsg(int pkts, boolean clear) {
+        this.totalRcvBytes += pkts;
         fields.get(COMMANDS).add(new AstfCmdRecvMsg(this.totalRcvBytes, clear));
+    }
+
+    /**
+     * For TCP connection send RST to peer. Should be the last command
+     */
+    public void reset() {
+        fields.get(COMMANDS).add(new AstfCmdReset());
+    }
+
+    /**
+     * For TCP connection wait for peer side to close (read==0) and only then close. Should be the last command
+     * This simulates server side that waits for a requests until client retire with close().
+     */
+    public void waitForPeerClose() {
+        fields.get(COMMANDS).add(new AstfCmdNoClose());
+    }
+
+    /**
+     * for TCP connection wait for the connection to be connected. should be the first command in the client side
+     */
+    public void connect() {
+        fields.get(COMMANDS).add(new AstfCmdConnect());
+    }
 
 
+    /**
+     * close msg,explicit UDP flow close
+     */
+    public void closeMsg() {
+        this.fields.get(COMMANDS).add(new AstfCmdCloseMsg());
+    }
+
+    /**
+     * set_send_blocking (block), set the stream transmit mode
+     * block : for send command wait until the last byte is ack
+     * non-block: continue to the next command when the queue is almost empty, this is good for pipeline the transmit
+     *
+     * @param block
+     */
+    public void setSendBlocking(boolean block) {
+        int flags = block ? 0 : 1;
+        this.fields.get(COMMANDS).add(new AstfCmdTxMode(flags));
+    }
+
+    public void setKeepAliveMsg(int msec) {
+        this.fields.get(COMMANDS).add(new AstfCmdRecvMsg(this.totalRcvBytes, false));
     }
 
     /**
@@ -280,7 +350,7 @@ public class AstfProgram {
      * @return
      */
     public boolean isStream() {
-        return this.stream;
+        return stream;
     }
 
     /**
@@ -290,6 +360,22 @@ public class AstfProgram {
      */
     public static JsonArray classToJson() {
         return bufList.toJson();
+    }
+
+    /**
+     * class reset, clear all cached buffer
+     */
+    public static void classReset() {
+        bufList = new BufferList();
+    }
+
+    /**
+     * get buffer list size
+     *
+     * @return
+     */
+    public static int getBufSize() {
+        return bufList.getLen();
     }
 
     /**
@@ -310,7 +396,6 @@ public class AstfProgram {
         jsonObject.add(COMMANDS, jsonArray);
         return jsonObject;
     }
-
 
     private void addVar(String varName) {
         if (!vars.containsKey(varName)) {
@@ -346,10 +431,10 @@ public class AstfProgram {
             if (cmd instanceof AstfCmdJmpnz) {
                 AstfCmdJmpnz cmdJmpnz = (AstfCmdJmpnz) cmd;
                 cmdJmpnz.fields.addProperty("offset", getLabelId(cmdJmpnz.getLabel()) - i);
-                cmdJmpnz.fields.addProperty("id", getVarIndex(String.valueOf(cmdJmpnz.fields.get("id").getAsString())));
+                cmdJmpnz.fields.addProperty("id", getVarIndex(cmdJmpnz.fields.get("id").getAsString()));
             }
             if (cmd instanceof AstfCmdSetVal) {
-                cmd.fields.addProperty("id", getVarIndex(String.valueOf(cmd.fields.get("id").getAsString())));
+                cmd.fields.addProperty("id", getVarIndex(cmd.fields.get("id").getAsString()));
             }
             i++;
         }
@@ -395,29 +480,30 @@ public class AstfProgram {
          * @return json string
          */
         public JsonArray toJson() {
-            JsonArray jsonArray=new JsonArray();
-            for (String buf : bufList){
+            JsonArray jsonArray = new JsonArray();
+            for (String buf : bufList) {
                 jsonArray.add(buf);
             }
             return jsonArray;
         }
 
-        /**
-         * @param buf should be base64 encode string
-         * @return Hex string of the sha256 encode buf
-         */
-        private String encodeSha256(String buf) {
-            try {
-                MessageDigest sha256 = MessageDigest.getInstance("MD5");
-                byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
-                StringBuilder sb = new StringBuilder();
-                for (byte b : hashInBytes) {
-                    sb.append(String.format("%02x", b));
-                }
-                return sb.toString();
-            } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException("Could not generate MD5", e);
+    }
+
+    /**
+     * @param buf should be base64 encode string
+     * @return Hex string of the sha256 encode buf
+     */
+    private static String encodeSha256(String buf) {
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance("MD5");
+            byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashInBytes) {
+                sb.append(String.format("%02x", b));
             }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Could not generate MD5", e);
         }
     }
 
@@ -432,14 +518,16 @@ public class AstfProgram {
 
         /**
          * Construct
+         *
          * @param type
          */
-        SideType(String type){
-            this.type=type;
+        SideType(String type) {
+            this.type = type;
         }
 
         /**
          * getType
+         *
          * @return type
          */
         public String getType() {

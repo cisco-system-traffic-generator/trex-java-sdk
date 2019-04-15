@@ -1,4 +1,5 @@
 package com.cisco.trex.stateful;
+
 import com.google.gson.JsonObject;
 
 /**
@@ -10,32 +11,33 @@ public class AstfTcpServerTemplate extends AstfTemplateBase {
 
     /**
      * construct
+     *
      * @param astfProgram
      * @param assoc
      * @param globalInfo
      */
-    public AstfTcpServerTemplate(AstfProgram astfProgram,AstfAssociation assoc, AstfGlobalInfoPerTemplate globalInfo) {
+    public AstfTcpServerTemplate(AstfProgram astfProgram, AstfAssociation assoc, AstfGlobalInfoPerTemplate globalInfo) {
         super(astfProgram);
-        if (assoc==null){
-            this.assoc=new AstfAssociation(new AstfAssociationRule(null, null, 80));
-        }else {
-            this.assoc=assoc;
+        if (assoc == null) {
+            this.assoc = new AstfAssociation(new AstfAssociationRule(null, null, 80));
+        } else {
+            this.assoc = assoc;
         }
-        this.globalInfo=globalInfo;
+        this.globalInfo = globalInfo;
 
     }
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         JsonObject json = super.toJson();
-        json.add("assoc",assoc.toJson());
-        if (globalInfo != null){
+        json.add("assoc", assoc.toJson());
+        if (globalInfo != null) {
             json.add("glob_info", globalInfo.toJson());
         }
         return json;
-
     }
 }

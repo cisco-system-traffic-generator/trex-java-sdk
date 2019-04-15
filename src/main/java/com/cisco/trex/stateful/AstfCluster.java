@@ -9,9 +9,10 @@ public class AstfCluster {
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         return new JsonObject();
     }
 }

@@ -9,6 +9,7 @@ public interface AstfGlobalInfoBase {
 
     /**
      * scheduler global info
+     *
      * @param schedulerParam
      * @param value
      * @return this
@@ -17,6 +18,7 @@ public interface AstfGlobalInfoBase {
 
     /**
      * ipv6 global info
+     *
      * @param ipv6Param
      * @param value
      * @return this
@@ -25,6 +27,7 @@ public interface AstfGlobalInfoBase {
 
     /**
      * tcp global info
+     *
      * @param tcpParam
      * @param value
      * @return this
@@ -33,6 +36,7 @@ public interface AstfGlobalInfoBase {
 
     /**
      * ip global info
+     *
      * @param ipParam
      * @param value
      * @return this
@@ -41,6 +45,7 @@ public interface AstfGlobalInfoBase {
 
     /**
      * to json format
+     *
      * @return json string
      */
     JsonObject toJson();
@@ -48,21 +53,23 @@ public interface AstfGlobalInfoBase {
     /**
      * Scheduler Param enum
      */
-    enum SchedulerParam{
+    enum SchedulerParam {
         RAMPUP_SEC("rampup_sec"),
         ACCURATE("accurate");
         String type;
 
         /**
          * Construct
+         *
          * @param type
          */
-        SchedulerParam(String type){
-            this.type=type;
+        SchedulerParam(String type) {
+            this.type = type;
         }
 
         /**
          * get scheduler type
+         *
          * @return type
          */
         public String getType() {
@@ -73,7 +80,7 @@ public interface AstfGlobalInfoBase {
     /**
      * Ipv6 Param enum
      */
-    enum Ipv6Param{
+    enum Ipv6Param {
         SRC_MSB("src_msb"),
         DST_MSB("dst_msb"),
         ENABLE("enable");
@@ -82,14 +89,16 @@ public interface AstfGlobalInfoBase {
 
         /**
          * Construct
+         *
          * @param type
          */
-        Ipv6Param(String type){
-            this.type=type;
+        Ipv6Param(String type) {
+            this.type = type;
         }
 
         /**
          * get ipv6 type
+         *
          * @return type
          */
         public String getType() {
@@ -100,7 +109,7 @@ public interface AstfGlobalInfoBase {
     /**
      * Tcp Param enum
      */
-    enum TcpParam{
+    enum TcpParam {
         MSS("mss"),
         INIT_WND("initwnd"),
         RX_BUF_SIZE("rxbufsize"),
@@ -117,14 +126,16 @@ public interface AstfGlobalInfoBase {
 
         /**
          * Construct
+         *
          * @param type
          */
-        TcpParam(String type){
-            this.type=type;
+        TcpParam(String type) {
+            this.type = type;
         }
 
         /**
          * get tcp type
+         *
          * @return type
          */
         public String getType() {
@@ -135,7 +146,7 @@ public interface AstfGlobalInfoBase {
     /**
      * Ip Param enum
      */
-    enum IpParam{
+    enum IpParam {
         TOS("tos"),
         TTL("ttl");
 
@@ -143,21 +154,22 @@ public interface AstfGlobalInfoBase {
 
         /**
          * Construct
+         *
          * @param type
          */
-        IpParam(String type){
-            this.type=type;
+        IpParam(String type) {
+            this.type = type;
         }
 
         /**
          * get ip type
+         *
          * @return type
          */
         public String getType() {
             return type;
         }
     }
-
 
 
 }

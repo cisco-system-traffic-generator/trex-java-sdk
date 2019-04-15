@@ -9,11 +9,11 @@ import java.util.Set;
 /**
  * Astf Global Info Per Template
  */
-public class AstfGlobalInfoPerTemplate implements AstfGlobalInfoBase{
-    private JsonObject tcp=new JsonObject();
-    private JsonObject ip=new JsonObject();
-    private static final Set<String> tcpParamSet=new HashSet(Arrays.asList(
-            "initwnd", "mss", "no_delay","rxbufsize","txbufsize"));
+public class AstfGlobalInfoPerTemplate implements AstfGlobalInfoBase {
+    private JsonObject tcp = new JsonObject();
+    private JsonObject ip = new JsonObject();
+    private static final Set<String> tcpParamSet = new HashSet(Arrays.asList(
+            "initwnd", "mss", "no_delay", "rxbufsize", "txbufsize"));
 
     @Override
     public AstfGlobalInfoBase scheduler(SchedulerParam schedulerParam, int value) {
@@ -27,8 +27,8 @@ public class AstfGlobalInfoPerTemplate implements AstfGlobalInfoBase{
 
     @Override
     public AstfGlobalInfoBase tcp(TcpParam tcpParam, int value) {
-        if (!tcpParamSet.contains(tcpParam.getType())){
-            throw new IllegalStateException(String.format("TcpParam: %s is not support in AstfGlobalInfoPerTemplate class",tcpParam.getType()));
+        if (!tcpParamSet.contains(tcpParam.getType())) {
+            throw new IllegalStateException(String.format("TcpParam: %s is not support in AstfGlobalInfoPerTemplate class", tcpParam.getType()));
         }
         tcp.addProperty(tcpParam.getType(), value);
         return this;
@@ -42,11 +42,11 @@ public class AstfGlobalInfoPerTemplate implements AstfGlobalInfoBase{
 
     @Override
     public JsonObject toJson() {
-        JsonObject jsonObject=new JsonObject();
-        if(!tcp.isJsonNull()){
-            jsonObject.add("tcp",this.tcp);
+        JsonObject jsonObject = new JsonObject();
+        if (tcp.size() != 0) {
+            jsonObject.add("tcp", this.tcp);
         }
-        if(!ip.isJsonNull()){
+        if (ip.size() != 0) {
             jsonObject.add("ip", this.ip);
         }
         return jsonObject;

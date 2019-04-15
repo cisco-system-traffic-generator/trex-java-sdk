@@ -10,18 +10,19 @@ public class AstfIpGen {
     private AstfIpGenDist distServer;
     private AstfIpGenGlobal ipGenGlobal;
 
-    private JsonObject fields=new JsonObject();
+    private JsonObject fields = new JsonObject();
 
     /**
      * construct
+     *
      * @param distClient
      * @param distServer
      * @param ipGenGlobal
      */
-    public AstfIpGen(AstfIpGenDist distClient,AstfIpGenDist distServer,AstfIpGenGlobal ipGenGlobal){
-        this.distClient=distClient;
-        this.distServer=distServer;
-        this.ipGenGlobal=ipGenGlobal;
+    public AstfIpGen(AstfIpGenDist distClient, AstfIpGenDist distServer, AstfIpGenGlobal ipGenGlobal) {
+        this.distClient = distClient;
+        this.distServer = distServer;
+        this.ipGenGlobal = ipGenGlobal;
 
         this.fields.add("dist_client", distClient.toJson());
         distClient.setDirection("c");
@@ -34,9 +35,10 @@ public class AstfIpGen {
 
     /**
      * to json format
+     *
      * @return JsonObject
      */
-    public JsonObject toJson(){
+    public JsonObject toJson() {
         return fields;
     }
 
