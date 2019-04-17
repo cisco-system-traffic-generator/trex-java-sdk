@@ -13,6 +13,15 @@ public class AstfTcpServerTemplate extends AstfTemplateBase {
      * construct
      *
      * @param astfProgram
+     */
+    public AstfTcpServerTemplate(AstfProgram astfProgram) {
+        this(astfProgram, null, null);
+    }
+
+    /**
+     * construct
+     *
+     * @param astfProgram
      * @param assoc
      * @param globalInfo
      */

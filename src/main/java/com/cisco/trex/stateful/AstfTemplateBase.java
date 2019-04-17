@@ -45,22 +45,14 @@ abstract class AstfTemplateBase {
      * @param astfProgram
      * @return program index in the program List
      */
-    public int addProgram(AstfProgram astfProgram) {
+    public static int addProgram(AstfProgram astfProgram) {
         if (programHash.containsKey(astfProgram)) {
             return programHash.get(astfProgram);
         }
         programList.add(astfProgram);
-        programIndex = programList.size() - 1;
-        programHash.put(astfProgram, programIndex);
-        return programIndex;
-    }
-
-    /**
-     * clear all cached program
-     */
-    public void clearCache() {
-        programList.clear();
-        programHash.clear();
+        int index = programList.size() - 1;
+        programHash.put(astfProgram, index);
+        return index;
     }
 
     /**
@@ -88,6 +80,14 @@ abstract class AstfTemplateBase {
      */
     public JsonObject toJson() {
         return fields;
+    }
+
+    /**
+     * clear all cached data
+     */
+    public static void classReset() {
+        programList.clear();
+        programHash.clear();
     }
 
     /**

@@ -27,6 +27,16 @@ public class AstfProfile {
      * construct
      *
      * @param defaultIpGen
+     * @param astfTemplateList
+     */
+    public AstfProfile(AstfIpGen defaultIpGen, List<AstfTemplate> astfTemplateList) {
+        this(defaultIpGen, null, null, astfTemplateList, null);
+    }
+
+    /**
+     * construct
+     *
+     * @param defaultIpGen
      * @param astfClientGlobalInfo
      * @param astfServerGlobalInfo
      * @param astfTemplateList
@@ -88,6 +98,15 @@ public class AstfProfile {
         }
         json.add("templates", jsonArray);
         return json;
+    }
+
+    /**
+     * clear all cache data.
+     */
+    public static void clearCache() {
+        AstfProgram.classReset();
+        AstfIpGenDist.classReset();
+        AstfTemplateBase.classReset();
     }
 
     /**

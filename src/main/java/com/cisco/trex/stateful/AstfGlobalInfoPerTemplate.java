@@ -17,12 +17,12 @@ public class AstfGlobalInfoPerTemplate implements AstfGlobalInfoBase {
 
     @Override
     public AstfGlobalInfoBase scheduler(SchedulerParam schedulerParam, int value) {
-        throw new IllegalStateException("unsupported method in this class");
+        throw new IllegalStateException("unsupported method in AstfGlobalInfoPerTemplate class");
     }
 
     @Override
     public AstfGlobalInfoBase ipv6(Ipv6Param ipv6Param, int value) {
-        throw new IllegalStateException("unsupported method in this class");
+        throw new IllegalStateException("unsupported method in AstfGlobalInfoPerTemplate class");
     }
 
     @Override

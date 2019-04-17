@@ -18,14 +18,13 @@ import java.util.Map;
  * Emulation L7 program
  *
  * @<code> ASTFProgram progServer =new ASTFProgram()
- * progServer.recv(len(http_req))
+ * progServer.recv(http_req.length())
  * progServer.send(http_response)
  * progServer.delay(10)
  * progServer.reset()
  * </code>
  */
 public class AstfProgram {
-
     private static final int MIN_DELAY = 50;
     private static final int MAX_DELAY = 700000;
     private static final int MAX_KEEPALIVE = 500000;
@@ -363,7 +362,7 @@ public class AstfProgram {
     }
 
     /**
-     * class reset, clear all cached buffer
+     * class reset, clear all cached data
      */
     public static void classReset() {
         bufList = new BufferList();

@@ -133,6 +133,13 @@ public class AstfIpGenDist {
     }
 
     /**
+     * class reset, clear all cached data
+     */
+    public static void classReset() {
+        inList.clear();
+    }
+
+    /**
      * Inner class
      */
     class Inner {

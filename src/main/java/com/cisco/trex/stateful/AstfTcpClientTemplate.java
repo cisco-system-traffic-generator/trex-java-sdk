@@ -36,6 +36,39 @@ public class AstfTcpClientTemplate extends AstfClientTemplate {
     /**
      * construct
      *
+     * @param astfProgram
+     * @param iPGen
+     */
+    public AstfTcpClientTemplate(AstfProgram astfProgram, AstfIpGen iPGen) {
+        this(astfProgram, iPGen, 0);
+    }
+
+    /**
+     * construct
+     *
+     * @param astfProgram
+     * @param iPGen
+     * @param limit
+     */
+    public AstfTcpClientTemplate(AstfProgram astfProgram, AstfIpGen iPGen, int limit) {
+        this(astfProgram, iPGen, 80, limit);
+    }
+
+    /**
+     * construct
+     *
+     * @param astfProgram
+     * @param iPGen
+     * @param port
+     * @param limit
+     */
+    public AstfTcpClientTemplate(AstfProgram astfProgram, AstfIpGen iPGen, int port, int limit) {
+        this(astfProgram, iPGen, null, port, 1, null, limit);
+    }
+
+    /**
+     * construct
+     *
      * @param iPGen       AstfIpGen generator
      * @param cluster     AstfCluster
      * @param astfProgram AstfProgram L7 emulation program
