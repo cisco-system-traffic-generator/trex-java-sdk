@@ -7,8 +7,6 @@ import org.apache.commons.lang.StringUtils;
  * Astf Association Rule
  */
 public class AstfAssociationRule {
-    private String ipStart;
-    private String ipEnd;
     private JsonObject fields = new JsonObject();
     private int port;
 
@@ -21,8 +19,6 @@ public class AstfAssociationRule {
      */
     public AstfAssociationRule(String ipStart, String ipEnd, int port) {
         this.port = port;
-        this.ipStart = ipStart;
-        this.ipEnd = ipEnd;
         fields.addProperty("port", port);
         if (!StringUtils.isEmpty(ipStart)) {
             fields.addProperty("ip_start", ipStart);

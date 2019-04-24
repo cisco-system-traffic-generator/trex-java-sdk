@@ -22,8 +22,8 @@ public class AstfCmdTxPkt extends AstfCmd {
         fields.addProperty("name", NAME);
         fields.addProperty("buf_index", -1);
         this.bufLen = asciiBuf.length;
-        buffer = true;
         stream = false;
+        buffer = true;
     }
 
     /**
@@ -56,11 +56,6 @@ public class AstfCmdTxPkt extends AstfCmd {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public boolean isBuffer() {
-        return true;
     }
 
     /**

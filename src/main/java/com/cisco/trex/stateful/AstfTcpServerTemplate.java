@@ -28,7 +28,7 @@ public class AstfTcpServerTemplate extends AstfTemplateBase {
     public AstfTcpServerTemplate(AstfProgram astfProgram, AstfAssociation assoc, AstfGlobalInfoPerTemplate globalInfo) {
         super(astfProgram);
         if (assoc == null) {
-            this.assoc = new AstfAssociation(new AstfAssociationRule(null, null, 80));
+            this.assoc = new AstfAssociation(new AstfAssociationRule(80));
         } else {
             this.assoc = assoc;
         }

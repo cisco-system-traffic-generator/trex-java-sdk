@@ -3,7 +3,6 @@ package com.cisco.trex.stateful;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -28,7 +27,7 @@ public class AstfProgram {
     private static final int MIN_DELAY = 50;
     private static final int MAX_DELAY = 700000;
     private static final int MAX_KEEPALIVE = 500000;
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
     private static final String COMMANDS = "commands";
 
     private Map<String, Integer> vars = new HashMap();
@@ -36,8 +35,9 @@ public class AstfProgram {
     private Map<String, List<AstfCmd>> fields = new HashMap();
     private int totalSendBytes = 0;
     private int totalRcvBytes = 0;
+    private int payloadLen = 0;
 
-    private File file;
+    private String filePath;
     private SideType side;
     private List<AstfCmd> commands;
     private boolean stream = true;
@@ -56,35 +56,133 @@ public class AstfProgram {
      * @param side
      */
     public AstfProgram(SideType side) {
-        this(null, side, null, true);
+        this(null, side);
+    }
+
+    /**
+     * construct
+     *
+     * @param filePath
+     * @param side
+     */
+    public AstfProgram(String filePath, SideType side) {
+        this(filePath, side, null, true);
     }
 
     /**
      * Construct
      *
-     * @param file     pcap file
+     * @param filePath pcap file absolute path
      * @param side     server side or client side
      * @param commands
      * @param stream
      */
-    public AstfProgram(File file, SideType side, List<AstfCmd> commands, boolean stream) {
-        this.file = file;
+    public AstfProgram(String filePath, SideType side, List<AstfCmd> commands, boolean stream) {
+        this.filePath = filePath;
         this.side = side;
         this.commands = commands;
         this.stream = stream;
         fields.put(COMMANDS, new ArrayList<AstfCmd>());
-        if (file != null) {
-            /**
-             * TODO: pcap secnario,need to be done in the future.
-             */
+        if (filePath != null) {
+            CpcapReader cap = CapHandling.cpcapReader(filePath);
+            cap.analyze();
+            this.payloadLen = cap.payloadLen();
+            if (cap.isTcp()) {
+                cap.condensePktData();
+            } else {
+                this.stream = false;
+            }
+
+            createCmdFromCap(cap.isTcp(), cap.getPkts(), cap.getPktTimes(), cap.getPktDirs(), side);
         } else if (commands != null) {
             setCmds(commands);
         }
     }
 
+    private void createCmdFromCap(boolean isTcp, List<CPacketData> cmds, List<Double> times, List<SideType> dirs, SideType initSide) {
+        if (cmds.size() != dirs.size()) {
+            throw new IllegalStateException(String.format("cmds size %s is not equal to dirs size %s", cmds.size(), dirs.size()));
+        }
+        if (cmds.size() == 0) {
+            return;
+        }
+
+        List<AstfCmd> newCmds = new ArrayList();
+        int totRcvBytes = 0;
+        boolean rx = false;
+        int maxDelay = 0;
+
+        if (isTcp) {
+            //In case that server start sending the traffic we must wait for the connection to establish
+            if (dirs.get(0) == SideType.Server && initSide == SideType.Server) {
+                newCmds.add(new AstfCmdConnect());
+            }
+
+            AstfCmd newCmd = null;
+            for (int i = 0; i < cmds.size(); i++) {
+                SideType dir = dirs.get(i);
+                CPacketData cmd = cmds.get(i);
+
+                if (dir == initSide) {
+                    newCmd = new AstfCmdSend(cmd.getPayload());
+                } else {
+                    totRcvBytes += cmd.getPayload().length;
+                    newCmd = new AstfCmdRecv(totRcvBytes, false);
+                }
+                newCmds.add(newCmd);
+            }
+        } else {
+            if (cmds.size() != times.size()) {
+                throw new IllegalStateException(String.format("cmds size %s is not equal to times size %s", cmds.size(), times.size()));
+            }
+
+            SideType lastDir = null;
+            for (int i = 0; i < cmds.size(); i++) {
+                SideType dir = dirs.get(i);
+                CPacketData cmd = cmds.get(i);
+                Double time = times.get(i);
+
+                if (dir == initSide) {
+                    if (lastDir == initSide) {
+                        int dUsec = (int) (time * 1000000);
+                        if (dUsec > MAX_DELAY) {
+                            dUsec = MAX_DELAY;
+                        }
+                        if (dUsec > MIN_DELAY) {
+                            AstfCmdDelay nCmd = new AstfCmdDelay(dUsec);
+                            if (maxDelay < dUsec) {
+                                maxDelay = dUsec;
+                            }
+                            newCmds.add(nCmd);
+                        }
+                    } else {
+                        if (rx) {
+                            rx = false;
+                            AstfCmdRecvMsg nCmd = new AstfCmdRecvMsg(totRcvBytes, false);
+                            newCmds.add(nCmd);
+                        }
+                    }
+                } else {
+                    totRcvBytes += 1;
+                    rx = true;
+                }
+                lastDir = dir;
+            }
+        }
+        if (rx) {
+            rx = false;
+            AstfCmdRecvMsg nCmd = new AstfCmdRecvMsg(totRcvBytes, false);
+            newCmds.add(nCmd);
+        }
+        if (maxDelay > MAX_KEEPALIVE) {
+            newCmds.add(0, new AstfCmdKeepaliveMsg(maxDelay * 2));
+        }
+        this.setCmds(newCmds);
+    }
+
     private void setCmds(List<AstfCmd> commands) {
         for (AstfCmd cmd : commands) {
-            if (cmd.isBuffer()) {
+            if (null != cmd.isBuffer() && cmd.isBuffer()) {
                 if (cmd instanceof AstfCmdTxPkt) {
                     AstfCmdTxPkt txPktCmd = (AstfCmdTxPkt) cmd;
                     totalSendBytes += txPktCmd.getBufLen();
@@ -396,6 +494,15 @@ public class AstfProgram {
         return jsonObject;
     }
 
+    /**
+     * get payload length
+     *
+     * @return
+     */
+    public int getPayloadLen() {
+        return payloadLen;
+    }
+
     private void addVar(String varName) {
         if (!vars.containsKey(varName)) {
             int varIndex = vars.size();
@@ -424,19 +531,34 @@ public class AstfProgram {
     private void compile() {
         int i = 0;
         for (AstfCmd cmd : fields.get(COMMANDS)) {
-            if (cmd.isStream() && !this.stream) {
+            if (null != cmd.isStream() && cmd.isStream() != this.stream) {
                 throw new IllegalStateException(String.format(" Command %s stream mode is %s and different from the flow stream mode %s", cmd.getName(), cmd.isStream(), this.stream));
             }
             if (cmd instanceof AstfCmdJmpnz) {
                 AstfCmdJmpnz cmdJmpnz = (AstfCmdJmpnz) cmd;
                 cmdJmpnz.fields.addProperty("offset", getLabelId(cmdJmpnz.getLabel()) - i);
-                cmdJmpnz.fields.addProperty("id", getVarIndex(cmdJmpnz.fields.get("id").getAsString()));
+                String id = cmdJmpnz.fields.get("id").getAsString();
+                if (!isNumber(id)) {
+                    cmdJmpnz.fields.addProperty("id", getVarIndex(id));
+                }
             }
             if (cmd instanceof AstfCmdSetVal) {
-                cmd.fields.addProperty("id", getVarIndex(cmd.fields.get("id").getAsString()));
+                String id = cmd.fields.get("id").getAsString();
+                if (!isNumber(id)) {
+                    cmd.fields.addProperty("id", getVarIndex(id));
+                }
             }
             i++;
         }
+    }
+
+    private boolean isNumber(String str) {
+        for (char c : str.toCharArray()) {
+            if (c < 48 || c > 57) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -8,8 +8,8 @@ import com.google.gson.JsonObject;
 public abstract class AstfCmd {
 
     protected JsonObject fields;
-    protected boolean stream = false;
-    protected boolean buffer = false;
+    protected Boolean stream = null;
+    protected Boolean buffer = null;
 
     /**
      * construct
@@ -30,7 +30,7 @@ public abstract class AstfCmd {
      *
      * @return true if it's stream
      */
-    public boolean isStream() {
+    public Boolean isStream() {
         return stream;
     }
 
@@ -48,7 +48,7 @@ public abstract class AstfCmd {
      *
      * @return true if it's buffer
      */
-    public boolean isBuffer() {
+    public Boolean isBuffer() {
         return buffer;
     }
 

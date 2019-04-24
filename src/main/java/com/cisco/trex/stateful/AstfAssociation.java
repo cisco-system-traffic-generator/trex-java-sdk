@@ -44,4 +44,16 @@ public class AstfAssociation {
         return jsonArray;
     }
 
+    /**
+     * get Port
+     *
+     * @return port
+     */
+    public int getPort() {
+        if (astfAssociationRuleList.size() != 1) {
+            throw new IllegalStateException(String.format("rule list size should be 1, but it's %s now", astfAssociationRuleList.size()));
+        }
+        return astfAssociationRuleList.get(0).getPort();
+    }
+
 }
