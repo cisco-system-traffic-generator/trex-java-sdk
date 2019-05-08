@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public class TRexClient extends ClientBase {
 
     private static final EtherType QInQ = new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
     private static Integer API_VERSION_MAJOR = 4;
-    private static Integer API_VERSION_MINOR = 5;
+    private static Integer API_VERSION_MINOR = 6;
     private Integer session_id = 123456789;
 
     public TRexClient(String host, String port, String userName) {
@@ -109,7 +110,9 @@ public class TRexClient extends ClientBase {
     public void resetPort(int portIndex) {
         acquirePort(portIndex, true);
         stopTraffic(portIndex);
-        removeAllStreams(portIndex);
+        for (String profileId : getProfileIds(portIndex)) {
+            removeAllStreams(portIndex, profileId);
+        }
         removeRxQueue(portIndex);
         serviceMode(portIndex, false);
         releasePort(portIndex);
@@ -124,16 +127,28 @@ public class TRexClient extends ClientBase {
     }
 
     public void addStream(int portIndex, Stream stream) {
-        Map<String, Object> payload = createPayload(portIndex);
-        payload.put("stream_id", stream.getId());
-        payload.put("stream", stream);
-        callMethod("add_stream", payload);
+        addStream(portIndex, "", stream.getId(), stream);
+    }
+
+    public void addStream(int portIndex, String profileId, Stream stream) {
+        addStream(portIndex, profileId, stream.getId(), stream);
     }
 
     public void addStream(int portIndex, int streamId, JsonObject stream) {
+        addStream(portIndex, "", streamId, stream);
+    }
+
+    public void addStream(int portIndex, String profileId, int streamId, JsonObject stream) {
+        addStream(portIndex, profileId, streamId, stream);
+    }
+    
+    private void addStream(int portIndex, String profileId, int streamId, Object streamObject) {
         Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
+        }
         payload.put("stream_id", streamId);
-        payload.put("stream", stream);
+        payload.put("stream", streamObject);
         callMethod("add_stream", payload);
     }
 
@@ -158,12 +173,26 @@ public class TRexClient extends ClientBase {
     }
 
     public void removeAllStreams(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
-        callMethod("remove_all_streams", payload);
+        removeAllStreams(portIndex, "");
     }
 
-    public List<Stream> getAllStreams(int portIndex) {
+    public void removeAllStreams(int portIndex, String profileId) {
         Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
+        }
+        callMethod("remove_all_streams", payload);
+    }
+    
+    public List<Stream> getAllStreams(int portIndex) {
+        return getAllStreams(portIndex, "");
+    }
+
+    public List<Stream> getAllStreams(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
+        }
         String json = callMethod("get_all_streams", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonObject streams = response.getAsJsonArray().get(0)
@@ -175,11 +204,19 @@ public class TRexClient extends ClientBase {
         for (Map.Entry<String, JsonElement> stream : streams.entrySet()) {
             streamList.add(GSON.fromJson(stream.getValue(), Stream.class));
         }
+
         return streamList;
     }
-
+    
     public List<Integer> getStreamIds(int portIndex) {
+        return getStreamIds(portIndex, "");
+    }
+
+    public List<Integer> getStreamIds(int portIndex, String profileId) {
         Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
+        }
         String json = callMethod("get_stream_list", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
@@ -207,6 +244,16 @@ public class TRexClient extends ClientBase {
         payload.put("mul", multiplier);
         payload.put("stream_ids", streams);
         callMethod("update_streams", payload);
+    }
+
+    public List<String> getProfileIds(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        String json = callMethod("get_profile_list", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        return StreamSupport.stream(ids.spliterator(), false)
+                .map(JsonElement::getAsString)
+                .collect(Collectors.toList());
     }
 
     public ActivePGIds getActivePgids() {
