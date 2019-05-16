@@ -1,5 +1,8 @@
 package com.cisco.trex.stateful;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,6 +66,20 @@ public class TRexAstfClient extends ClientBase {
             payload.put("handler", masterHandler);
         }
         return payload;
+    }
+    
+    private static String calculateMd5(String profile) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] hashInBytes = md.digest(profile.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashInBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Could not generate MD5", e);
+        }
     }
 
     /**
@@ -179,22 +196,31 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * @param fragFirst
-     * @param fragLast
-     * @param fragmentData
-     * @param totalSize
+     * Load profile object as string and upload in fragments
+     * 
+     * @param profile
      */
-    public void loadProfile(boolean fragFirst, boolean fragLast, String fragmentData, long totalSize) {
-        Map<String, Object> payload = createPayload();
-        if (fragFirst) {
-            payload.put("frag_first", true);
-            payload.put("total_size", totalSize);
+    public void loadProfile(String profile) {
+        int indexStart = 0;
+        int fragmentLength = 1000; //shorter length the first time
+        int totalLength = profile.length();
+        while (totalLength > indexStart) {
+            int indexEnd = indexStart + fragmentLength;
+            Map<String, Object> payload = createPayload();
+            if (indexStart == 0) { //is first fragment
+                payload.put("frag_first", true);
+                payload.put("total_size", totalLength);
+                payload.put("md5", calculateMd5(profile));
+            }
+            if (indexEnd >= totalLength) {
+                payload.put("frag_last", true);
+                indexEnd = totalLength;
+            }
+            payload.put("fragment", profile.subSequence(indexStart, indexEnd));
+            this.callMethod("profile_fragment", payload);
+            indexStart = indexEnd;
+            fragmentLength = 500000; //larger fragments after first fragment
         }
-        if (fragLast) {
-            payload.put("frag_last", true);
-        }
-        payload.put("fragment", fragmentData);
-        this.callMethod("profile_fragment", payload);
     }
 
     /**
