@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class L3Configuration {
+
     @JsonProperty("dst")
     private String dst;
 
@@ -32,6 +33,11 @@ public class L3Configuration {
     @JsonProperty("src")
     public void setSrc(String src) {
         this.src = src;
+    }
+
+    @JsonProperty("state")
+    public String getState() {
+        return state;
     }
 
     @JsonProperty("state")
