@@ -126,6 +126,53 @@ public class IPv6NeighborDiscoveryService {
 
     }
 
+    public EthernetPacket sendNeighborSolicitation(int portIdx, int timeout, String dstIp) throws ServiceModeRequiredException {
+        endTs = System.currentTimeMillis() + timeout * 1000;
+        PortStatus portStatus = tRexClient.getPortStatus(portIdx).get();
+        
+        srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
+        
+        Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp, null);
+
+        tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
+
+        Predicate<EthernetPacket> ipV6NAPktFilter = etherPkt -> {
+            if (!etherPkt.contains(IcmpV6NeighborAdvertisementPacket.class)) {
+                return false;
+            }
+            IcmpV6NeighborAdvertisementHeader icmpV6NaHdr = etherPkt.get(IcmpV6NeighborAdvertisementPacket.class).getHeader();
+
+            String nodeIp = icmpV6NaHdr.getTargetAddress().toString().substring(1);
+
+            IpV6Packet.IpV6Header ipV6Header = etherPkt.get(IpV6Packet.class).getHeader();
+            String dstAddr = ipV6Header.getDstAddr().toString().substring(1);
+
+            try {
+                Inet6Address dstIPv6Addr = (Inet6Address) Inet6Address.getByName(dstAddr);
+                Inet6Address srcIPv6Addr = (Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac));
+                
+                Inet6Address nodeIpv6 = (Inet6Address) Inet6Address.getByName(nodeIp);
+                Inet6Address targetIpv6inNS = (Inet6Address) Inet6Address.getByName(dstIp);
+                return icmpV6NaHdr.getSolicitedFlag() && nodeIpv6.equals(targetIpv6inNS) && dstIPv6Addr.equals(srcIPv6Addr);
+            } catch (UnknownHostException ignored) {}
+            return false;
+        };
+        
+        EthernetPacket na = null;
+        while (endTs > System.currentTimeMillis() && na == null) {
+            List<EthernetPacket> pkts = tRexClient.getRxQueue(portIdx, ipV6NAPktFilter);
+            if (!pkts.isEmpty()) {
+                na = pkts.get(0);
+            }
+        }
+        tRexClient.removeRxQueue(portIdx);
+        if (tRexClient.getPortStatus(portIdx).get().getState().equals("TX")) {
+            tRexClient.stopTraffic(portIdx);
+        }
+        tRexClient.removeAllStreams(portIdx);
+        return na;
+    }
+
     private Map<String, EthernetPacket> sendNSandIcmpV6Req(int portIdx, int timeDuration, String dstIp)  throws ServiceModeRequiredException {
         endTs = System.currentTimeMillis() + timeDuration * 1000;
         TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);

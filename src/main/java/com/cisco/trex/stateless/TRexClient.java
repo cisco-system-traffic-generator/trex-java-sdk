@@ -25,6 +25,7 @@ import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IcmpV4EchoReplyPacket;
+import org.pcap4j.packet.IcmpV6NeighborAdvertisementPacket;
 import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.IpV4Rfc791Tos;
@@ -511,6 +512,18 @@ public class TRexClient extends ClientBase {
                 false,
                 null,
                 -1);
+    }
+
+    public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
+        removeRxQueue(portIndex);
+        setRxQueue(portIndex, 1000);
+        
+        EthernetPacket naPacket = new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
+        if (naPacket != null) {
+            return naPacket.getHeader().getSrcAddr().toString();
+        }
+        
+        return null;
     }
 
     public List<EthernetPacket> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
