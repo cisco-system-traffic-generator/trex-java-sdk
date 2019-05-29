@@ -315,6 +315,21 @@ public abstract class ClientBase {
     }
 
     /**
+     * Get Port Status including profile transmitting state
+     *
+     * @param portIdx
+     * @param profileId
+     * @return PortStatus
+     */
+    public TRexClientResult<PortStatus> getPortStatus(int portIdx, String profileId) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIdx);
+        parameters.put("profile_id", profileId);
+        parameters.put("block", false);
+        return callMethod("get_port_status", parameters, PortStatus.class);
+    }
+
+    /**
      * @param portIndex
      * @return PortStatistics
      */
@@ -522,6 +537,14 @@ public abstract class ClientBase {
             if (handler != null) {
                 payload.put("handler", handler);
             }
+        }
+        return payload;
+    }
+    
+    protected Map<String, Object> createPayload(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
         }
         return payload;
     }
