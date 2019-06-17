@@ -177,6 +177,12 @@ public class TRexClient extends ClientBase {
         callMethod("remove_stream", payload);
     }
 
+    public void removeStream(int portIndex, String profileId, int streamId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
+        payload.put("stream_id", streamId);
+        callMethod("remove_stream", payload);
+    }
+
     public void removeAllStreams(int portIndex) {
         removeAllStreams(portIndex, "");
     }
