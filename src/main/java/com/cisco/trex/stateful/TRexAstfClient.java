@@ -14,10 +14,14 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang.StringUtils;
 
 import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateful.model.stats.AstfStatistics;
+import com.cisco.trex.stateful.model.stats.MetaData;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
+import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
+import com.cisco.trex.stateless.model.stats.XstatsNames;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -314,37 +318,31 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * Get Counter Metadata of profile associated default profile id
-     * Not finished, needs to return counter object
+     * Get ASTF counters of profile associated with specified profile id
+     * 
+     * @param profileId
+     * @return AstfStatistics
      */
-    public void getCounterMetadata() {
-        getCounterMetadata("");
-    }
-
-    /**
-     * Get Counter Metadata of profile associated specified profile id
-     * Not finished, needs to return counter object
-     */
-    public void getCounterMetadata(String profileId) {
+    public AstfStatistics getAstfStatistics(String profileId) {
         Map<String, Object> payload = createPayload(profileId);
-        this.callMethod("get_counter_desc", payload);
+        return callMethod("get_counter_values", payload, AstfStatistics.class).get()
+                .setCounterNames(getAstfStatsMetaData());
     }
 
     /**
-     * Get Astf Counters of profile associated default profile id
-     * Not finished, needs to return counter object
+     * Get ASTF total counters for all profiles
+     * 
+     * @return AstfStatistics
      */
-    public void getAstfCounters() {
-        getAstfCounters("");
+    public AstfStatistics getAstfTotalStatistics() {
+        Map<String, Object> payload = createPayload();
+        return callMethod("get_total_counter_values", payload, AstfStatistics.class).get()
+                .setCounterNames(getAstfStatsMetaData());
     }
 
-    /**
-     * Get Astf Counters of profile associated specified profile id
-     * Not finished, needs to return counter object
-     */
-    public void getAstfCounters(String profileId) {
-        Map<String, Object> payload = this.createPayload(profileId);
-        this.callMethod("get_counter_values", payload);
+    private MetaData getAstfStatsMetaData() {
+        Map<String, Object> payload = createPayload();
+        return callMethod("get_counter_desc", payload, MetaData.class).get();
     }
 
     /**
