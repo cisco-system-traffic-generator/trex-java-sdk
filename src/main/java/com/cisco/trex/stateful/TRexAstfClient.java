@@ -4,17 +4,21 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import com.cisco.trex.stateless.model.ApiVersionHandler;
 import org.apache.commons.lang.StringUtils;
 
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
+import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -68,6 +72,14 @@ public class TRexAstfClient extends ClientBase {
         return payload;
     }
 
+    protected Map<String, Object> createPayload(String profileId) {
+        Map<String, Object> payload = createPayload();
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
+        }
+        return payload;
+    }
+
     private static String calculateMd5(String profile) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -83,7 +95,7 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * start traffic on all ports on the last loaded profile
+     * start traffic on all ports on loaded profile associated with default profile id
      *
      * @param clientMask
      * @param duration
@@ -94,7 +106,23 @@ public class TRexAstfClient extends ClientBase {
      */
     public void startTraffic(long clientMask, double duration, boolean ipv6,
             int latencyPps, int mult, boolean nc) {
-        Map<String, Object> payload = createPayload();
+        startTraffic("", clientMask, duration, ipv6, latencyPps, mult, nc);
+    }
+
+    /**
+     * start traffic on all ports on loaded profile associated with specified profile id
+     *
+     * @param profileId
+     * @param clientMask
+     * @param duration
+     * @param ipv6
+     * @param latencyPps
+     * @param mult
+     * @param nc
+     */
+    public void startTraffic(String profileId, long clientMask, double duration, boolean ipv6,
+            int latencyPps, int mult, boolean nc) {
+        Map<String, Object> payload = createPayload(profileId);
         payload.put("client_mask", clientMask);
         payload.put("duration", duration);
         payload.put("ipv6", ipv6);
@@ -124,11 +152,30 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * Stop the active traffic
+     * Stop the active traffic associated with default profile id
      */
     public void stopTraffic() {
-        Map<String, Object> payload = createPayload();
+        stopTraffic("");
+    }
+
+    /**
+     * Stop the active traffic associated with specified profile id
+     *
+     * @param profileId
+     */
+    public void stopTraffic(String profileId) {
+        Map<String, Object> payload = createPayload(profileId);
         this.callMethod("stop", payload);
+    }
+
+    /**
+     * Stop all active traffic
+     */
+    public void stopAllTraffic() {
+        List<String> profileIds = getProfileIds();
+        for (String profileId : profileIds) {
+            stopTraffic(profileId);
+        }
     }
 
     /**
@@ -197,16 +244,27 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Load profile object as string and upload in fragments
-     * 
+     *
      * @param profile
      */
     public void loadProfile(String profile) {
+        loadProfile(profile, "");
+    }
+
+    /**
+     * Load profile object as string and upload in fragments and associate it with specified profile
+     * id
+     *
+     * @param profile
+     * @param profileId
+     */
+    public void loadProfile(String profileId, String profile) {
         int indexStart = 0;
         int fragmentLength = 1000; //shorter length the first time
         int totalLength = profile.length();
         while (totalLength > indexStart) {
             int indexEnd = indexStart + fragmentLength;
-            Map<String, Object> payload = createPayload();
+            Map<String, Object> payload = createPayload(profileId);
             if (indexStart == 0) { //is first fragment
                 payload.put("frag_first", true);
                 payload.put("total_size", totalLength);
@@ -224,28 +282,68 @@ public class TRexAstfClient extends ClientBase {
     }
 
     /**
-     * clearProfile
+     * clear profile on loaded state for default profile id
      */
     public void clearProfile() {
-        Map<String, Object> payload = createPayload();
+        clearProfile("");
+    }
+
+    /**
+     * clear profile on loaded state for specified profile id
+     *
+     * @param profileId
+     */
+    public void clearProfile(String profileId) {
+        Map<String, Object> payload = createPayload(profileId);
         this.callMethod("profile_clear", payload);
     }
-    
+
     /**
-     * Get Counter Metadata
+     * fetch all the associated profile ids
+     *
+     * @return profile id list
+     */
+    public List<String> getProfileIds() {
+        Map<String, Object> payload = createPayload();
+        String json = callMethod("get_profile_list", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        return StreamSupport.stream(ids.spliterator(), false)
+                .map(JsonElement::getAsString)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get Counter Metadata of profile associated default profile id
      * Not finished, needs to return counter object
      */
     public void getCounterMetadata() {
-        Map<String, Object> payload = createPayload();
+        getCounterMetadata("");
+    }
+
+    /**
+     * Get Counter Metadata of profile associated specified profile id
+     * Not finished, needs to return counter object
+     */
+    public void getCounterMetadata(String profileId) {
+        Map<String, Object> payload = createPayload(profileId);
         this.callMethod("get_counter_desc", payload);
     }
 
     /**
-     * Get Astf Counters
+     * Get Astf Counters of profile associated default profile id
      * Not finished, needs to return counter object
      */
     public void getAstfCounters() {
-        Map<String, Object> payload = this.createPayload();
+        getAstfCounters("");
+    }
+
+    /**
+     * Get Astf Counters of profile associated specified profile id
+     * Not finished, needs to return counter object
+     */
+    public void getAstfCounters(String profileId) {
+        Map<String, Object> payload = this.createPayload(profileId);
         this.callMethod("get_counter_values", payload);
     }
 
@@ -260,7 +358,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get Version
-     * 
+     *
      * @return version
      */
     public String getVersion() {

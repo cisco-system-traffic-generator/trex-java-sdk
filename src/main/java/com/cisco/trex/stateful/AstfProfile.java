@@ -15,6 +15,7 @@ import java.util.Map;
  * ASTF profile
  */
 public class AstfProfile {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AstfProfile.class);
 
     private static final String L7_PRECENT = "l7_percent";
@@ -25,6 +26,7 @@ public class AstfProfile {
     private AstfGlobalInfo astfServerGlobalInfo;
     private List<AstfTemplate> astfTemplateList;
     private List<AstfCapInfo> astfCapInfoList;
+    private String profileId;
 
     /**
      * construct
@@ -141,6 +143,8 @@ public class AstfProfile {
                 astfTemplateList.add(template);
             }
         }
+
+        this.profileId = "astf_profile_" + System.currentTimeMillis();
     }
 
     /**
@@ -190,7 +194,8 @@ public class AstfProfile {
             JsonObject tempJson = astfTemplateList.get(i).toJson();
             int clientProgInd = tempJson.getAsJsonObject("client_template").get("program_index").getAsInt();
             int serverProgInd = tempJson.getAsJsonObject("server_template").get("program_index").getAsInt();
-            int totalBytes = AstfTemplateBase.getTotalSendBytes(clientProgInd) + AstfTemplateBase.getTotalSendBytes(serverProgInd);
+            int totalBytes = AstfTemplateBase.getTotalSendBytes(clientProgInd)
+                    + AstfTemplateBase.getTotalSendBytes(serverProgInd);
 
             float tempCps = tempJson.getAsJsonObject("client_template").get("cps").getAsFloat();
             float tempBps = totalBytes * tempCps * 8;
@@ -199,6 +204,10 @@ public class AstfProfile {
             totalCps += tempCps;
         }
         LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);
+    }
+
+    public String getProfileId() {
+        return this.profileId;
     }
 
 }

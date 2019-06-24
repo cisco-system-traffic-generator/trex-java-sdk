@@ -271,10 +271,7 @@ public class TRexClient extends ClientBase {
     }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
-        List<String> profileIds = getProfileIds(portIndex);
-        for (String profileId : profileIds) {
-            startTraffic(portIndex, profileId, duration, force, mul, coreMask);
-        }
+        startTraffic(portIndex, "", duration, force, mul, coreMask);
     }
 
     public void startTraffic(int portIndex, String profileId, double duration, boolean force, Map<String, Object> mul,
@@ -285,6 +282,13 @@ public class TRexClient extends ClientBase {
         payload.put("duration", duration);
         payload.put("force", force);
         callMethod("start_traffic", payload);
+    }
+
+    public void startAllTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+        List<String> profileIds = getProfileIds(portIndex);
+        for (String profileId : profileIds) {
+            startTraffic(portIndex, profileId, duration, force, mul, coreMask);
+        }
     }
 
     public void pauseTraffic(int portIndex) {
@@ -645,15 +649,19 @@ public class TRexClient extends ClientBase {
     }
 
     public void stopTraffic(int portIndex) {
-        List<String> profileIds = getProfileIds(portIndex);
-        for (String profileId : profileIds) {
-            stopTraffic(portIndex, profileId);
-        }
+        stopTraffic(portIndex, "");
     }
 
     public void stopTraffic(int portIndex, String profileId) {
         Map<String, Object> payload = createPayload(portIndex, profileId);
         callMethod("stop_traffic", payload);
+    }
+
+    public void stopAllTraffic(int portIndex) {
+        List<String> profileIds = getProfileIds(portIndex);
+        for (String profileId : profileIds) {
+            stopTraffic(portIndex, profileId);
+        }
     }
 
     public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {
