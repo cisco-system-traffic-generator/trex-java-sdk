@@ -32,7 +32,7 @@ import com.google.gson.JsonParser;
 public class TRexAstfClient extends ClientBase {
 
     private static final Integer API_VERSION_MAJOR = 1;
-    private static final Integer API_VERSION_MINOR = 5;
+    private static final Integer API_VERSION_MINOR = 7;
     private static final String ASTF = "ASTF";
 
     /**

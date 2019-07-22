@@ -65,7 +65,7 @@ public class TRexClient extends ClientBase {
 
     private static final EtherType QInQ = new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
     private static Integer API_VERSION_MAJOR = 4;
-    private static Integer API_VERSION_MINOR = 5;
+    private static Integer API_VERSION_MINOR = 6;
     private Integer session_id = 123456789;
 
     public TRexClient(String host, String port, String userName) {
