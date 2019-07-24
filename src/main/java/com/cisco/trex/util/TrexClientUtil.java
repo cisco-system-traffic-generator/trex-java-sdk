@@ -21,7 +21,7 @@ public final class TrexClientUtil {
     private static final String JSON_RPC_VERSION = "2.0";
     private static final Random randomizer = new Random();
     private static Integer API_VERSION_MAJOR = 1;
-    private static Integer API_VERSION_MINOR = 5;
+    private static Integer API_VERSION_MINOR = 7;
     private static TRexTransport transport;
 
     private TrexClientUtil() {
