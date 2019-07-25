@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.cisco.trex.util.Constants;
 import org.apache.commons.lang.StringUtils;
 
 import com.cisco.trex.ClientBase;
@@ -31,8 +32,6 @@ import com.google.gson.JsonParser;
  */
 public class TRexAstfClient extends ClientBase {
 
-    private static final Integer API_VERSION_MAJOR = 1;
-    private static final Integer API_VERSION_MINOR = 7;
     private static final String ASTF = "ASTF";
 
     /**
@@ -52,14 +51,14 @@ public class TRexAstfClient extends ClientBase {
     protected void serverAPISync() throws TRexConnectionException {
         LOGGER.info("Sync API with the TRex");
         Map<String, Object> apiVers = new HashMap<>();
-        apiVers.put("major", API_VERSION_MAJOR);
-        apiVers.put("minor", API_VERSION_MINOR);
+        apiVers.put("major", Constants.API_VERSION_MAJOR);
+        apiVers.put("minor", Constants.ASTF_API_VERSION_MINOR);
         apiVers.put("name", ASTF);
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    "Unable to connect to TRex server. Required API version is " + API_VERSION_MAJOR + "."
-                            + API_VERSION_MINOR);
+                    "Unable to connect to TRex server. Required API version is " + Constants.API_VERSION_MAJOR + "."
+                            + Constants.ASTF_API_VERSION_MINOR);
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
         }

@@ -1,6 +1,5 @@
 package com.cisco.trex.stateless;
 
-import com.cisco.trex.util.TrexClientUtil;
 import com.cisco.trex.util.TrexServerMode;
 import org.junit.Test;
 
