@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.cisco.trex.util.Constants;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.Dot1qVlanTagPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -64,8 +65,6 @@ import com.google.gson.JsonParser;
 public class TRexClient extends ClientBase {
 
     private static final EtherType QInQ = new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
-    private static Integer API_VERSION_MAJOR = 4;
-    private static Integer API_VERSION_MINOR = 6;
     private Integer session_id = 123456789;
 
     public TRexClient(String host, String port, String userName) {
@@ -83,8 +82,8 @@ public class TRexClient extends ClientBase {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("name", "STL");
-        parameters.put("major", API_VERSION_MAJOR);
-        parameters.put("minor", API_VERSION_MINOR);
+        parameters.put("major", Constants.STL_API_VERSION_MAJOR);
+        parameters.put("minor", Constants.STL_API_VERSION_MINOR);
 
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
@@ -92,8 +91,8 @@ public class TRexClient extends ClientBase {
             TRexConnectionException e = new TRexConnectionException(
                     MessageFormat.format(
                             "Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
-                            API_VERSION_MAJOR,
-                            API_VERSION_MINOR,
+                            Constants.STL_API_VERSION_MAJOR,
+                            Constants.STL_API_VERSION_MINOR,
                             result.getError()));
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
