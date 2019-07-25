@@ -30,7 +30,7 @@ public final class TRexClientUtil {
         transport = new TRexTransport(host, port, 3000);
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("name", "ASTF");
-        parameters.put("major", Constants.API_VERSION_MAJOR);
+        parameters.put("major", Constants.ASTF_API_VERSION_MAJOR);
         parameters.put("minor", Constants.ASTF_API_VERSION_MINOR);
         RPCResponse response = null;
         try {

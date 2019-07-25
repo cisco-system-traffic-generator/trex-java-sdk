@@ -21,8 +21,6 @@ import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
-import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
-import com.cisco.trex.stateless.model.stats.XstatsNames;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -51,13 +49,13 @@ public class TRexAstfClient extends ClientBase {
     protected void serverAPISync() throws TRexConnectionException {
         LOGGER.info("Sync API with the TRex");
         Map<String, Object> apiVers = new HashMap<>();
-        apiVers.put("major", Constants.API_VERSION_MAJOR);
+        apiVers.put("major", Constants.ASTF_API_VERSION_MAJOR);
         apiVers.put("minor", Constants.ASTF_API_VERSION_MINOR);
         apiVers.put("name", ASTF);
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    "Unable to connect to TRex server. Required API version is " + Constants.API_VERSION_MAJOR + "."
+                    "Unable to connect to TRex server. Required API version is " + Constants.ASTF_API_VERSION_MAJOR + "."
                             + Constants.ASTF_API_VERSION_MINOR);
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
