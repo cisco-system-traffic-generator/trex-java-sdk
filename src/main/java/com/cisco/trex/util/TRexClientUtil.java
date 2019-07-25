@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import com.cisco.trex.stateless.TRexCommand;
 import com.cisco.trex.stateless.TRexTransport;
@@ -42,7 +43,7 @@ public final class TRexClientUtil {
         if (!response.isFailed()) {
             return TRexServerMode.ASTF;
         }
-        if ("RPC configuration mismatch - server RPC configuration: 'STL', client RPC configuration: 'ASTF'".equalsIgnoreCase(response.getError().getSpecificErr())) {
+        if (Pattern.compile(".*mismatch.*server RPC.*STL.").matcher(response.getError().getSpecificErr()).find()) {
             return TRexServerMode.STL;
         }
         return TRexServerMode.UNKNOWN;
