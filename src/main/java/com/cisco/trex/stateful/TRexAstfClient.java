@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.cisco.trex.util.Constants;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateful.model.stats.AstfStatistics;
