@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.util.Constants;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.Dot1qVlanTagPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -41,6 +41,16 @@ import org.pcap4j.util.MacAddress;
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
+import com.cisco.trex.stateless.model.ApiVersionHandler;
+import com.cisco.trex.stateless.model.Ipv6Node;
+import com.cisco.trex.stateless.model.Port;
+import com.cisco.trex.stateless.model.PortStatus;
+import com.cisco.trex.stateless.model.Stream;
+import com.cisco.trex.stateless.model.StreamMode;
+import com.cisco.trex.stateless.model.StreamModeRate;
+import com.cisco.trex.stateless.model.StreamRxStats;
+import com.cisco.trex.stateless.model.StreamVM;
+import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.stats.ActivePGIds;
 import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
@@ -55,8 +65,6 @@ import com.google.gson.JsonParser;
 public class TRexClient extends ClientBase {
 
     private static final EtherType QInQ = new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
-    private static Integer API_VERSION_MAJOR = 4;
-    private static Integer API_VERSION_MINOR = 5;
     private Integer session_id = 123456789;
 
     public TRexClient(String host, String port, String userName) {
@@ -74,18 +82,18 @@ public class TRexClient extends ClientBase {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("name", "STL");
-        parameters.put("major", API_VERSION_MAJOR);
-        parameters.put("minor", API_VERSION_MINOR);
+        parameters.put("major", Constants.STL_API_VERSION_MAJOR);
+        parameters.put("minor", Constants.STL_API_VERSION_MINOR);
 
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    MessageFormat.format("Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
-                            API_VERSION_MAJOR,
-                            API_VERSION_MINOR,
-                            result.getError()
-                    ));
+                    MessageFormat.format(
+                            "Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
+                            Constants.STL_API_VERSION_MAJOR,
+                            Constants.STL_API_VERSION_MINOR,
+                            result.getError()));
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
         }
@@ -109,7 +117,9 @@ public class TRexClient extends ClientBase {
     public void resetPort(int portIndex) {
         acquirePort(portIndex, true);
         stopTraffic(portIndex);
-        removeAllStreams(portIndex);
+        for (String profileId : getProfileIds(portIndex)) {
+            removeAllStreams(portIndex, profileId);
+        }
         removeRxQueue(portIndex);
         serviceMode(portIndex, false);
         releasePort(portIndex);
@@ -124,16 +134,25 @@ public class TRexClient extends ClientBase {
     }
 
     public void addStream(int portIndex, Stream stream) {
-        Map<String, Object> payload = createPayload(portIndex);
-        payload.put("stream_id", stream.getId());
-        payload.put("stream", stream);
-        callMethod("add_stream", payload);
+        addStream(portIndex, "", stream.getId(), stream);
+    }
+
+    public void addStream(int portIndex, String profileId, Stream stream) {
+        addStream(portIndex, profileId, stream.getId(), stream);
     }
 
     public void addStream(int portIndex, int streamId, JsonObject stream) {
-        Map<String, Object> payload = createPayload(portIndex);
+        addStream(portIndex, "", streamId, stream);
+    }
+
+    public void addStream(int portIndex, String profileId, int streamId, JsonObject stream) {
+        addStream(portIndex, profileId, streamId, stream);
+    }
+
+    private void addStream(int portIndex, String profileId, int streamId, Object streamObject) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         payload.put("stream_id", streamId);
-        payload.put("stream", stream);
+        payload.put("stream", streamObject);
         callMethod("add_stream", payload);
     }
 
@@ -157,13 +176,27 @@ public class TRexClient extends ClientBase {
         callMethod("remove_stream", payload);
     }
 
+    public void removeStream(int portIndex, String profileId, int streamId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
+        payload.put("stream_id", streamId);
+        callMethod("remove_stream", payload);
+    }
+
     public void removeAllStreams(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
+        removeAllStreams(portIndex, "");
+    }
+
+    public void removeAllStreams(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         callMethod("remove_all_streams", payload);
     }
 
     public List<Stream> getAllStreams(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
+        return getAllStreams(portIndex, "");
+    }
+
+    public List<Stream> getAllStreams(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         String json = callMethod("get_all_streams", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonObject streams = response.getAsJsonArray().get(0)
@@ -175,11 +208,16 @@ public class TRexClient extends ClientBase {
         for (Map.Entry<String, JsonElement> stream : streams.entrySet()) {
             streamList.add(GSON.fromJson(stream.getValue(), Stream.class));
         }
+
         return streamList;
     }
 
     public List<Integer> getStreamIds(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
+        return getStreamIds(portIndex, "");
+    }
+
+    public List<Integer> getStreamIds(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         String json = callMethod("get_stream_list", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
@@ -209,6 +247,16 @@ public class TRexClient extends ClientBase {
         callMethod("update_streams", payload);
     }
 
+    public List<String> getProfileIds(int portIndex) {
+        Map<String, Object> payload = createPayload(portIndex);
+        String json = callMethod("get_profile_list", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        return StreamSupport.stream(ids.spliterator(), false)
+                .map(JsonElement::getAsString)
+                .collect(Collectors.toList());
+    }
+
     public ActivePGIds getActivePgids() {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("pgids", "");
@@ -222,12 +270,24 @@ public class TRexClient extends ClientBase {
     }
 
     public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
-        Map<String, Object> payload = createPayload(portIndex);
+        startTraffic(portIndex, "", duration, force, mul, coreMask);
+    }
+
+    public void startTraffic(int portIndex, String profileId, double duration, boolean force, Map<String, Object> mul,
+            int coreMask) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         payload.put("core_mask", coreMask);
         payload.put("mul", mul);
         payload.put("duration", duration);
         payload.put("force", force);
         callMethod("start_traffic", payload);
+    }
+
+    public void startAllTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+        List<String> profileIds = getProfileIds(portIndex);
+        for (String profileId : profileIds) {
+            startTraffic(portIndex, profileId, duration, force, mul, coreMask);
+        }
     }
 
     public void pauseTraffic(int portIndex) {
@@ -466,6 +526,18 @@ public class TRexClient extends ClientBase {
                 -1);
     }
 
+    public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
+        removeRxQueue(portIndex);
+        setRxQueue(portIndex, 1000);
+
+        EthernetPacket naPacket = new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
+        if (naPacket != null) {
+            return naPacket.getHeader().getSrcAddr().toString();
+        }
+
+        return null;
+    }
+
     public List<EthernetPacket> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
 
         Map<String, Object> payload = createPayload(portIndex);
@@ -576,8 +648,19 @@ public class TRexClient extends ClientBase {
     }
 
     public void stopTraffic(int portIndex) {
-        Map<String, Object> payload = createPayload(portIndex);
+        stopTraffic(portIndex, "");
+    }
+
+    public void stopTraffic(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex, profileId);
         callMethod("stop_traffic", payload);
+    }
+
+    public void stopAllTraffic(int portIndex) {
+        List<String> profileIds = getProfileIds(portIndex);
+        for (String profileId : profileIds) {
+            stopTraffic(portIndex, profileId);
+        }
     }
 
     public Map<String, Ipv6Node> scanIPv6(int portIndex) throws ServiceModeRequiredException {

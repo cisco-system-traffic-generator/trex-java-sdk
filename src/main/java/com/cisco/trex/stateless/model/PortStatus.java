@@ -1,6 +1,10 @@
 package com.cisco.trex.stateless.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.cisco.trex.stateless.model.port.PortAttributes;
+import com.cisco.trex.stateless.model.stats.FlowStat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,6 +28,9 @@ public class PortStatus {
     
     @JsonProperty("state")
     public String state;
+
+    @JsonProperty("state_profile")
+    private String stateProfile;
 
     @JsonProperty("attr")
     public PortAttributes getAttr() {
@@ -83,5 +90,15 @@ public class PortStatus {
     @JsonProperty("state")
     public void setState(String state) {
         this.state = state;
+    }
+
+    @JsonProperty("state_profile")
+    public String getStateProfile() {
+        return stateProfile;
+    }
+
+    @JsonProperty("state_profile")
+    public void setStateProfile(String stateProfile) {
+        this.stateProfile = stateProfile;
     }
 }

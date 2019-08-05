@@ -7,11 +7,11 @@ public class WriteMaskFlowVar extends VMInstruction {
     private int pkt_offset;
     private int add_value;
     private int pkt_cast_size;
-    private int mask;
+    private long mask;
     private int shift;
     private boolean is_big_endian;
 
-    public WriteMaskFlowVar(String name, int pkt_offset, int add_value, int pkt_cast_size, int mask, int shift,
+    public WriteMaskFlowVar(String name, int pkt_offset, int add_value, int pkt_cast_size, long mask, int shift,
             boolean is_big_endian) {
         super();
         this.type = "write_mask_flow_var";
@@ -44,7 +44,7 @@ public class WriteMaskFlowVar extends VMInstruction {
         return pkt_cast_size;
     }
 
-    public int getMask() {
+    public long getMask() {
         return mask;
     }
 

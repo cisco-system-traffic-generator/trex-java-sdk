@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.cisco.trex.util.Constants;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,6 @@ import com.google.gson.reflect.TypeToken;
 public abstract class ClientBase {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(ClientBase.class);
-    protected static final String JSON_RPC_VERSION = "2.0";
     protected static final Gson GSON = buildGson();
     protected String host;
     protected String port;
@@ -74,7 +74,7 @@ public abstract class ClientBase {
         }
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("id", "aggogxls");
-        parameters.put("jsonrpc", JSON_RPC_VERSION);
+        parameters.put("jsonrpc", Constants.JSON_RPC_VERSION);
         parameters.put("method", methodName);
         payload.put("api_h", apiH);
         parameters.put("params", payload);
@@ -232,7 +232,7 @@ public abstract class ClientBase {
         Map<String, Object> payload = new HashMap<>();
         int cmdId = randomizer.nextInt() & Integer.MAX_VALUE; //get a positive random value
         payload.put("id", cmdId);
-        payload.put("jsonrpc", JSON_RPC_VERSION);
+        payload.put("jsonrpc", Constants.JSON_RPC_VERSION);
         payload.put("method", methodName);
         if (!StringUtils.isEmpty(this.masterHandler)) {
             payload.put("handler", this.masterHandler);
@@ -310,6 +310,21 @@ public abstract class ClientBase {
     public TRexClientResult<PortStatus> getPortStatus(int portIdx) {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("port_id", portIdx);
+        parameters.put("block", false);
+        return callMethod("get_port_status", parameters, PortStatus.class);
+    }
+
+    /**
+     * Get Port Status including profile transmitting state
+     *
+     * @param portIdx
+     * @param profileId
+     * @return PortStatus
+     */
+    public TRexClientResult<PortStatus> getPortStatus(int portIdx, String profileId) {
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("port_id", portIdx);
+        parameters.put("profile_id", profileId);
         parameters.put("block", false);
         return callMethod("get_port_status", parameters, PortStatus.class);
     }
@@ -522,6 +537,14 @@ public abstract class ClientBase {
             if (handler != null) {
                 payload.put("handler", handler);
             }
+        }
+        return payload;
+    }
+    
+    protected Map<String, Object> createPayload(int portIndex, String profileId) {
+        Map<String, Object> payload = createPayload(portIndex);
+        if (profileId != null && !profileId.isEmpty()) {
+            payload.put("profile_id", profileId);
         }
         return payload;
     }
