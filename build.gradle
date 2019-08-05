@@ -15,7 +15,7 @@ dependencies {
     compile group: 'org.pcap4j', name: 'pcap4j-packetfactory-static', version:'1.7.1'
     compile group: 'commons-lang', name: 'commons-lang', version:'2.4'
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
-    compile group: 'org.zeromq', name: 'jeromq', version:'0.4.0'
+    compile group: 'org.zeromq', name: 'jeromq', version:'0.5.1'
     compile group: 'com.google.code.gson', name: 'gson', version:'2.7'
     compile group: 'com.google.guava', name: 'guava', version: '24.0-jre'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.6.0'
