@@ -1,7 +1,7 @@
 package com.cisco.trex.stateful;
 
 import com.cisco.trex.stateful.AstfProgram.SideType;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.Pcaps;
