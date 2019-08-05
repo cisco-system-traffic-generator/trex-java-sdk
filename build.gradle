@@ -33,6 +33,10 @@ dependencies {
     }
 }
 
+jar {
+    from sourceSets.main.allSource
+}
+
 test {
     testLogging {
         events "passed", "skipped" , "failed"
