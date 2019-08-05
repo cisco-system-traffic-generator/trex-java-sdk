@@ -1,7 +1,7 @@
 package com.cisco.trex.stateful;
 
 import com.google.gson.JsonObject;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Astf Association Rule
