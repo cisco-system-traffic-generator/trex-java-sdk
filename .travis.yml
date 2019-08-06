@@ -15,5 +15,4 @@ deploy:
     skip_cleanup: true
     on:
         branch: master
-        jdk: oraclejdk8
         tags: true #Deploying only on tagged builds
