@@ -1,5 +1,4 @@
 group 'com.cisco.trex'
-version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 
