@@ -4,7 +4,7 @@ jdk: oraclejdk8
 
 before_deploy:
   - ./gradlew clean
-  - ./gradlew jar
+  - ./gradlew -Pversion=${VERSION:1} jar
   
 deploy:
   - provider: releases
