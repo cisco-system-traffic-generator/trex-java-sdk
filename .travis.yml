@@ -4,7 +4,7 @@ jdk: oraclejdk8
 
 before_deploy:
   - ./gradlew clean
-  - ./gradlew -Pversion=$TRAVIS_TAG jar
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} jar
   
 deploy:
   - provider: releases
