@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import java.util.List;
 
 /**
- * Locate here temporary,will remove later.
+ *
  * This class provide a separate method to fetch cached json command. When user use it to create
  * profiles,all the profiles will not interact with each other.So user can create all the profiles
  * first and then start all of them.
