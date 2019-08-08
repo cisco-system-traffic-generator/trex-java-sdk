@@ -1,3 +1,18 @@
 language: java
 dist: trusty
 jdk: oraclejdk8
+
+before_deploy:
+  - ./gradlew clean
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} jar
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} jarWithDependencies
+  
+deploy:
+  - provider: releases
+    api_key: "$GITHUB_TOKEN"
+    file_glob: true
+    file: "build/libs/*"
+    skip_cleanup: true
+    on:
+        branch: master
+        tags: true #Deploying only on tagged builds
