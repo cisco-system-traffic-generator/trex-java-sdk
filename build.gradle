@@ -13,7 +13,7 @@ dependencies {
     compile group: 'org.pcap4j', name: 'pcap4j-core', version:'1.7.1'
     compile group: 'org.pcap4j', name: 'pcap4j-packetfactory-static', version:'1.7.1'
     compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.9'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.26'
     compile group: 'org.zeromq', name: 'jeromq', version:'0.4.0'
     compile group: 'com.google.code.gson', name: 'gson', version:'2.7'
     compile group: 'com.google.guava', name: 'guava', version: '24.0-jre'
