@@ -52,7 +52,7 @@ task e2eTest(type: Test) {
     description 'Runs E2E testing on trex-java-sdk'
 
     outputs.upToDateWhen { false }
-    testClassesDir = sourceSets.e2eTest.output.classesDir
+    testClassesDirs = sourceSets.e2eTest.output.classesDirs
     classpath = sourceSets.e2eTest.runtimeClasspath
 
     test {
