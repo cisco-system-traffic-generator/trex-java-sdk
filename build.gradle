@@ -35,6 +35,12 @@ jar {
     from sourceSets.main.allSource
 }
 
+task jarWithDependencies(type: Jar) {
+    baseName = project.name + '-WithDependencies'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 test {
     testLogging {
         events "passed", "skipped" , "failed"
