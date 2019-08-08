@@ -37,7 +37,7 @@ jar {
 }
 
 task jarWithDependencies(type: Jar) {
-    baseName = project.name + '-WithDependencies'
+    baseName = project.name + '-with-dependencies'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
