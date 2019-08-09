@@ -26,8 +26,6 @@ public class ASTFProfile {
     private ASTFGlobalInfo astfServerGlobalInfo;
     private List<ASTFTemplate> astfTemplateList;
     private List<ASTFCapInfo> astfCapInfoList;
-    private String profileId;
-
     /**
      * construct
      *
@@ -144,7 +142,6 @@ public class ASTFProfile {
             }
         }
 
-        this.profileId = "astf_profile_" + System.currentTimeMillis();
     }
 
     /**
@@ -204,10 +201,6 @@ public class ASTFProfile {
             totalCps += tempCps;
         }
         LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);
-    }
-
-    public String getProfileId() {
-        return this.profileId;
     }
 
 }
