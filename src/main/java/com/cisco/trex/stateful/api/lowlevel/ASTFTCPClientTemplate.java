@@ -9,7 +9,7 @@ import com.google.gson.JsonObject;
  * <p>
  * client commands
  *
- * @<code> ASTFProgram progC =new ASTFProgram()
+ * <code> ASTFProgram progC =new ASTFProgram()
  * progC.send(http_req)
  * progC.recv(http_response.length())
  * </code>
@@ -17,7 +17,7 @@ import com.google.gson.JsonObject;
  *
  * <p>
  * ip generator
- * @<code> ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255");
+ * <code> ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255");
  * ASTFIpGenDist ipGenS =new ASTFIpGenDist("48.0.0.0", "48.0.255.255");
  * ASTFIpGen ipGen = new ASTFIpGen(new ASTFIpGenGlobal("1.0.0.0");
  * </code>
@@ -25,7 +25,7 @@ import com.google.gson.JsonObject;
  *
  * <p>
  * template
- * @<code> ASTFTCPClientTemplate tempC=new ASTFTCPClientTemplate(progC, ipGen)</code>
+ * <code> ASTFTCPClientTemplate tempC=new ASTFTCPClientTemplate(progC, ipGen)</code>
  * </p>
  */
 public class ASTFTCPClientTemplate extends ASTFClientTemplate {
