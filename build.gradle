@@ -46,11 +46,6 @@ task writePom {
             }
         }.writeTo("pom.xml")
     }
-    # copy to libs folder to include it in the upload to github
-    copy {
-	from("pom.xml")
-	into("build/libs/")
-	}
 }
 
 jar {
