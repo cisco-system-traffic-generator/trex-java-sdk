@@ -1,6 +1,7 @@
 group 'com.cisco.trex'
 
 apply plugin: 'java'
+apply plugin: 'maven'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -31,6 +32,30 @@ dependencies {
     }
 }
 
+task writePom {
+    doLast {
+        pom {
+            project {
+            	artifactId 'trex-java-sdk'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+        }.writeTo("pom.xml")
+    }
+}
+
+jar {
+    dependsOn writePom
+    from sourceSets.main.allSource
+    into("META-INF/maven/$project.group/$project.name") {
+		    from("pom.xml")
+    }
+}
+
 task javadocJar(type: Jar) {
 	classifier = 'javadoc'
 	from javadoc
@@ -42,6 +67,7 @@ task sourcesJar(type: Jar) {
 }
 
 task jarWithDependencies(type: Jar) {
+    dependsOn writePom
     baseName = project.name + '-with-dependencies'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
