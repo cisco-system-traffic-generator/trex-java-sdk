@@ -50,9 +50,8 @@ task writePom {
 
 jar {
     dependsOn writePom
-    from sourceSets.main.allSource
     into("META-INF/maven/$project.group/$project.name") {
-		    from("pom.xml")
+	from("pom.xml")
     }
 }
 
