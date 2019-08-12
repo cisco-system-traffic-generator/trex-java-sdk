@@ -50,10 +50,19 @@ task writePom {
 
 jar {
     dependsOn writePom
-    from sourceSets.main.allSource
     into("META-INF/maven/$project.group/$project.name") {
-		from("pom.xml")
-	}
+	from("pom.xml")
+    }
+}
+
+task javadocJar(type: Jar) {
+	classifier = 'javadoc'
+	from javadoc
+}
+
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 
 task jarWithDependencies(type: Jar) {
@@ -61,6 +70,10 @@ task jarWithDependencies(type: Jar) {
     baseName = project.name + '-with-dependencies'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+}
+
+artifacts {
+  archives javadocJar, sourcesJar, jarWithDependencies
 }
 
 test {
