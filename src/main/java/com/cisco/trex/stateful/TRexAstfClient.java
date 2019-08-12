@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.cisco.trex.ClientBase;
 import com.cisco.trex.stateful.model.stats.AstfStatistics;
 import com.cisco.trex.stateful.model.stats.MetaData;
+import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
@@ -344,11 +345,12 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get Latency Stats
-     * Not finished, needs to return counter object
+     *
+     * @return LatencyStats
      */
-    public void getLatencyStats() {
+    public LatencyStats getLatencyStats() {
         Map<String, Object> payload = this.createPayload();
-        this.callMethod("get_latency_stats", payload);
+        return this.callMethod("get_latency_stats", payload, LatencyStats.class).get();
     }
 
     /**
