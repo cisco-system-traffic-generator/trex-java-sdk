@@ -4,8 +4,7 @@ jdk: oraclejdk8
 
 before_deploy:
   - ./gradlew clean
-  - ./gradlew -Pversion=${TRAVIS_TAG:1} jar
-  - ./gradlew -Pversion=${TRAVIS_TAG:1} jarWithDependencies
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} assemble
   - cp pom.xml build/libs/trex-java-sdk-${TRAVIS_TAG:1}.pom
   
 deploy:
