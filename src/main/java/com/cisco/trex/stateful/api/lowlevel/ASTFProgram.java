@@ -18,7 +18,7 @@ import java.util.Map;
  * 
  * Emulation L7 program
  *
- * @<code> ASTFProgram progServer =new ASTFProgram()
+ * <code> ASTFProgram progServer =new ASTFProgram()
  * progServer.recv(http_req.length())
  * progServer.send(http_response)
  * progServer.delay(10)
