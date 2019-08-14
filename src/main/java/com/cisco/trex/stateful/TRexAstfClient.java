@@ -1,8 +1,11 @@
 package com.cisco.trex.stateful;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +58,8 @@ public class TRexAstfClient extends ClientBase {
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    "Unable to connect to TRex server. Required API version is " + Constants.ASTF_API_VERSION_MAJOR + "."
+                    "Unable to connect to TRex server. Required API version is " + Constants.ASTF_API_VERSION_MAJOR
+                            + "."
                             + Constants.ASTF_API_VERSION_MINOR);
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
@@ -249,7 +253,7 @@ public class TRexAstfClient extends ClientBase {
      * @param profile
      */
     public void loadProfile(String profile) {
-        loadProfile(profile, "");
+        loadProfile("", profile);
     }
 
     /**
@@ -316,7 +320,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get ASTF counters of profile associated with specified profile id
-     * 
+     *
      * @param profileId
      * @return AstfStatistics
      */
@@ -328,7 +332,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get ASTF total counters for all profiles
-     * 
+     *
      * @return AstfStatistics
      */
     public AstfStatistics getAstfTotalStatistics() {
@@ -366,6 +370,94 @@ public class TRexAstfClient extends ClientBase {
         } catch (NullPointerException e) {
             throw new IllegalStateException("could not parse version", e);
         }
+    }
+
+    /**
+     * get template group names
+     *
+     * @return template group names
+     */
+    public List<String> getTemplateGroupNames() {
+        return this.getTemplateGroupNames(null);
+    }
+
+    /**
+     * get template group names
+     *
+     * @param profileId
+     * @return template group names
+     */
+    public List<String> getTemplateGroupNames(String profileId) {
+        Map<String, Object> payload = createPayload(profileId);
+        payload.put("epoch", 1);
+        payload.put("initialized", false);
+        String json = callMethod("get_tg_names", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonArray names = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+                .get("tg_names").getAsJsonArray();
+        return StreamSupport.stream(names.spliterator(), false).map(name -> name.getAsString())
+                .collect(Collectors.toList());
+
+    }
+
+    /**
+     * get template group statistics
+     *
+     * @param tgNames
+     * @return
+     */
+    public Map<String, AstfStatistics> getTemplateGroupStatistics(List<String> tgNames) {
+        return getTemplateGroupStatistics(null, tgNames);
+    }
+
+    /**
+     * get template group statistics
+     *
+     * @param profileId
+     * @param tgNames
+     * @return
+     */
+    public Map<String, AstfStatistics> getTemplateGroupStatistics(String profileId, List<String> tgNames) {
+        Map<String, AstfStatistics> stats = new HashMap<>();
+        Map<String, Object> payload = createPayload(profileId);
+        payload.put("epoch", 1);
+
+        Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames);
+        List<Integer> tgIds = new ArrayList<>(tgNames.size());
+        tgNames.forEach(name -> tgIds.add(name2Id.get(name)));
+        payload.put("tg_ids", tgIds);
+
+        String json = callMethod("get_tg_id_stats", payload);
+        JsonElement response = new JsonParser().parse(json);
+
+        JsonObject result = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject();
+        Map<Integer, String> id2Name = translateIds2Names(name2Id);
+        for (Integer id : tgIds){
+            stats.put(id2Name.get(id), GSON.fromJson(result.get(id.toString()), AstfStatistics.class));
+        }
+
+        return  stats;
+    }
+
+    private Map<Integer, String> translateIds2Names(Map<String, Integer> name2Id){
+        Map<Integer, String> id2Name = new HashMap<>(name2Id.size());
+
+        for(Map.Entry<String, Integer> enrty : name2Id.entrySet()){
+            id2Name.put(enrty.getValue(), enrty.getKey());
+        }
+
+        return id2Name;
+    }
+
+    private Map<String, Integer> translateNames2Ids(String profileId, List<String> tgNames) {
+        Map<String, Integer> name2Id = new HashMap<>(tgNames.size());
+        List<String> allTgNames = getTemplateGroupNames(profileId);
+        for (int i = 0; i < allTgNames.size(); i++) {
+            if(tgNames.contains(allTgNames.get(i)))
+                name2Id.put(allTgNames.get(i), i+1);
+        }
+
+        return name2Id;
     }
 
 }

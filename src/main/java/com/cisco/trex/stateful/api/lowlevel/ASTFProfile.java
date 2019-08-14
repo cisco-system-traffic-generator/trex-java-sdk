@@ -2,6 +2,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.LinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,8 @@ public class ASTFProfile {
     private List<ASTFCapInfo> astfCapInfoList;
     private String profileId;
 
+    private Map<String, Integer> tgName2TgId = new LinkedHashMap<>(); //template group name -> template group id
+
     /**
      * construct
      *
@@ -47,15 +50,30 @@ public class ASTFProfile {
      * @param astfTemplateList
      * @param astfCapInfoList
      */
-    public ASTFProfile(ASTFIpGen defaultIpGen, ASTFGlobalInfo astfClientGlobalInfo, ASTFGlobalInfo astfServerGlobalInfo, List<ASTFTemplate> astfTemplateList, List<ASTFCapInfo> astfCapInfoList) {
+    public ASTFProfile(ASTFIpGen defaultIpGen, ASTFGlobalInfo astfClientGlobalInfo, ASTFGlobalInfo astfServerGlobalInfo,
+            List<ASTFTemplate> astfTemplateList, List<ASTFCapInfo> astfCapInfoList) {
         this.astfClientGlobalInfo = astfClientGlobalInfo;
         this.astfServerGlobalInfo = astfServerGlobalInfo;
 
         if (astfTemplateList == null && astfCapInfoList == null) {
-            throw new IllegalStateException(String.format("bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time "));
+            throw new IllegalStateException(String.format(
+                    "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time "));
         }
         this.astfTemplateList = astfTemplateList;
         this.astfCapInfoList = astfCapInfoList;
+
+        for (ASTFTemplate template : astfTemplateList) {
+            if (template.getTgName() == null) {
+                template.setTgId(0);
+                continue;
+            }
+
+            String tgName = template.getTgName();
+            if (!tgName2TgId.containsKey(tgName)) {
+                tgName2TgId.put(tgName, tgName2TgId.size() + 1);
+            }
+            template.setTgId(tgName2TgId.get(tgName));
+        }
 
         /**
          * for pcap file parse scenario
@@ -89,7 +107,8 @@ public class ASTFProfile {
                         throw new IllegalStateException("If one cap specifies l7_percent, then all should specify it");
                     }
                     if (mode.equals(CPS) && l7Percent > 0) {
-                        throw new IllegalStateException("Can't mix specifications of cps and l7_percent in same cap list");
+                        throw new IllegalStateException(
+                                "Can't mix specifications of cps and l7_percent in same cap list");
                     }
                 }
                 totalPayload += progC.getPayloadLen();
@@ -102,7 +121,9 @@ public class ASTFProfile {
                 } else {
                     dPort = capInfo.getAssoc().getPort();
                     myAssoc = capInfo.getAssoc();
-                    throw new IllegalStateException(String.format("More than one cap use dest port %s. This is currently not supported.", dPort));
+                    throw new IllegalStateException(
+                            String.format("More than one cap use dest port %s. This is currently not supported.",
+                                    dPort));
                 }
                 dPorts.add(dPort);
 
@@ -136,9 +157,12 @@ public class ASTFProfile {
             }
 
             for (Map<String, Object> map : allCapInfo) {
-                ASTFTCPClientTemplate tempC = new ASTFTCPClientTemplate((ASTFProgram) map.get("prog_c"), (ASTFIpGen) map.get("ip_gen"), null,
-                        (int) map.get("d_port"), (float) map.get("cps"), (ASTFGlobalInfoPerTemplate) map.get("glob_c"), (int) map.get("limit"));
-                ASTFTCPServerTemplate tempS = new ASTFTCPServerTemplate((ASTFProgram) map.get("prog_s"), (ASTFAssociation) map.get("my_assoc"), (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
+                ASTFTCPClientTemplate tempC = new ASTFTCPClientTemplate((ASTFProgram) map.get("prog_c"),
+                        (ASTFIpGen) map.get("ip_gen"), null,
+                        (int) map.get("d_port"), (float) map.get("cps"), (ASTFGlobalInfoPerTemplate) map.get("glob_c"),
+                        (int) map.get("limit"));
+                ASTFTCPServerTemplate tempS = new ASTFTCPServerTemplate((ASTFProgram) map.get("prog_s"),
+                        (ASTFAssociation) map.get("my_assoc"), (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
                 ASTFTemplate template = new ASTFTemplate(tempC, tempS);
                 astfTemplateList.add(template);
             }
@@ -168,6 +192,11 @@ public class ASTFProfile {
             jsonArray.add(astfTemplate.toJson());
         }
         json.add("templates", jsonArray);
+
+        JsonArray tgNames = new JsonArray();
+        tgName2TgId.keySet().forEach(name -> tgNames.add(name));
+        json.add("tg_names", tgNames);
+
         return json;
     }
 
