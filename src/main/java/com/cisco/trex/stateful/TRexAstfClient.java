@@ -25,6 +25,9 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
+import com.cisco.trex.stateful.model.stats.LatencyStats;
+import com.cisco.trex.stateful.model.stats.PortLatencyData;
 
 /**
  * TRex Astf Client class
@@ -350,7 +353,25 @@ public class TRexAstfClient extends ClientBase {
      */
     public LatencyStats getLatencyStats() {
         Map<String, Object> payload = this.createPayload();
-        return this.callMethod("get_latency_stats", payload, LatencyStats.class).get();
+        String json = this.callMethod("get_latency_stats", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonElement latencyStatsData = response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+        //only can parse a part of data, PortLatencyData need to be parsed manually.
+        LatencyStats latencyStats = GSON.fromJson(latencyStatsData, LatencyStats.class);
+        JsonElement dataElement = latencyStatsData.getAsJsonObject().get("data");
+        JsonObject data = dataElement.getAsJsonObject();
+        Map<Integer, PortLatencyData> portLatencyDataMap = new HashMap<>();
+        // parse PortLatencyData manually
+        for (Map.Entry<String, JsonElement> entry : data.entrySet()) {
+            String jsonKey = entry.getKey();
+            if(jsonKey.startsWith("port")){
+                Integer port = Integer.parseInt(jsonKey.substring(5));
+                PortLatencyData portLatencyData = GSON.fromJson(entry.getValue(), PortLatencyData.class);
+                portLatencyDataMap.put(port,portLatencyData);
+            }
+        }
+        latencyStats.getData().setPortLatencyDataMap(portLatencyDataMap);
+        return latencyStats;
     }
 
     /**
