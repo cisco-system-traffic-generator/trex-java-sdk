@@ -45,7 +45,7 @@ public class LatencyStats {
      * see http://trex-tgn.cisco.com/trex/doc/cp_docs/api/json_fields.html#trex-latecny-field for detail description.
      */
     @JsonProperty("data")
-    public Map data;
+    public LatencyData data;
 
     @JsonProperty("name")
     public String name;
@@ -53,11 +53,11 @@ public class LatencyStats {
     @JsonProperty("type")
     public Integer type;
 
-    public Map getData() {
+    public LatencyData getData() {
         return data;
     }
 
-    public void setData(Map data) {
+    public void setData(LatencyData data) {
         this.data = data;
     }
 
