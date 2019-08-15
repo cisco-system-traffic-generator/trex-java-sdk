@@ -11,11 +11,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.cisco.trex.stateful.model.stats.*;
 import com.cisco.trex.util.Constants;
 import org.apache.commons.lang3.StringUtils;
 
 import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateful.model.stats.AstfStatistics;
+import com.cisco.trex.stateful.model.stats.MetaData;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
