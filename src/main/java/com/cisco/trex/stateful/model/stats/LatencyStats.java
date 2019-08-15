@@ -1,7 +1,6 @@
 package com.cisco.trex.stateful.model.stats;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Map;
+import com.google.gson.annotations.SerializedName;
 
 public class LatencyStats {
 
@@ -44,35 +43,41 @@ public class LatencyStats {
      * </pre>
      * see http://trex-tgn.cisco.com/trex/doc/cp_docs/api/json_fields.html#trex-latecny-field for detail description.
      */
-    @JsonProperty("data")
+    @SerializedName("data")
     public LatencyData data;
 
-    @JsonProperty("name")
+    @SerializedName("name")
     public String name;
 
-    @JsonProperty("type")
+    @SerializedName("type")
     public Integer type;
 
+    @SerializedName("data")
     public LatencyData getData() {
         return data;
     }
 
+    @SerializedName("data")
     public void setData(LatencyData data) {
         this.data = data;
     }
 
+    @SerializedName("name")
     public String getName() {
         return name;
     }
 
+    @SerializedName("name")
     public void setName(String name) {
         this.name = name;
     }
 
+    @SerializedName("type")
     public Integer getType() {
         return type;
     }
 
+    @SerializedName("type")
     public void setType(Integer type) {
         this.type = type;
     }

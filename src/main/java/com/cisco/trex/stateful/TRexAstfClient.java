@@ -11,13 +11,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.cisco.trex.stateful.model.stats.*;
 import com.cisco.trex.util.Constants;
 import org.apache.commons.lang3.StringUtils;
 
 import com.cisco.trex.ClientBase;
-import com.cisco.trex.stateful.model.stats.AstfStatistics;
-import com.cisco.trex.stateful.model.stats.MetaData;
-import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.PortStatus;
@@ -27,7 +25,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 import com.cisco.trex.stateful.model.stats.LatencyStats;
-import com.cisco.trex.stateful.model.stats.PortLatencyData;
+import com.cisco.trex.stateful.model.stats.LatencyPortData;
 
 /**
  * TRex Astf Client class
@@ -355,19 +353,19 @@ public class TRexAstfClient extends ClientBase {
         Map<String, Object> payload = this.createPayload();
         String json = this.callMethod("get_latency_stats", payload);
         JsonElement response = new JsonParser().parse(json);
-        JsonElement latencyStatsData = response.getAsJsonArray().get(0).getAsJsonObject().get("result");
-        //only can parse a part of data, PortLatencyData need to be parsed manually.
-        LatencyStats latencyStats = GSON.fromJson(latencyStatsData, LatencyStats.class);
-        JsonElement dataElement = latencyStatsData.getAsJsonObject().get("data");
-        JsonObject data = dataElement.getAsJsonObject();
-        Map<Integer, PortLatencyData> portLatencyDataMap = new HashMap<>();
-        // parse PortLatencyData manually
-        for (Map.Entry<String, JsonElement> entry : data.entrySet()) {
+        JsonElement latencyStatsJsonElement = response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+        //only can parse a part of data, LatencyPortData need to be parsed manually.
+        LatencyStats latencyStats = GSON.fromJson(latencyStatsJsonElement, LatencyStats.class);
+        JsonElement latencyDataJsonElement = latencyStatsJsonElement.getAsJsonObject().get("data");
+        JsonObject latencyDataJsonObject = latencyDataJsonElement.getAsJsonObject();
+        Map<Integer, LatencyPortData> portLatencyDataMap = new HashMap<>();
+        // parse LatencyPortData manually
+        for (Map.Entry<String, JsonElement> entry : latencyDataJsonObject.entrySet()) {
             String jsonKey = entry.getKey();
             if(jsonKey.startsWith("port")){
-                Integer port = Integer.parseInt(jsonKey.substring(5));
-                PortLatencyData portLatencyData = GSON.fromJson(entry.getValue(), PortLatencyData.class);
-                portLatencyDataMap.put(port,portLatencyData);
+                Integer portIndex = Integer.parseInt(jsonKey.substring(5));
+                LatencyPortData latencyPortData = GSON.fromJson(entry.getValue(), LatencyPortData.class);
+                portLatencyDataMap.put(portIndex, latencyPortData);
             }
         }
         latencyStats.getData().setPortLatencyDataMap(portLatencyDataMap);
