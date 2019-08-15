@@ -1,50 +1,56 @@
 package com.cisco.trex.stateful.model.stats;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
 
 public class LatencyData {
 
-    @JsonProperty("cpu_util")
-    public String cpu_util;
+    @SerializedName("cpu_util")
+    public String cpuUtil;
 
-    @JsonProperty("epoch")
+    @SerializedName("epoch")
     public Integer epoch;
 
-    public Map<Integer, PortLatencyData> portLatencyDataMap;
+    public Map<Integer, LatencyPortData> portLatencyDataMap;
 
-    @JsonProperty("unknown")
+    @SerializedName("unknown")
     public Integer unknown;
 
-    public String getCpu_util() {
-        return cpu_util;
+    @SerializedName("cpu_util")
+    public String getCpuUtil() {
+        return cpuUtil;
     }
 
-    public void setCpu_util(String cpu_util) {
-        this.cpu_util = cpu_util;
+    @SerializedName("cpu_util")
+    public void setCpuUtil(String cpuUtil) {
+        this.cpuUtil = cpuUtil;
     }
 
+    @SerializedName("epoch")
     public Integer getEpoch() {
         return epoch;
     }
 
+    @SerializedName("epoch")
     public void setEpoch(Integer epoch) {
         this.epoch = epoch;
     }
 
-    public Map<Integer, PortLatencyData> getPortLatencyDataMap() {
+    public Map<Integer, LatencyPortData> getPortLatencyDataMap() {
         return portLatencyDataMap;
     }
 
-    public void setPortLatencyDataMap(Map<Integer, PortLatencyData> portLatencyDataMap) {
+    public void setPortLatencyDataMap(Map<Integer, LatencyPortData> portLatencyDataMap) {
         this.portLatencyDataMap = portLatencyDataMap;
     }
 
+    @SerializedName("unknown")
     public Integer getUnknown() {
         return unknown;
     }
 
+    @SerializedName("unknown")
     public void setUnknown(Integer unknown) {
         this.unknown = unknown;
     }
