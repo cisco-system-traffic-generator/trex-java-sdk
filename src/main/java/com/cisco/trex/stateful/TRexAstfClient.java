@@ -10,6 +10,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -417,7 +418,8 @@ public class TRexAstfClient extends ClientBase {
         JsonElement response = new JsonParser().parse(json);
         JsonArray names = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
                 .get("tg_names").getAsJsonArray();
-        return StreamSupport.stream(names.spliterator(), false).map(name -> name.getAsString())
+        return StreamSupport.stream(names.spliterator(), false)
+                .map(JsonElement::getAsString)
                 .collect(Collectors.toList());
     }
 
@@ -439,16 +441,15 @@ public class TRexAstfClient extends ClientBase {
      * @return Map key:tgName, value:AstfStatistics
      */
     public Map<String, AstfStatistics> getTemplateGroupStatistics(String profileId, List<String> tgNames) {
-        Map<String, AstfStatistics> stats = new HashMap<>();
-        Map<String, Object> payload = createPayload(profileId);
-        payload.put("epoch", 1);
 
         //remove duplicated tgNames in input list
         tgNames = new ArrayList<>(new HashSet<>(tgNames));
+        Map<String, AstfStatistics> stats = new LinkedHashMap<>(tgNames.size());
+
+        Map<String, Object> payload = createPayload(profileId);
+        payload.put("epoch", 1);
         Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames);
-        List<Integer> tgIds = new ArrayList<>(tgNames.size());
-        tgNames.forEach(name -> tgIds.add(name2Id.get(name)));
-        payload.put("tg_ids", tgIds);
+        payload.put("tg_ids", new ArrayList<>(name2Id.values()));
 
         String json = callMethod("get_tg_id_stats", payload);
         JsonElement response = new JsonParser().parse(json);
@@ -476,7 +477,7 @@ public class TRexAstfClient extends ClientBase {
      * @return Map key:tgName, value:tgId
      */
     private Map<String, Integer> translateNames2Ids(String profileId, List<String> tgNames) {
-        Map<String, Integer> name2Id = new HashMap<>(tgNames.size());
+        Map<String, Integer> name2Id = new LinkedHashMap<>(tgNames.size());
         List<String> allTgNames = getTemplateGroupNames(profileId);
         for (int i = 0; i < allTgNames.size(); i++) {
             if(tgNames.contains(allTgNames.get(i)))
