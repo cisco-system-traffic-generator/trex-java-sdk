@@ -26,6 +26,9 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
+import com.cisco.trex.stateful.model.stats.LatencyStats;
+import com.cisco.trex.stateful.model.stats.LatencyPortData;
 
 /**
  * TRex Astf Client class
@@ -346,11 +349,30 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get Latency Stats
-     * Not finished, needs to return counter object
+     *
+     * @return LatencyStats
      */
-    public void getLatencyStats() {
+    public LatencyStats getLatencyStats() {
         Map<String, Object> payload = this.createPayload();
-        this.callMethod("get_latency_stats", payload);
+        String json = this.callMethod("get_latency_stats", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonElement latencyStatsJsonElement = response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+        //only can parse a part of data, LatencyPortData need to be parsed manually.
+        LatencyStats latencyStats = GSON.fromJson(latencyStatsJsonElement, LatencyStats.class);
+        JsonElement latencyDataJsonElement = latencyStatsJsonElement.getAsJsonObject().get("data");
+        JsonObject latencyDataJsonObject = latencyDataJsonElement.getAsJsonObject();
+        Map<Integer, LatencyPortData> portLatencyDataMap = new HashMap<>();
+        // parse LatencyPortData manually
+        for (Map.Entry<String, JsonElement> entry : latencyDataJsonObject.entrySet()) {
+            String jsonKey = entry.getKey();
+            if(jsonKey.startsWith("port")){
+                Integer portIndex = Integer.parseInt(jsonKey.substring(5));
+                LatencyPortData latencyPortData = GSON.fromJson(entry.getValue(), LatencyPortData.class);
+                portLatencyDataMap.put(portIndex, latencyPortData);
+            }
+        }
+        latencyStats.getData().setPortLatencyDataMap(portLatencyDataMap);
+        return latencyStats;
     }
 
     /**
