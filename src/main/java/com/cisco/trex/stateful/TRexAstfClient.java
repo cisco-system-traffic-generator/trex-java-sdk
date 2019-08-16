@@ -1,16 +1,15 @@
 package com.cisco.trex.stateful;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -58,8 +57,7 @@ public class TRexAstfClient extends ClientBase {
         TRexClientResult<ApiVersionHandler> result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
         if (result.get() == null) {
             TRexConnectionException e = new TRexConnectionException(
-                    "Unable to connect to TRex server. Required API version is " + Constants.ASTF_API_VERSION_MAJOR
-                            + "."
+                    "Unable to connect to TRex server. Required API version is " + Constants.ASTF_API_VERSION_MAJOR + "."
                             + Constants.ASTF_API_VERSION_MINOR);
             LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
             throw e;
@@ -378,7 +376,7 @@ public class TRexAstfClient extends ClientBase {
      * @return template group names
      */
     public List<String> getTemplateGroupNames() {
-        return this.getTemplateGroupNames(null);
+        return this.getTemplateGroupNames("");
     }
 
     /**
@@ -389,7 +387,6 @@ public class TRexAstfClient extends ClientBase {
      */
     public List<String> getTemplateGroupNames(String profileId) {
         Map<String, Object> payload = createPayload(profileId);
-        payload.put("epoch", 1);
         payload.put("initialized", false);
         String json = callMethod("get_tg_names", payload);
         JsonElement response = new JsonParser().parse(json);
@@ -397,7 +394,6 @@ public class TRexAstfClient extends ClientBase {
                 .get("tg_names").getAsJsonArray();
         return StreamSupport.stream(names.spliterator(), false).map(name -> name.getAsString())
                 .collect(Collectors.toList());
-
     }
 
     /**
@@ -407,7 +403,7 @@ public class TRexAstfClient extends ClientBase {
      * @return
      */
     public Map<String, AstfStatistics> getTemplateGroupStatistics(List<String> tgNames) {
-        return getTemplateGroupStatistics(null, tgNames);
+        return getTemplateGroupStatistics("", tgNames);
     }
 
     /**
@@ -415,13 +411,15 @@ public class TRexAstfClient extends ClientBase {
      *
      * @param profileId
      * @param tgNames
-     * @return
+     * @return Map key:tgName, value:AstfStatistics
      */
     public Map<String, AstfStatistics> getTemplateGroupStatistics(String profileId, List<String> tgNames) {
         Map<String, AstfStatistics> stats = new HashMap<>();
         Map<String, Object> payload = createPayload(profileId);
         payload.put("epoch", 1);
 
+        //remove duplicated tgNames in input list
+        tgNames = new ArrayList<>(new HashSet<>(tgNames));
         Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames);
         List<Integer> tgIds = new ArrayList<>(tgNames.size());
         tgNames.forEach(name -> tgIds.add(name2Id.get(name)));
@@ -429,26 +427,28 @@ public class TRexAstfClient extends ClientBase {
 
         String json = callMethod("get_tg_id_stats", payload);
         JsonElement response = new JsonParser().parse(json);
-
         JsonObject result = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject();
-        Map<Integer, String> id2Name = translateIds2Names(name2Id);
-        for (Integer id : tgIds){
-            stats.put(id2Name.get(id), GSON.fromJson(result.get(id.toString()), AstfStatistics.class));
-        }
+        name2Id.forEach((key, value) ->{
+            try {
+                AstfStatistics astfStatistics = new ObjectMapper().readValue(result.get(value.toString()).toString(), AstfStatistics.class);
+                astfStatistics.setCounterNames(getAstfStatsMetaData());
+                stats.put(key, astfStatistics);
+            } catch (IOException e) {
+//                e.printStackTrace();
+            }
+        });
 
         return  stats;
     }
 
-    private Map<Integer, String> translateIds2Names(Map<String, Integer> name2Id){
-        Map<Integer, String> id2Name = new HashMap<>(name2Id.size());
-
-        for(Map.Entry<String, Integer> enrty : name2Id.entrySet()){
-            id2Name.put(enrty.getValue(), enrty.getKey());
-        }
-
-        return id2Name;
-    }
-
+    /**
+     * translate template group names to ids
+     * getTemplateGroupNames with return all template group names, this method will map an id for each name,
+     * the id is an increasing integer starting at 1. and filter names by input name list
+     * @param profileId
+     * @param tgNames
+     * @return Map key:tgName, value:tgId
+     */
     private Map<String, Integer> translateNames2Ids(String profileId, List<String> tgNames) {
         Map<String, Integer> name2Id = new HashMap<>(tgNames.size());
         List<String> allTgNames = getTemplateGroupNames(profileId);
