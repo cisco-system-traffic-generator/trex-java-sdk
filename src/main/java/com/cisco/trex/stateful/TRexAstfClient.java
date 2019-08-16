@@ -1,9 +1,16 @@
 package com.cisco.trex.stateful;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonObject;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +31,6 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonObject;
 import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateful.model.stats.LatencyPortData;
 
@@ -252,7 +258,7 @@ public class TRexAstfClient extends ClientBase {
      * @param profile
      */
     public void loadProfile(String profile) {
-        loadProfile(profile, "");
+        loadProfile("", profile);
     }
 
     /**
@@ -319,7 +325,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get ASTF counters of profile associated with specified profile id
-     * 
+     *
      * @param profileId
      * @return AstfStatistics
      */
@@ -331,7 +337,7 @@ public class TRexAstfClient extends ClientBase {
 
     /**
      * Get ASTF total counters for all profiles
-     * 
+     *
      * @return AstfStatistics
      */
     public AstfStatistics getAstfTotalStatistics() {
@@ -388,6 +394,97 @@ public class TRexAstfClient extends ClientBase {
         } catch (NullPointerException e) {
             throw new IllegalStateException("could not parse version", e);
         }
+    }
+
+    /**
+     * get template group names
+     *
+     * @return template group names
+     */
+    public List<String> getTemplateGroupNames() {
+        return this.getTemplateGroupNames("");
+    }
+
+    /**
+     * get template group names
+     *
+     * @param profileId
+     * @return template group names
+     */
+    public List<String> getTemplateGroupNames(String profileId) {
+        Map<String, Object> payload = createPayload(profileId);
+        payload.put("initialized", false);
+        String json = callMethod("get_tg_names", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonArray names = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+                .get("tg_names").getAsJsonArray();
+        return StreamSupport.stream(names.spliterator(), false)
+                .map(JsonElement::getAsString)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * get template group statistics
+     *
+     * @param tgNames
+     * @return
+     */
+    public Map<String, AstfStatistics> getTemplateGroupStatistics(List<String> tgNames) {
+        return getTemplateGroupStatistics("", tgNames);
+    }
+
+    /**
+     * get template group statistics
+     *
+     * @param profileId
+     * @param tgNames
+     * @return Map key:tgName, value:AstfStatistics
+     */
+    public Map<String, AstfStatistics> getTemplateGroupStatistics(String profileId, List<String> tgNames) {
+
+        //remove duplicated tgNames in input list
+        tgNames = new ArrayList<>(new HashSet<>(tgNames));
+        Map<String, AstfStatistics> stats = new LinkedHashMap<>(tgNames.size());
+
+        Map<String, Object> payload = createPayload(profileId);
+        payload.put("epoch", 1);
+        Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames);
+        payload.put("tg_ids", new ArrayList<>(name2Id.values()));
+
+        String json = callMethod("get_tg_id_stats", payload);
+        JsonElement response = new JsonParser().parse(json);
+        JsonObject result = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject();
+        MetaData metaData = getAstfStatsMetaData();
+        name2Id.forEach((tgName, tgId) ->{
+            try {
+                AstfStatistics astfStatistics = new ObjectMapper().readValue(result.get(tgId.toString()).toString(), AstfStatistics.class);
+                astfStatistics.setCounterNames(metaData);
+                stats.put(tgName, astfStatistics);
+            } catch (IOException e) {
+                LOGGER.error("Error occurred during processing output of get_tg_id_stats method", e);
+            }
+        });
+
+        return  stats;
+    }
+
+    /**
+     * translate template group names to ids
+     * getTemplateGroupNames with return all template group names, this method will map an id for each name,
+     * the id is an increasing integer starting at 1. and filter names by input name list
+     * @param profileId
+     * @param tgNames
+     * @return Map key:tgName, value:tgId
+     */
+    private Map<String, Integer> translateNames2Ids(String profileId, List<String> tgNames) {
+        Map<String, Integer> name2Id = new LinkedHashMap<>(tgNames.size());
+        List<String> allTgNames = getTemplateGroupNames(profileId);
+        for (int i = 0; i < allTgNames.size(); i++) {
+            if(tgNames.contains(allTgNames.get(i)))
+                name2Id.put(allTgNames.get(i), i+1);
+        }
+
+        return name2Id;
     }
 
 }
