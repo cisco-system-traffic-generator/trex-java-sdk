@@ -1,15 +1,19 @@
 package com.cisco.trex.stateful;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -26,7 +30,6 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonObject;
 import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateful.model.stats.LatencyPortData;
 
