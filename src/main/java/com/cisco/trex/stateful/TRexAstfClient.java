@@ -453,13 +453,14 @@ public class TRexAstfClient extends ClientBase {
         String json = callMethod("get_tg_id_stats", payload);
         JsonElement response = new JsonParser().parse(json);
         JsonObject result = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject();
-        name2Id.forEach((key, value) ->{
+        MetaData metaData = getAstfStatsMetaData();
+        name2Id.forEach((tgName, tgId) ->{
             try {
-                AstfStatistics astfStatistics = new ObjectMapper().readValue(result.get(value.toString()).toString(), AstfStatistics.class);
-                astfStatistics.setCounterNames(getAstfStatsMetaData());
-                stats.put(key, astfStatistics);
+                AstfStatistics astfStatistics = new ObjectMapper().readValue(result.get(tgId.toString()).toString(), AstfStatistics.class);
+                astfStatistics.setCounterNames(metaData);
+                stats.put(tgName, astfStatistics);
             } catch (IOException e) {
-//                e.printStackTrace();
+                LOGGER.error("Error occurred during processing output of get_tg_id_stats method", e);
             }
         });
 
