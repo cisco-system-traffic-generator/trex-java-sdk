@@ -6,7 +6,7 @@ import java.util.List;
 
 public class LatencyPortHist {
 
-    private static class Histogram{
+    public static class Histogram{
         @SerializedName("key")
         public Integer key;
 
