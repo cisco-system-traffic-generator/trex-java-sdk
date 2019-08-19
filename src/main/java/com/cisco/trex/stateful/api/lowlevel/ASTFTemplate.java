@@ -33,8 +33,11 @@ import com.google.gson.JsonObject;
  * </p>
  */
 public class ASTFTemplate {
+
     private ASTFTCPClientTemplate astfTcpClientTemplate;
     private ASTFTCPServerTemplate astfTcpServerTemplate;
+    private String tgName;
+    private Integer tgId;
 
     /**
      * construct
@@ -43,11 +46,35 @@ public class ASTFTemplate {
      * @param astfTcpServerTemplate
      */
     public ASTFTemplate(ASTFTCPClientTemplate astfTcpClientTemplate, ASTFTCPServerTemplate astfTcpServerTemplate) {
+        this(astfTcpClientTemplate, astfTcpServerTemplate, null);
+    }
+
+    /**
+     * construct
+     *
+     * @param astfTcpClientTemplate
+     * @param astfTcpServerTemplate
+     * @param tgName
+     */
+    public ASTFTemplate(ASTFTCPClientTemplate astfTcpClientTemplate, ASTFTCPServerTemplate astfTcpServerTemplate, String tgName) {
         if (astfTcpClientTemplate.isStream() != astfTcpServerTemplate.isStream()) {
             throw new IllegalStateException(String.format(" Client template stream mode is %s and different from server template mode %s", astfTcpClientTemplate.isStream(), astfTcpServerTemplate.isStream()));
         }
         this.astfTcpClientTemplate = astfTcpClientTemplate;
         this.astfTcpServerTemplate = astfTcpServerTemplate;
+        this.tgName = tgName;
+    }
+
+    public String getTgName() {
+        return tgName;
+    }
+
+    Integer getTgId() {
+        return tgId;
+    }
+
+    void setTgId(Integer tgId) {
+        this.tgId = tgId;
     }
 
     /**
@@ -59,6 +86,7 @@ public class ASTFTemplate {
         JsonObject json = new JsonObject();
         json.add("client_template", astfTcpClientTemplate.toJson());
         json.add("server_template", astfTcpServerTemplate.toJson());
+        json.addProperty("tg_id", tgId);
         return json;
     }
 }

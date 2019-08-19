@@ -2,6 +2,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.util.LinkedHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,9 @@ public class ASTFProfile {
     private ASTFGlobalInfo astfServerGlobalInfo;
     private List<ASTFTemplate> astfTemplateList;
     private List<ASTFCapInfo> astfCapInfoList;
+
+    private Map<String, Integer> tgName2TgId = new LinkedHashMap<>(); //template group name -> template group id
+
     /**
      * construct
      *
@@ -54,6 +58,19 @@ public class ASTFProfile {
         }
         this.astfTemplateList = astfTemplateList;
         this.astfCapInfoList = astfCapInfoList;
+
+        for (ASTFTemplate template : astfTemplateList) {
+            if (template.getTgName() == null) {
+                template.setTgId(0);
+                continue;
+            }
+
+            String tgName = template.getTgName();
+            if (!tgName2TgId.containsKey(tgName)) {
+                tgName2TgId.put(tgName, tgName2TgId.size() + 1);
+            }
+            template.setTgId(tgName2TgId.get(tgName));
+        }
 
         /**
          * for pcap file parse scenario
@@ -165,6 +182,11 @@ public class ASTFProfile {
             jsonArray.add(astfTemplate.toJson());
         }
         json.add("templates", jsonArray);
+
+        JsonArray tgNames = new JsonArray();
+        tgName2TgId.keySet().forEach(name -> tgNames.add(name));
+        json.add("tg_names", tgNames);
+
         return json;
     }
 
