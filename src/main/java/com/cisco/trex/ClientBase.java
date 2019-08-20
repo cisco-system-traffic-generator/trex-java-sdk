@@ -41,6 +41,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
@@ -294,11 +295,20 @@ public abstract class ClientBase {
         Map<String, Object> payload = new HashMap<>();
         payload.put("api_h", apiH);
         String json = callMethod("get_supported_cmds", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray cmds = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        JsonArray cmds = getResultFromResponse(json).getAsJsonArray();
         return StreamSupport.stream(cmds.spliterator(), false)
                 .map(JsonElement::getAsString)
                 .collect(Collectors.toList());
+    }
+    
+    protected JsonElement getResultFromResponse(String json) {
+        JsonElement response = new JsonParser().parse(json);
+        if (response.isJsonArray()) {
+            // for versions of TRex before v2.61, single entry response also wrapped with json array
+            return response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+        }
+
+        return response.getAsJsonObject().get("result");
     }
 
     /**
@@ -505,8 +515,7 @@ public abstract class ClientBase {
      */
     public SystemInfo getSystemInfo() {
         String json = callMethod("get_system_info", null);
-        SystemInfoResponse response = GSON.fromJson(json, SystemInfoResponse[].class)[0];
-        return response.getResult();
+        return GSON.fromJson(getResultFromResponse(json), SystemInfo.class);
     }
     
     /**

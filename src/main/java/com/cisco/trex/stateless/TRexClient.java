@@ -108,8 +108,7 @@ public class TRexClient extends ClientBase {
         payload.put("user", userName);
         payload.put("force", force);
         String json = callMethod("acquire", payload);
-        JsonElement response = new JsonParser().parse(json);
-        String handler = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsString();
+        String handler = getResultFromResponse(json).getAsString();
         portHandlers.put(portIndex, handler);
         return getPortStatus(portIndex).get();
     }
@@ -163,8 +162,7 @@ public class TRexClient extends ClientBase {
 
         String json = callMethod("get_stream", payload);
         JsonElement response = new JsonParser().parse(json);
-        JsonObject stream = response.getAsJsonArray().get(0)
-                .getAsJsonObject().get("result")
+        JsonObject stream = getResultFromResponse(json)
                 .getAsJsonObject().get("stream")
                 .getAsJsonObject();
         return GSON.fromJson(stream, Stream.class);
@@ -199,8 +197,7 @@ public class TRexClient extends ClientBase {
         Map<String, Object> payload = createPayload(portIndex, profileId);
         String json = callMethod("get_all_streams", payload);
         JsonElement response = new JsonParser().parse(json);
-        JsonObject streams = response.getAsJsonArray().get(0)
-                .getAsJsonObject().get("result")
+        JsonObject streams = getResultFromResponse(json)
                 .getAsJsonObject().get("streams")
                 .getAsJsonObject();
         ArrayList<Stream> streamList = new ArrayList<>();
@@ -219,8 +216,7 @@ public class TRexClient extends ClientBase {
     public List<Integer> getStreamIds(int portIndex, String profileId) {
         Map<String, Object> payload = createPayload(portIndex, profileId);
         String json = callMethod("get_stream_list", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        JsonArray ids = getResultFromResponse(json).getAsJsonArray();
         return StreamSupport.stream(ids.spliterator(), false)
                 .map(JsonElement::getAsInt)
                 .collect(Collectors.toList());
@@ -250,8 +246,7 @@ public class TRexClient extends ClientBase {
     public List<String> getProfileIds(int portIndex) {
         Map<String, Object> payload = createPayload(portIndex);
         String json = callMethod("get_profile_list", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        JsonArray ids = getResultFromResponse(json).getAsJsonArray();
         return StreamSupport.stream(ids.spliterator(), false)
                 .map(JsonElement::getAsString)
                 .collect(Collectors.toList());
@@ -542,9 +537,7 @@ public class TRexClient extends ClientBase {
 
         Map<String, Object> payload = createPayload(portIndex);
         String json = callMethod("get_rx_queue_pkts", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray pkts = response.getAsJsonArray().get(0)
-                .getAsJsonObject().get("result")
+        JsonArray pkts = getResultFromResponse(json)
                 .getAsJsonObject()
                 .getAsJsonArray("pkts");
         return StreamSupport.stream(pkts.spliterator(), false)
