@@ -4,7 +4,7 @@ package com.cisco.trex.stateful.api.lowlevel;
  * Java implementation for TRex python sdk ASTFCmdRecvMsg class
  */
 public class ASTFCmdRecvMsg extends ASTFCmd {
-    private static final String NAME = "tx_msg";
+    private static final String NAME = "rx_msg";
 
     /**
      * construct
