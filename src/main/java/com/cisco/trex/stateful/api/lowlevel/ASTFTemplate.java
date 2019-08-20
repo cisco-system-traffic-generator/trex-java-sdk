@@ -60,6 +60,11 @@ public class ASTFTemplate {
         if (astfTcpClientTemplate.isStream() != astfTcpServerTemplate.isStream()) {
             throw new IllegalStateException(String.format(" Client template stream mode is %s and different from server template mode %s", astfTcpClientTemplate.isStream(), astfTcpServerTemplate.isStream()));
         }
+
+        if(tgName != null && (tgName.length() > 20 || tgName.isEmpty())){
+            throw new IllegalArgumentException(String.format("tgName %s is empty or too long", tgName));
+        }
+
         this.astfTcpClientTemplate = astfTcpClientTemplate;
         this.astfTcpServerTemplate = astfTcpServerTemplate;
         this.tgName = tgName;
