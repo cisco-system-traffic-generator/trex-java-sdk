@@ -52,8 +52,13 @@ public class TRexTransport {
     public RPCResponse sendCommand(TRexCommand command) throws IOException {
         String json = new ObjectMapper().writeValueAsString(command.getParameters());
         String response = sendJson(json);
-        RPCResponse[] rpcResult = new ObjectMapper().readValue(response, RPCResponse[].class);
-        return rpcResult[0];
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (objectMapper.readTree(response).isArray()) {
+            // for versions of TRex before v2.61, single entry response also wrapped with json array
+            RPCResponse[] rpcResult = objectMapper.readValue(response, RPCResponse[].class);
+            return rpcResult[0];
+        }
+        return objectMapper.readValue(response, RPCResponse.class);
     }
 
     public RPCResponse[] sendCommands(List<TRexCommand> commands) throws IOException {

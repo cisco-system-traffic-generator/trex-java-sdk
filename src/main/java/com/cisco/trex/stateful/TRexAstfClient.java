@@ -231,12 +231,11 @@ public class TRexAstfClient extends ClientBase {
         payload.put("force", force);
         payload.put("port_id", portIndex);
         String json = callMethod("acquire", payload);
-        JsonElement response = new JsonParser().parse(json);
         Set<Entry<String, JsonElement>> entrySet;
         try {
-            this.masterHandler = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+            this.masterHandler = getResultFromResponse(json).getAsJsonObject()
                     .get("handler").getAsString();
-            entrySet = response.getAsJsonArray().get(0).getAsJsonObject().get("result")
+            entrySet = getResultFromResponse(json)
                     .getAsJsonObject()
                     .get("ports").getAsJsonObject().entrySet();
         } catch (NullPointerException e) {
@@ -316,8 +315,7 @@ public class TRexAstfClient extends ClientBase {
     public List<String> getProfileIds() {
         Map<String, Object> payload = createPayload();
         String json = callMethod("get_profile_list", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray ids = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonArray();
+        JsonArray ids = getResultFromResponse(json).getAsJsonArray();
         return StreamSupport.stream(ids.spliterator(), false)
                 .map(JsonElement::getAsString)
                 .collect(Collectors.toList());
@@ -359,8 +357,7 @@ public class TRexAstfClient extends ClientBase {
     public LatencyStats getLatencyStats() {
         Map<String, Object> payload = this.createPayload();
         String json = this.callMethod("get_latency_stats", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonElement latencyStatsJsonElement = response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+        JsonElement latencyStatsJsonElement = getResultFromResponse(json);
         //only can parse a part of data, LatencyPortData need to be parsed manually.
         LatencyStats latencyStats = GSON.fromJson(latencyStatsJsonElement, LatencyStats.class);
         JsonElement latencyDataJsonElement = latencyStatsJsonElement.getAsJsonObject().get("data");
@@ -387,9 +384,8 @@ public class TRexAstfClient extends ClientBase {
     public String getVersion() {
         Map<String, Object> payload = this.createPayload();
         String json = callMethod("get_version", payload);
-        JsonElement response = new JsonParser().parse(json);
         try {
-            return response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+            return getResultFromResponse(json).getAsJsonObject()
                     .get("version").getAsString();
         } catch (NullPointerException e) {
             throw new IllegalStateException("could not parse version", e);
@@ -415,8 +411,7 @@ public class TRexAstfClient extends ClientBase {
         Map<String, Object> payload = createPayload(profileId);
         payload.put("initialized", false);
         String json = callMethod("get_tg_names", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonArray names = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject()
+        JsonArray names = getResultFromResponse(json).getAsJsonObject()
                 .get("tg_names").getAsJsonArray();
         return StreamSupport.stream(names.spliterator(), false)
                 .map(JsonElement::getAsString)
@@ -452,8 +447,7 @@ public class TRexAstfClient extends ClientBase {
         payload.put("tg_ids", new ArrayList<>(name2Id.values()));
 
         String json = callMethod("get_tg_id_stats", payload);
-        JsonElement response = new JsonParser().parse(json);
-        JsonObject result = response.getAsJsonArray().get(0).getAsJsonObject().get("result").getAsJsonObject();
+        JsonObject result = getResultFromResponse(json).getAsJsonObject();
         MetaData metaData = getAstfStatsMetaData();
         name2Id.forEach((tgName, tgId) ->{
             try {
