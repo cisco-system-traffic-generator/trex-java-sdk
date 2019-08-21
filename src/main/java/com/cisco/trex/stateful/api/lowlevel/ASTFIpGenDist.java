@@ -230,7 +230,7 @@ public class ASTFIpGenDist {
         /**
          * get type
          *
-         * @return
+         * @return type
          */
         public String getType() {
             return type;
@@ -252,7 +252,7 @@ public class ASTFIpGenDist {
         /**
          * get type
          *
-         * @return
+         * @return type
          */
         public String getType() {
             return type;

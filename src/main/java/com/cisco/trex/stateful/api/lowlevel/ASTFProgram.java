@@ -437,7 +437,7 @@ public class ASTFProgram {
     /**
      * get the total send bytes of the program
      *
-     * @return
+     * @return sent bytes
      */
     public int getTotalSendBytes() {
         return totalSendBytes;
@@ -446,7 +446,7 @@ public class ASTFProgram {
     /**
      * return true if it's stream
      *
-     * @return
+     * @return if stream
      */
     public boolean isStream() {
         return stream;
@@ -471,7 +471,7 @@ public class ASTFProgram {
     /**
      * get buffer list size
      *
-     * @return
+     * @return buffer size
      */
     public static int getBufSize() {
         return bufList.getLen();
@@ -499,7 +499,7 @@ public class ASTFProgram {
     /**
      * get payload length
      *
-     * @return
+     * @return payload length
      */
     public int getPayloadLen() {
         return payloadLen;

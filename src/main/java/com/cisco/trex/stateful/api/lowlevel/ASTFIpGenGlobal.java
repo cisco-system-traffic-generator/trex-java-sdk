@@ -31,7 +31,7 @@ public class ASTFIpGenGlobal {
     /**
      * to json format
      *
-     * @return
+     * @return json
      */
     public JsonObject toJson() {
         return fields;
