@@ -427,7 +427,7 @@ public class TRexAstfClient extends ClientBase {
      * get template group statistics
      *
      * @param tgNames
-     * @return
+     * @return group statistics
      */
     public Map<String, AstfStatistics> getTemplateGroupStatistics(List<String> tgNames) {
         return getTemplateGroupStatistics("", tgNames);
