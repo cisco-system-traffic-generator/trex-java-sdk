@@ -2,6 +2,10 @@ language: java
 dist: trusty
 jdk: oraclejdk8
 
+notifications:
+    webhooks: https://www.travisbuddy.com/
+    on_success: never
+
 before_deploy:
   - ./gradlew clean
   - ./gradlew -Pversion=${TRAVIS_TAG:1} assemble
