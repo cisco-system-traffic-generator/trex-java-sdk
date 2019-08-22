@@ -62,7 +62,7 @@ public class TRexTransport {
     }
 
     public RPCResponse[] sendCommands(List<TRexCommand> commands) throws IOException {
-        if (commands.size() ==1) {
+        if (commands.size() == 1) {
             return new RPCResponse[] {sendCommand(commands.get(0))};
         }
 
