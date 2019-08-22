@@ -62,6 +62,10 @@ public class TRexTransport {
     }
 
     public RPCResponse[] sendCommands(List<TRexCommand> commands) throws IOException {
+        if (commands.size() ==1) {
+            return new RPCResponse[] {sendCommand(commands.get(0))};
+        }
+
         List<Map<String, Object>> commandList = commands.stream().map(TRexCommand::getParameters).collect(Collectors.toList());
         
         if (commandList.isEmpty()) {
