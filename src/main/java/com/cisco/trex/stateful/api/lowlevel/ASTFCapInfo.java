@@ -2,12 +2,12 @@ package com.cisco.trex.stateful.api.lowlevel;
 
 /** Java implementation for TRex python sdk ASTFCapInfo class */
 public class ASTFCapInfo {
-  private String
-      filePath; // pcap file name. Filesystem directory location is relative to the profile file in
-                // case it is not start with
+
+  // pcap file name. Filesystem directory location is relative to the profile file
+  private String filePath;
+  // rule for server association in default take the destination port from pcap file
+  private ASTFAssociation assoc;
   private float cps; // new connection per second rate
-  private ASTFAssociation
-      assoc; // rule for server association in default take the destination port from pcap file
   private ASTFIpGen astfIpGen; // tuple generator for this template
   private int port; // Override destination port, by default is taken from pcap
   private float l7Percent; // L7 stream bandwidth percent
@@ -144,6 +144,7 @@ public class ASTFCapInfo {
 
   /** AstfCapInfo builder */
   public static final class AstfCapInfoBuilder {
+
     private String filePath;
     private float cps;
     private ASTFAssociation assoc;
