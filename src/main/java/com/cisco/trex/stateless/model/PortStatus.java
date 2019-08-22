@@ -1,104 +1,100 @@
 package com.cisco.trex.stateless.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.cisco.trex.stateless.model.port.PortAttributes;
-import com.cisco.trex.stateless.model.stats.FlowStat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PortStatus {
-    
-    @JsonProperty("attr")
-    public PortAttributes attr;
 
-    @JsonProperty("max_stream_id")
-    private int maxStreamId;
+  @JsonProperty("attr")
+  public PortAttributes attr;
 
-    @JsonProperty("owner")
-    public String owner;
+  @JsonProperty("max_stream_id")
+  private int maxStreamId;
 
-    @JsonProperty("rx_info")
-    private PortRXInfo rxInfo;
-    
-    @JsonProperty("service")
-    public Boolean service;
-    
-    @JsonProperty("state")
-    public String state;
+  @JsonProperty("owner")
+  public String owner;
 
-    @JsonProperty("state_profile")
-    private String stateProfile;
+  @JsonProperty("rx_info")
+  private PortRXInfo rxInfo;
 
-    @JsonProperty("attr")
-    public PortAttributes getAttr() {
-        return attr;
-    }
+  @JsonProperty("service")
+  public Boolean service;
 
-    @JsonProperty("attr")
-    public void setAttr(PortAttributes attr) {
-        this.attr = attr;
-    }
+  @JsonProperty("state")
+  public String state;
 
-    @JsonProperty("max_stream_id")
-    public int getMaxStreamId() {
-        return maxStreamId;
-    }
+  @JsonProperty("state_profile")
+  private String stateProfile;
 
-    @JsonProperty("max_stream_id")
-    public void setMaxStreamId(int maxStreamId) {
-        this.maxStreamId = maxStreamId;
-    }
+  @JsonProperty("attr")
+  public PortAttributes getAttr() {
+    return attr;
+  }
 
-    @JsonProperty("owner")
-    public String getOwner() {
-        return owner;
-    }
+  @JsonProperty("attr")
+  public void setAttr(PortAttributes attr) {
+    this.attr = attr;
+  }
 
-    @JsonProperty("owner")
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
+  @JsonProperty("max_stream_id")
+  public int getMaxStreamId() {
+    return maxStreamId;
+  }
 
-    @JsonProperty("rx_info")
-    public PortRXInfo getRxInfo() {
-        return rxInfo;
-    }
+  @JsonProperty("max_stream_id")
+  public void setMaxStreamId(int maxStreamId) {
+    this.maxStreamId = maxStreamId;
+  }
 
-    @JsonProperty("rx_info")
-    public void setRxInfo(PortRXInfo rxInfo) {
-        this.rxInfo = rxInfo;
-    }
+  @JsonProperty("owner")
+  public String getOwner() {
+    return owner;
+  }
 
-    @JsonProperty("service")
-    public Boolean getService() {
-        return service;
-    }
+  @JsonProperty("owner")
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
 
-    @JsonProperty("service")
-    public void setService(Boolean service) {
-        this.service = service;
-    }
+  @JsonProperty("rx_info")
+  public PortRXInfo getRxInfo() {
+    return rxInfo;
+  }
 
-    @JsonProperty("state")
-    public String getState() {
-        return state;
-    }
+  @JsonProperty("rx_info")
+  public void setRxInfo(PortRXInfo rxInfo) {
+    this.rxInfo = rxInfo;
+  }
 
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
-    }
+  @JsonProperty("service")
+  public Boolean getService() {
+    return service;
+  }
 
-    @JsonProperty("state_profile")
-    public String getStateProfile() {
-        return stateProfile;
-    }
+  @JsonProperty("service")
+  public void setService(Boolean service) {
+    this.service = service;
+  }
 
-    @JsonProperty("state_profile")
-    public void setStateProfile(String stateProfile) {
-        this.stateProfile = stateProfile;
-    }
+  @JsonProperty("state")
+  public String getState() {
+    return state;
+  }
+
+  @JsonProperty("state")
+  public void setState(String state) {
+    this.state = state;
+  }
+
+  @JsonProperty("state_profile")
+  public String getStateProfile() {
+    return stateProfile;
+  }
+
+  @JsonProperty("state_profile")
+  public void setStateProfile(String stateProfile) {
+    this.stateProfile = stateProfile;
+  }
 }

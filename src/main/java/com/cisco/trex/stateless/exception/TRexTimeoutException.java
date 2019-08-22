@@ -1,4 +1,3 @@
 package com.cisco.trex.stateless.exception;
 
-public class TRexTimeoutException extends Exception {
-}
+public class TRexTimeoutException extends Exception {}

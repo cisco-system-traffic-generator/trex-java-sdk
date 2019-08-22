@@ -1,18 +1,17 @@
 package com.cisco.trex.stateless.model.vm;
 
 public enum VariableOperation {
-    INC("inc"),
-    DEC("dec"),
-    RANDOM("random");
+  INC("inc"),
+  DEC("dec"),
+  RANDOM("random");
 
-    String op;
+  String op;
 
-    VariableOperation(String op) {
-        this.op = op;
-    }
+  VariableOperation(String op) {
+    this.op = op;
+  }
 
-    String getValue() {
-        return op;
-    }
-
+  String getValue() {
+    return op;
+  }
 }

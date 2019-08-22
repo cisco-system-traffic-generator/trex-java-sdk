@@ -1,23 +1,21 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-/**
- * Java implementation for TRex python sdk ASTFCmdTxMode class
- */
+/** Java implementation for TRex python sdk ASTFCmdTxMode class */
 public class ASTFCmdTxMode extends ASTFCmd {
-    private static final String NAME = "tx_mode";
+  private static final String NAME = "tx_mode";
 
-    /**
-     * construct
-     *
-     * @param flags
-     */
-    public ASTFCmdTxMode(int flags) {
-        fields.addProperty("name", NAME);
-        fields.addProperty("flags", flags);
-    }
+  /**
+   * construct
+   *
+   * @param flags
+   */
+  public ASTFCmdTxMode(int flags) {
+    fields.addProperty("name", NAME);
+    fields.addProperty("flags", flags);
+  }
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+  @Override
+  public String getName() {
+    return NAME;
+  }
 }

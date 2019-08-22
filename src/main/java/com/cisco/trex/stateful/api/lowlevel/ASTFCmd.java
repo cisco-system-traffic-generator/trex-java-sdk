@@ -2,56 +2,49 @@ package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonObject;
 
-/**
- * Java implementation for TRex python sdk ASTFCmd class, the abstract Astf Cmd class,
- */
+/** Java implementation for TRex python sdk ASTFCmd class, the abstract Astf Cmd class, */
 public abstract class ASTFCmd {
 
-    protected JsonObject fields;
-    protected Boolean stream = null;
-    protected Boolean buffer = null;
+  protected JsonObject fields;
+  protected Boolean stream = null;
+  protected Boolean buffer = null;
 
-    /**
-     * construct
-     */
-    public ASTFCmd() {
-        fields = new JsonObject();
-    }
+  /** construct */
+  public ASTFCmd() {
+    fields = new JsonObject();
+  }
 
-    /**
-     * get AstfCmd name
-     *
-     * @return Astf cmd name
-     */
-    public abstract String getName();
+  /**
+   * get AstfCmd name
+   *
+   * @return Astf cmd name
+   */
+  public abstract String getName();
 
-    /**
-     * isStream
-     *
-     * @return true if it's stream
-     */
-    public Boolean isStream() {
-        return stream;
-    }
+  /**
+   * isStream
+   *
+   * @return true if it's stream
+   */
+  public Boolean isStream() {
+    return stream;
+  }
 
-    /**
-     * to json format
-     *
-     * @return JsonObject
-     */
-    public JsonObject toJson() {
-        return fields;
-    }
+  /**
+   * to json format
+   *
+   * @return JsonObject
+   */
+  public JsonObject toJson() {
+    return fields;
+  }
 
-    /**
-     * isBuffer
-     *
-     * @return true if it's buffer
-     */
-    public Boolean isBuffer() {
-        return buffer;
-    }
-
+  /**
+   * isBuffer
+   *
+   * @return true if it's buffer
+   */
+  public Boolean isBuffer() {
+    return buffer;
+  }
 }
-
-

@@ -4,72 +4,75 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatencyStatErr {
-    @JsonProperty("drp")
-    private long drp = 0;
-    @JsonProperty("dup")
-    private long dup = 0;
-    @JsonProperty("ooo")
-    private long ooo = 0;
-    @JsonProperty("sth")
-    private long sth = 0;
-    @JsonProperty("stl")
-    private long stl = 0;
+  @JsonProperty("drp")
+  private long drp = 0;
 
-    @JsonProperty("drp")
-    public long getDrp() {
-        return drp;
-    }
+  @JsonProperty("dup")
+  private long dup = 0;
 
-    @JsonProperty("drp")
-    public void setDrp(final long drp) {
-        this.drp = drp;
-    }
+  @JsonProperty("ooo")
+  private long ooo = 0;
 
-    @JsonProperty("dup")
-    public long getDup() {
-        return dup;
-    }
+  @JsonProperty("sth")
+  private long sth = 0;
 
-    @JsonProperty("dup")
-    public void setDup(final long dup) {
-        this.dup = dup;
-    }
+  @JsonProperty("stl")
+  private long stl = 0;
 
-    @JsonProperty("ooo")
-    public long getOoo() {
-        return ooo;
-    }
+  @JsonProperty("drp")
+  public long getDrp() {
+    return drp;
+  }
 
-    @JsonProperty("ooo")
-    public void setOoo(final long ooo) {
-        this.ooo = ooo;
-    }
+  @JsonProperty("drp")
+  public void setDrp(final long drp) {
+    this.drp = drp;
+  }
 
-    @JsonProperty("sth")
-    public long getSth() {
-        return sth;
-    }
+  @JsonProperty("dup")
+  public long getDup() {
+    return dup;
+  }
 
-    @JsonProperty("sth")
-    public void setSth(final long sth) {
-        this.sth = sth;
-    }
+  @JsonProperty("dup")
+  public void setDup(final long dup) {
+    this.dup = dup;
+  }
 
-    @JsonProperty("stl")
-    public long getStl() {
-        return stl;
-    }
+  @JsonProperty("ooo")
+  public long getOoo() {
+    return ooo;
+  }
 
-    @JsonProperty("stl")
-    public void setStl(final long stl) {
-        this.stl = stl;
-    }
+  @JsonProperty("ooo")
+  public void setOoo(final long ooo) {
+    this.ooo = ooo;
+  }
 
-    @JsonIgnore
-    public long getTotal() {
-        return drp + dup + ooo + sth + stl;
-    }
+  @JsonProperty("sth")
+  public long getSth() {
+    return sth;
+  }
+
+  @JsonProperty("sth")
+  public void setSth(final long sth) {
+    this.sth = sth;
+  }
+
+  @JsonProperty("stl")
+  public long getStl() {
+    return stl;
+  }
+
+  @JsonProperty("stl")
+  public void setStl(final long stl) {
+    this.stl = stl;
+  }
+
+  @JsonIgnore
+  public long getTotal() {
+    return drp + dup + ooo + sth + stl;
+  }
 }
