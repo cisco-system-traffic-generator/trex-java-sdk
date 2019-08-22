@@ -55,6 +55,9 @@ task writePom {
                     }
                 }
             }
+	}.withXml {
+		def templateXml = (new XmlParser()).parse('pom-template.xml')
+		asNode().append(templateXml.build)
         }.writeTo("pom.xml")
     }
 }
