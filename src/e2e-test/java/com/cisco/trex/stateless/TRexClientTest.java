@@ -36,7 +36,7 @@ public class TRexClientTest {
 
     @BeforeClass
     public static void setUp() throws TRexConnectionException, TRexTimeoutException {
-        client = new TRexClient("10.76.176.8", "4501", CLIENT_USER);
+        client = new TRexClient("trex-host", "4501", CLIENT_USER);
         client.connect();
     }
 
