@@ -64,7 +64,7 @@ public class TRexClient extends ClientBase {
 
   private static final EtherType QInQ =
       new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
-  private Integer session_id = 123456789;
+  private static final int SESSON_ID = 123456789;
 
   public TRexClient(String host, String port, String userName) {
     this.host = host;
@@ -105,7 +105,7 @@ public class TRexClient extends ClientBase {
   @Override
   public PortStatus acquirePort(int portIndex, Boolean force) {
     Map<String, Object> payload = createPayload(portIndex);
-    payload.put("session_id", session_id);
+    payload.put("session_id", SESSON_ID);
     payload.put("user", userName);
     payload.put("force", force);
     String json = callMethod("acquire", payload);
@@ -162,7 +162,6 @@ public class TRexClient extends ClientBase {
     payload.put("stream_id", streamId);
 
     String json = callMethod("get_stream", payload);
-    JsonElement response = new JsonParser().parse(json);
     JsonObject stream =
         getResultFromResponse(json).getAsJsonObject().get("stream").getAsJsonObject();
     return GSON.fromJson(stream, Stream.class);
@@ -196,7 +195,6 @@ public class TRexClient extends ClientBase {
   public List<Stream> getAllStreams(int portIndex, String profileId) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
     String json = callMethod("get_all_streams", payload);
-    JsonElement response = new JsonParser().parse(json);
     JsonObject streams =
         getResultFromResponse(json).getAsJsonObject().get("streams").getAsJsonObject();
     ArrayList<Stream> streamList = new ArrayList<>();
@@ -513,9 +511,9 @@ public class TRexClient extends ClientBase {
   }
 
   private static Stream build1PktSingleBurstStream(Packet pkt) {
-    int stream_id = (int) (Math.random() * 1000);
+    int streamId = (int) (Math.random() * 1000);
     return new Stream(
-        stream_id,
+        streamId,
         true,
         3,
         0.0,
@@ -528,7 +526,7 @@ public class TRexClient extends ClientBase {
             StreamMode.Type.single_burst),
         -1,
         pkt,
-        new StreamRxStats(true, true, true, stream_id),
+        new StreamRxStats(true, true, true, streamId),
         new StreamVM("", Collections.<VMInstruction>emptyList()),
         true,
         false,
