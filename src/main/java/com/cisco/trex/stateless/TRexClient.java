@@ -71,7 +71,7 @@ public class TRexClient extends ClientBase {
     this.transport = transport;
     supportedCmds.addAll(supportedCommands);
   }
-  
+
   public TRexClient(String host, String port, String userName) {
     this.host = host;
     this.port = port;
