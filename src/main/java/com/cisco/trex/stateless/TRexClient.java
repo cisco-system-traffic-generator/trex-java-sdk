@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -65,6 +66,12 @@ public class TRexClient extends ClientBase {
       new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
   private static final int SESSON_ID = 123456789;
 
+  TRexClient(TRexTransport transport, Set<String> supportedCommands) {
+    // For unit testing
+    this.transport = transport;
+    supportedCmds.addAll(supportedCommands);
+  }
+  
   public TRexClient(String host, String port, String userName) {
     this.host = host;
     this.port = port;
