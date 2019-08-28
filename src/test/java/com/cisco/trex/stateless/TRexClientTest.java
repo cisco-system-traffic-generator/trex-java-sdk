@@ -206,8 +206,7 @@ public class TRexClientTest {
   @Test
   public void removeAllStreams() {
     Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"remove_all_streams\"")))
-        .thenReturn(
-            "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{}}]");
+        .thenReturn("[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{}}]");
 
     client.removeAllStreams(0);
   }
