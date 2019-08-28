@@ -207,7 +207,7 @@ public class TRexClientTest {
   public void removeAllStreams() {
     Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"remove_all_streams\"")))
         .thenReturn(
-            "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{\"streams\":{\"131040989\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":131040989},\"id\":131040989,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":131040989},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}},\"1360153259\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":1360153259},\"id\":1360153259,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":1360153259},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}}}}}]");
+            "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{}}]");
 
     client.removeAllStreams(0);
   }
