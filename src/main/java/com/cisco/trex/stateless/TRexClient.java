@@ -69,6 +69,9 @@ public class TRexClient extends ClientBase {
   TRexClient(TRexTransport transport, Set<String> supportedCommands) {
     // For unit testing
     this.transport = transport;
+    this.host = "testHost";
+    this.port = "testPort";
+    this.userName = "testUser";
     supportedCmds.addAll(supportedCommands);
   }
 
