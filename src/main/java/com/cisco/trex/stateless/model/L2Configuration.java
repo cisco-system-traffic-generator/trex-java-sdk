@@ -6,42 +6,42 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class L2Configuration {
 
-    @JsonProperty("dst")
-    private String dst;
+  @JsonProperty("dst")
+  private String dst;
 
-    @JsonProperty("src")
-    private String src;
+  @JsonProperty("src")
+  private String src;
 
-    @JsonProperty("state")
-    private String state;
+  @JsonProperty("state")
+  private String state;
 
-    @JsonProperty("dst")
-    public String getDst() {
-        return dst;
-    }
+  @JsonProperty("dst")
+  public String getDst() {
+    return dst;
+  }
 
-    @JsonProperty("dst")
-    public void setDst(String dst) {
-        this.dst = dst;
-    }
+  @JsonProperty("dst")
+  public void setDst(String dst) {
+    this.dst = dst;
+  }
 
-    @JsonProperty("src")
-    public String getSrc() {
-        return src;
-    }
+  @JsonProperty("src")
+  public String getSrc() {
+    return src;
+  }
 
-    @JsonProperty("src")
-    public void setSrc(String src) {
-        this.src = src;
-    }
+  @JsonProperty("src")
+  public void setSrc(String src) {
+    this.src = src;
+  }
 
-    @JsonProperty("state")
-    public String getState() {
-        return state;
-    }
+  @JsonProperty("state")
+  public String getState() {
+    return state;
+  }
 
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
-    }
+  @JsonProperty("state")
+  public void setState(String state) {
+    this.state = state;
+  }
 }

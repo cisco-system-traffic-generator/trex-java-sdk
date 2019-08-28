@@ -1,21 +1,18 @@
 package com.cisco.trex.util;
 
-/**
- * Class represent for Trex Server Mode
- */
+/** Class represent for Trex Server Mode */
 public enum TRexServerMode {
-    ASTF("ASTF"),
-    STL("STL"),
-    UNKNOWN("UNKNOWN");
+  ASTF("ASTF"),
+  STL("STL"),
+  UNKNOWN("UNKNOWN");
 
-    private String serverMode;
+  private String serverMode;
 
-    TRexServerMode(String serverMode) {
-        this.serverMode = serverMode;
-    }
+  TRexServerMode(String serverMode) {
+    this.serverMode = serverMode;
+  }
 
-    public String getServerMode() {
-        return this.serverMode;
-    }
-
+  public String getServerMode() {
+    return this.serverMode;
+  }
 }

@@ -6,40 +6,42 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RPCResponseError {
 
-    @JsonProperty("code")
-    private Integer code;
-    @JsonProperty("message")
-    private String message;
-    @JsonProperty("specific_err")
-    private String specificErr;
+  @JsonProperty("code")
+  private Integer code;
 
-    @JsonProperty("code")
-    public Integer getCode() {
-        return code;
-    }
+  @JsonProperty("message")
+  private String message;
 
-    @JsonProperty("code")
-    public void setCode(Integer code) {
-        this.code = code;
-    }
+  @JsonProperty("specific_err")
+  private String specificErr;
 
-    @JsonProperty("message")
-    public String getMessage() {
-        return message;
-    }
+  @JsonProperty("code")
+  public Integer getCode() {
+    return code;
+  }
 
-    @JsonProperty("message")
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  @JsonProperty("code")
+  public void setCode(Integer code) {
+    this.code = code;
+  }
 
-    @JsonProperty("specific_err")
-    public String getSpecificErr() {
-        return specificErr;
-    }
+  @JsonProperty("message")
+  public String getMessage() {
+    return message;
+  }
 
-    @JsonProperty("specific_err")
-    public void setSpecificErr(String specificErr) {
-        this.specificErr = specificErr;
-    }
+  @JsonProperty("message")
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  @JsonProperty("specific_err")
+  public String getSpecificErr() {
+    return specificErr;
+  }
+
+  @JsonProperty("specific_err")
+  public void setSpecificErr(String specificErr) {
+    this.specificErr = specificErr;
+  }
 }

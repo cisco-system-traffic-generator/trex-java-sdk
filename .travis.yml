@@ -1,3 +1,22 @@
 language: java
 dist: trusty
 jdk: oraclejdk8
+
+notifications:
+    webhooks: https://www.travisbuddy.com/
+    on_success: never
+
+before_deploy:
+  - ./gradlew clean
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} assemble
+  - cp pom.xml build/libs/trex-java-sdk-${TRAVIS_TAG:1}.pom
+  
+deploy:
+  - provider: releases
+    api_key: "$GITHUB_TOKEN"
+    file_glob: true
+    file: "build/libs/*"
+    skip_cleanup: true
+    on:
+        branch: master
+        tags: true #Deploying only on tagged builds
