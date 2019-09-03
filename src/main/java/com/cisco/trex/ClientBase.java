@@ -45,6 +45,12 @@ import org.slf4j.LoggerFactory;
 /** Base class for stateful and stateless classes */
 public abstract class ClientBase {
 
+  private static final String CAPTURE_ID = "capture_id";
+  private static final String CAPTURE = "capture";
+  private static final String COMMAND = "command";
+  protected static final String API_H = "api_h";
+  private static final String RESULT = "result";
+  protected static final String PORT_ID = "port_id";
   protected static final Logger LOGGER = LoggerFactory.getLogger(ClientBase.class);
   protected static final Gson GSON = buildGson();
   protected String host;
@@ -72,7 +78,7 @@ public abstract class ClientBase {
     parameters.put("id", "aggogxls");
     parameters.put("jsonrpc", Constants.JSON_RPC_VERSION);
     parameters.put("method", methodName);
-    payload.put("api_h", apiH);
+    payload.put(API_H, apiH);
     parameters.put("params", payload);
     return GSON.toJson(parameters);
   }
@@ -81,28 +87,17 @@ public abstract class ClientBase {
     return this.transport.sendJson(json);
   }
 
-  private List<TRexCommand> buildRemoveCaptureCommand(List<Integer> capture_ids) {
-    return capture_ids
+  private List<TRexCommand> buildRemoveCaptureCommand(List<Integer> captureIds) {
+    return captureIds
         .stream()
         .map(
             captureId -> {
               Map<String, Object> parameters = new HashMap<>();
-              parameters.put("command", "remove");
-              parameters.put("capture_id", captureId);
-              return buildCommand("capture", parameters);
+              parameters.put(COMMAND, "remove");
+              parameters.put(CAPTURE_ID, captureId);
+              return buildCommand(CAPTURE, parameters);
             })
         .collect(Collectors.toList());
-  }
-
-  private class SystemInfoResponse {
-
-    private String id;
-    private String jsonrpc;
-    private SystemInfo result;
-
-    public SystemInfo getResult() {
-      return result;
-    }
   }
 
   /**
@@ -236,7 +231,7 @@ public abstract class ClientBase {
     if (parameters == null) {
       parameters = new HashMap<>();
     }
-    parameters.put("api_h", apiH);
+    parameters.put(API_H, apiH);
     Map<String, Object> payload = new HashMap<>();
     int cmdId = randomizer.nextInt() & Integer.MAX_VALUE; // get a positive random value
     payload.put("id", cmdId);
@@ -298,7 +293,7 @@ public abstract class ClientBase {
    */
   public List<String> getSupportedCommands() {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("api_h", apiH);
+    payload.put(API_H, apiH);
     String json = callMethod("get_supported_cmds", payload);
     JsonArray cmds = getResultFromResponse(json).getAsJsonArray();
     return StreamSupport.stream(cmds.spliterator(), false)
@@ -309,11 +304,12 @@ public abstract class ClientBase {
   protected JsonElement getResultFromResponse(String json) {
     JsonElement response = new JsonParser().parse(json);
     if (response.isJsonArray()) {
-      // for versions of TRex before v2.61, single entry response also wrapped with json array
-      return response.getAsJsonArray().get(0).getAsJsonObject().get("result");
+      // for versions of TRex before v2.61, single entry response also wrapped with
+      // json array
+      return response.getAsJsonArray().get(0).getAsJsonObject().get(RESULT);
     }
 
-    return response.getAsJsonObject().get("result");
+    return response.getAsJsonObject().get(RESULT);
   }
 
   /**
@@ -324,7 +320,7 @@ public abstract class ClientBase {
    */
   public TRexClientResult<PortStatus> getPortStatus(int portIdx) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIdx);
+    parameters.put(PORT_ID, portIdx);
     parameters.put("block", false);
     return callMethod("get_port_status", parameters, PortStatus.class);
   }
@@ -338,7 +334,7 @@ public abstract class ClientBase {
    */
   public TRexClientResult<PortStatus> getPortStatus(int portIdx, String profileId) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIdx);
+    parameters.put(PORT_ID, portIdx);
     parameters.put("profile_id", profileId);
     parameters.put("block", false);
     return callMethod("get_port_status", parameters, PortStatus.class);
@@ -350,7 +346,7 @@ public abstract class ClientBase {
    */
   public PortStatistics getPortStatistics(int portIndex) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIndex);
+    parameters.put(PORT_ID, portIndex);
     return callMethod("get_port_stats", parameters, PortStatistics.class).get();
   }
 
@@ -360,7 +356,7 @@ public abstract class ClientBase {
    */
   public ExtendedPortStatistics getExtendedPortStatistics(int portIndex) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIndex);
+    parameters.put(PORT_ID, portIndex);
     return callMethod("get_port_xstats_values", parameters, ExtendedPortStatistics.class)
         .get()
         .setValueNames(getPortStatNames(portIndex));
@@ -368,7 +364,7 @@ public abstract class ClientBase {
 
   private XstatsNames getPortStatNames(int portIndex) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIndex);
+    parameters.put(PORT_ID, portIndex);
     return callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
   }
 
@@ -379,8 +375,8 @@ public abstract class ClientBase {
    */
   public TRexClientResult<CaptureInfo[]> getActiveCaptures() {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("command", "status");
-    return callMethod("capture", payload, CaptureInfo[].class);
+    payload.put(COMMAND, "status");
+    return callMethod(CAPTURE, payload, CaptureInfo[].class);
   }
 
   /**
@@ -423,13 +419,13 @@ public abstract class ClientBase {
   public TRexClientResult<CaptureMonitor> startCapture(
       List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit, String filter) {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("command", "start");
+    payload.put(COMMAND, "start");
     payload.put("limit", limit);
     payload.put("mode", mode);
     payload.put("rx", rxPorts);
     payload.put("tx", txPorts);
     payload.put("filter", filter);
-    return callMethod("capture", payload, CaptureMonitor.class);
+    return callMethod(CAPTURE, payload, CaptureMonitor.class);
   }
 
   /**
@@ -453,9 +449,9 @@ public abstract class ClientBase {
    */
   public TRexClientResult<CaptureMonitorStop> captureMonitorStop(int captureId) {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("command", "stop");
-    payload.put("capture_id", captureId);
-    return callMethod("capture", payload, CaptureMonitorStop.class);
+    payload.put(COMMAND, "stop");
+    payload.put(CAPTURE_ID, captureId);
+    return callMethod(CAPTURE, payload, CaptureMonitorStop.class);
   }
 
   /**
@@ -484,10 +480,10 @@ public abstract class ClientBase {
    */
   public TRexClientResult<CapturedPackets> captureFetchPkts(int captureId, int chunkSize) {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("command", "fetch");
-    payload.put("capture_id", captureId);
+    payload.put(COMMAND, "fetch");
+    payload.put(CAPTURE_ID, captureId);
     payload.put("pkt_limit", chunkSize);
-    return callMethod("capture", payload, CapturedPackets.class);
+    return callMethod(CAPTURE, payload, CapturedPackets.class);
   }
 
   /**
@@ -499,7 +495,7 @@ public abstract class ClientBase {
    */
   public TRexClientResult<StubResult> setVlan(int portIdx, List<Integer> vlanIds) {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("port_id", portIdx);
+    parameters.put(PORT_ID, portIdx);
     parameters.put("vlan", vlanIds);
     parameters.put("block", false);
     return callMethod("set_vlan", parameters, StubResult.class);
@@ -534,8 +530,8 @@ public abstract class ClientBase {
 
   protected Map<String, Object> createPayload(int portIndex) {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("port_id", portIndex);
-    payload.put("api_h", apiH);
+    payload.put(PORT_ID, portIndex);
+    payload.put(API_H, apiH);
     if (!StringUtils.isEmpty(masterHandler)) {
       payload.put("handler", masterHandler);
     } else {
