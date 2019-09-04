@@ -567,7 +567,7 @@ public class IPv6NeighborDiscoveryService {
     return Arrays.stream(addressArray).collect(Collectors.joining(":"));
   }
 
-  private static String generateIPv6AddrFromMAC(String mac) {
+  static String generateIPv6AddrFromMAC(String mac) {
     String prefix = "fe80";
     List<Integer> macOctets =
         Arrays.stream(mac.split(":"))
