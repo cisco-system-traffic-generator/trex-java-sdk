@@ -60,8 +60,12 @@ import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
 
+/** TRex client for stateless traffic */
 public class TRexClient extends ClientBase {
 
+  private static final String TYPE = "type";
+  private static final String STREAM = "stream";
+  private static final String STREAM_ID = "stream_id";
   private static final EtherType QInQ =
       new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
   private static final int SESSON_ID = 123456789;
@@ -75,6 +79,13 @@ public class TRexClient extends ClientBase {
     supportedCmds.addAll(supportedCommands);
   }
 
+  /**
+   * constructor
+   *
+   * @param host
+   * @param port
+   * @param userName
+   */
   public TRexClient(String host, String port, String userName) {
     this.host = host;
     this.port = port;
@@ -111,6 +122,7 @@ public class TRexClient extends ClientBase {
     LOGGER.info("Received api_H: {}", apiH);
   }
 
+  @Deprecated
   @Override
   public PortStatus acquirePort(int portIndex, Boolean force) {
     Map<String, Object> payload = createPayload(portIndex);
@@ -123,6 +135,12 @@ public class TRexClient extends ClientBase {
     return getPortStatus(portIndex).get();
   }
 
+  /**
+   * Reset port stop traffic, remove all streams, remove rx queue, disable service mode and release
+   * port
+   *
+   * @param portIndex
+   */
   public void resetPort(int portIndex) {
     acquirePort(portIndex, true);
     stopTraffic(portIndex);
@@ -134,6 +152,13 @@ public class TRexClient extends ClientBase {
     releasePort(portIndex);
   }
 
+  /**
+   * Set port in service mode, needed to be able to do arp resolution and packet captureing
+   *
+   * @param portIndex
+   * @param isOn
+   * @return PortStatus
+   */
   public PortStatus serviceMode(int portIndex, Boolean isOn) {
     LOGGER.info("Set service mode : {}", isOn ? "on" : "off");
     Map<String, Object> payload = createPayload(portIndex);
@@ -160,31 +185,30 @@ public class TRexClient extends ClientBase {
 
   private void addStream(int portIndex, String profileId, int streamId, Object streamObject) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
-    payload.put("stream_id", streamId);
-    payload.put("stream", streamObject);
+    payload.put(STREAM_ID, streamId);
+    payload.put(STREAM, streamObject);
     callMethod("add_stream", payload);
   }
 
   public Stream getStream(int portIndex, int streamId) {
     Map<String, Object> payload = createPayload(portIndex);
     payload.put("get_pkt", true);
-    payload.put("stream_id", streamId);
+    payload.put(STREAM_ID, streamId);
 
     String json = callMethod("get_stream", payload);
-    JsonObject stream =
-        getResultFromResponse(json).getAsJsonObject().get("stream").getAsJsonObject();
+    JsonObject stream = getResultFromResponse(json).getAsJsonObject().get(STREAM).getAsJsonObject();
     return GSON.fromJson(stream, Stream.class);
   }
 
   public void removeStream(int portIndex, int streamId) {
     Map<String, Object> payload = createPayload(portIndex);
-    payload.put("stream_id", streamId);
+    payload.put(STREAM_ID, streamId);
     callMethod("remove_stream", payload);
   }
 
   public void removeStream(int portIndex, String profileId, int streamId) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
-    payload.put("stream_id", streamId);
+    payload.put(STREAM_ID, streamId);
     callMethod("remove_stream", payload);
   }
 
@@ -310,7 +334,7 @@ public class TRexClient extends ClientBase {
 
   public void setRxQueue(int portIndex, int size) {
     Map<String, Object> payload = createPayload(portIndex);
-    payload.put("type", "queue");
+    payload.put(TYPE, "queue");
     payload.put("enabled", true);
     payload.put("size", size);
     callMethod("set_rx_feature", payload);
@@ -318,7 +342,7 @@ public class TRexClient extends ClientBase {
 
   public void removeRxQueue(int portIndex) {
     Map<String, Object> payload = createPayload(portIndex);
-    payload.put("type", "queue");
+    payload.put(TYPE, "queue");
     payload.put("enabled", false);
     callMethod("set_rx_feature", payload);
   }
@@ -331,7 +355,7 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> mul = new HashMap<>();
     mul.put("op", "abs");
-    mul.put("type", "pps");
+    mul.put(TYPE, "pps");
     mul.put("value", 1.0);
     startTraffic(portIndex, 1, true, mul, 1);
   }
@@ -344,7 +368,7 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> mul = new HashMap<>();
     mul.put("op", "abs");
-    mul.put("type", "percentage");
+    mul.put(TYPE, "percentage");
     mul.put("value", 100);
     startTraffic(portIndex, -1, true, mul, 1);
   }
@@ -357,7 +381,7 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> mul = new HashMap<>();
     mul.put("op", "abs");
-    mul.put("type", "pps");
+    mul.put(TYPE, "pps");
     mul.put("value", 1.0);
     startTraffic(portIndex, 1, true, mul, 1);
     stopTraffic(portIndex);
@@ -375,32 +399,32 @@ public class TRexClient extends ClientBase {
     Predicate<EthernetPacket> arpReplyFilter =
         etherPkt -> {
           Queue<Integer> vlanTags = new LinkedList<>(vlan.getTags());
-          Packet next_pkt = etherPkt;
+          Packet nextPkt = etherPkt;
 
           boolean vlanOutsideMatches = true;
           if (etherPkt.getHeader().getType() == QInQ) {
             try {
-              Dot1qVlanTagPacket QInQPkt =
+              Dot1qVlanTagPacket qInqPkt =
                   Dot1qVlanTagPacket.newPacket(
                       etherPkt.getRawData(),
                       etherPkt.getHeader().length(),
                       etherPkt.getPayload().length());
-              vlanOutsideMatches = QInQPkt.getHeader().getVidAsInt() == vlanTags.poll();
+              vlanOutsideMatches = qInqPkt.getHeader().getVidAsInt() == vlanTags.poll();
 
-              next_pkt = QInQPkt.getPayload();
+              nextPkt = qInqPkt.getPayload();
             } catch (IllegalRawDataException e) {
               return false;
             }
           }
 
           boolean vlanInsideMatches = true;
-          if (next_pkt.contains(Dot1qVlanTagPacket.class)) {
-            Dot1qVlanTagPacket dot1qVlanTagPacket = next_pkt.get(Dot1qVlanTagPacket.class);
+          if (nextPkt.contains(Dot1qVlanTagPacket.class)) {
+            Dot1qVlanTagPacket dot1qVlanTagPacket = nextPkt.get(Dot1qVlanTagPacket.class);
             vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
           }
 
-          if (next_pkt.contains(ArpPacket.class)) {
-            ArpPacket arp = next_pkt.get(ArpPacket.class);
+          if (nextPkt.contains(ArpPacket.class)) {
+            ArpPacket arp = nextPkt.get(ArpPacket.class);
             ArpOperation arpOp = arp.getHeader().getOperation();
             String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
             boolean arpMatches = ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
@@ -557,7 +581,6 @@ public class TRexClient extends ClientBase {
   }
 
   public List<EthernetPacket> getRxQueue(int portIndex, Predicate<EthernetPacket> filter) {
-
     Map<String, Object> payload = createPayload(portIndex);
     String json = callMethod("get_rx_queue_pkts", payload);
     JsonArray pkts = getResultFromResponse(json).getAsJsonObject().getAsJsonArray("pkts");

@@ -73,7 +73,7 @@ public class TRexAstfClient extends ClientBase {
 
   private Map<String, Object> createPayload() {
     Map<String, Object> payload = new HashMap<>();
-    payload.put("api_h", apiH);
+    payload.put(API_H, apiH);
     if (!StringUtils.isEmpty(masterHandler)) {
       payload.put("handler", masterHandler);
     }
@@ -217,18 +217,12 @@ public class TRexAstfClient extends ClientBase {
     this.callMethod("update_latency", payload);
   }
 
-  /**
-   * Acquire Port
-   *
-   * @param force
-   * @param portIndex
-   */
   @Override
   public PortStatus acquirePort(int portIndex, Boolean force) {
     Map<String, Object> payload = createPayload();
     payload.put("user", userName);
     payload.put("force", force);
-    payload.put("port_id", portIndex);
+    payload.put(PORT_ID, portIndex);
     String json = callMethod("acquire", payload);
     Set<Entry<String, JsonElement>> entrySet;
     try {
@@ -437,12 +431,12 @@ public class TRexAstfClient extends ClientBase {
       String profileId, List<String> tgNames) {
 
     // remove duplicated tgNames in input list
-    tgNames = new ArrayList<>(new HashSet<>(tgNames));
-    Map<String, AstfStatistics> stats = new LinkedHashMap<>(tgNames.size());
+    List<String> tgNames2 = new ArrayList<>(new HashSet<>(tgNames));
+    Map<String, AstfStatistics> stats = new LinkedHashMap<>(tgNames2.size());
 
     Map<String, Object> payload = createPayload(profileId);
     payload.put("epoch", 1);
-    Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames);
+    Map<String, Integer> name2Id = translateNames2Ids(profileId, tgNames2);
     payload.put("tg_ids", new ArrayList<>(name2Id.values()));
 
     String json = callMethod("get_tg_id_stats", payload);
@@ -477,7 +471,9 @@ public class TRexAstfClient extends ClientBase {
     Map<String, Integer> name2Id = new LinkedHashMap<>(tgNames.size());
     List<String> allTgNames = getTemplateGroupNames(profileId);
     for (int i = 0; i < allTgNames.size(); i++) {
-      if (tgNames.contains(allTgNames.get(i))) name2Id.put(allTgNames.get(i), i + 1);
+      if (tgNames.contains(allTgNames.get(i))) {
+        name2Id.put(allTgNames.get(i), i + 1);
+      }
     }
 
     return name2Id;
