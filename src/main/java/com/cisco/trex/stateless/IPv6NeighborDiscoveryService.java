@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.apache.commons.lang3.StringUtils;
 import org.pcap4j.packet.*;
 import org.pcap4j.packet.IcmpV6CommonPacket.IpV6NeighborDiscoveryOption;
@@ -585,8 +584,8 @@ public class IPv6NeighborDiscoveryService {
       strOctets.add(
           String.format(
               "%s%s",
-                  StringUtils.leftPad(Integer.toHexString(macOctets.get(i)), 2, "0"),
-                  StringUtils.leftPad(Integer.toHexString(macOctets.get(i + 1)), 2, "0")));
+              StringUtils.leftPad(Integer.toHexString(macOctets.get(i)), 2, "0"),
+              StringUtils.leftPad(Integer.toHexString(macOctets.get(i + 1)), 2, "0")));
     }
     return String.format("%s::%s", prefix, String.join(":", strOctets));
   }
