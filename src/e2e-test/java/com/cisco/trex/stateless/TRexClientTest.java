@@ -6,6 +6,7 @@ import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
 import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.Port;
 import com.cisco.trex.stateless.model.capture.CaptureInfo;
 import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
