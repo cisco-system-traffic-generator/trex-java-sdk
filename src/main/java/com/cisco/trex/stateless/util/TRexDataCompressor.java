@@ -9,12 +9,13 @@ import java.util.zip.Inflater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** TRex Data Compressor */
 public class TRexDataCompressor implements IDataCompressor {
   // Magic bytes from TrexRpcZip
   private static final byte[] TREX_HEADER_MAGIC =
       new byte[] {(byte) 0xAB, (byte) 0xE8, (byte) 0x5C, (byte) 0xEA};
   private static final int HEADER_SIZE = 8; // 4 magic bytes and 4 bytes Integer (request length)
-  private static final Logger LOGGER = LoggerFactory.getLogger(TRexDataCompressor.class);;
+  private static final Logger LOGGER = LoggerFactory.getLogger(TRexDataCompressor.class);
 
   @Override
   public byte[] compressStringToBytes(String request) {
@@ -41,7 +42,7 @@ public class TRexDataCompressor implements IDataCompressor {
       byte[] magicBytes = Arrays.copyOfRange(data, 0, TREX_HEADER_MAGIC.length);
       if (Arrays.equals(magicBytes, TREX_HEADER_MAGIC)) {
 
-        // Skip another  4 bytes containing the uncompressed size of the  message
+        // Skip another 4 bytes containing the uncompressed size of the message
         byte[] compressedData = Arrays.copyOfRange(data, HEADER_SIZE, data.length);
         try {
           return new String(decompressBytes(compressedData));
@@ -54,7 +55,7 @@ public class TRexDataCompressor implements IDataCompressor {
     return new String(data);
   }
 
-  private byte[] concatByteArrays(byte[] firstDataArray, byte[] secondDataArray) {
+  private static byte[] concatByteArrays(byte[] firstDataArray, byte[] secondDataArray) {
     byte[] concatedDataArray = new byte[firstDataArray.length + secondDataArray.length];
     System.arraycopy(firstDataArray, 0, concatedDataArray, 0, firstDataArray.length);
     System.arraycopy(
@@ -62,7 +63,7 @@ public class TRexDataCompressor implements IDataCompressor {
     return concatedDataArray;
   }
 
-  private byte[] compressBytes(byte[] data) {
+  private static byte[] compressBytes(byte[] data) {
     Deflater deflater = new Deflater();
     deflater.setInput(data);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
@@ -77,7 +78,7 @@ public class TRexDataCompressor implements IDataCompressor {
     return outputStream.toByteArray();
   }
 
-  private byte[] decompressBytes(byte[] data) throws DataFormatException {
+  private static byte[] decompressBytes(byte[] data) throws DataFormatException {
     Inflater inflater = new Inflater();
     inflater.setInput(data);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
