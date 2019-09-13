@@ -8,11 +8,7 @@ import java.util.Objects;
 
 /** Java implementation for TRex python sdk ASTFIpGenDist class */
 public class ASTFIpGenDist {
-  private static List<Inner> inList = new ArrayList();
-  private String ipStart;
-  private String ipEnd;
-  private Distribution distribution;
-  private PerCoreDistributionVals perCoreDistributionVals;
+  private static List<Inner> inList = new ArrayList<>();
   private Inner newInner;
   private int index;
 
@@ -39,10 +35,6 @@ public class ASTFIpGenDist {
       String ipEnd,
       Distribution distribution,
       PerCoreDistributionVals perCoreDistributionVals) {
-    this.ipStart = ipStart;
-    this.ipEnd = ipEnd;
-    this.distribution = distribution;
-    this.perCoreDistributionVals = perCoreDistributionVals;
     this.newInner = new Inner(ipStart, ipEnd, distribution, perCoreDistributionVals);
 
     for (int i = 0; i < inList.size(); i++) {
@@ -51,7 +43,7 @@ public class ASTFIpGenDist {
         return;
       }
     }
-    this.inList.add(newInner);
+    ASTFIpGenDist.inList.add(newInner);
     this.index = inList.size() - 1;
   }
 
@@ -61,7 +53,7 @@ public class ASTFIpGenDist {
    * @return ip start
    */
   public String getIpStart() {
-    return this.inList.get(this.index).getIpStart();
+    return ASTFIpGenDist.inList.get(this.index).getIpStart();
   }
 
   /**
@@ -70,7 +62,7 @@ public class ASTFIpGenDist {
    * @return ip end
    */
   public String getIpEnd() {
-    return this.inList.get(this.index).getIpEnd();
+    return ASTFIpGenDist.inList.get(this.index).getIpEnd();
   }
 
   /**
@@ -79,7 +71,7 @@ public class ASTFIpGenDist {
    * @return distribution
    */
   public Distribution getDistribution() {
-    return this.inList.get(this.index).getDistribution();
+    return ASTFIpGenDist.inList.get(this.index).getDistribution();
   }
 
   /**
@@ -88,7 +80,7 @@ public class ASTFIpGenDist {
    * @return perCoreDistributionVals
    */
   public PerCoreDistributionVals getPerCoreDistributionVals() {
-    return this.inList.get(this.index).getPerCoreDistributionVals();
+    return ASTFIpGenDist.inList.get(this.index).getPerCoreDistributionVals();
   }
 
   /**
@@ -97,7 +89,7 @@ public class ASTFIpGenDist {
    * @param direction direction
    */
   public void setDirection(String direction) {
-    this.inList.get(this.index).setDirection(direction);
+    ASTFIpGenDist.inList.get(this.index).setDirection(direction);
   }
 
   /**
@@ -106,7 +98,7 @@ public class ASTFIpGenDist {
    * @param ipOffset ipOffset
    */
   public void setIpOffset(String ipOffset) {
-    this.inList.get(this.index).setIpOffset(ipOffset);
+    ASTFIpGenDist.inList.get(this.index).setIpOffset(ipOffset);
   }
 
   /**
@@ -144,10 +136,6 @@ public class ASTFIpGenDist {
     private String ipEnd;
     private Distribution distribution;
     private PerCoreDistributionVals perCoreDistributionVals;
-
-    private String direction;
-    private String ipOffset;
-
     private JsonObject fields = new JsonObject();
 
     /**
@@ -189,12 +177,10 @@ public class ASTFIpGenDist {
 
     void setDirection(String direction) {
       fields.addProperty("dir", direction);
-      this.direction = direction;
     }
 
     void setIpOffset(String ipOffset) {
       fields.addProperty("ip_offset", ipOffset);
-      this.ipOffset = ipOffset;
     }
 
     JsonObject toJson() {
@@ -203,8 +189,12 @@ public class ASTFIpGenDist {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       Inner inner = (Inner) o;
       return fields.equals(inner.fields);
     }
