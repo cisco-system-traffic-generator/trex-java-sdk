@@ -282,10 +282,10 @@ class CpcapReaderHelp {
     /** only for tcp usage */
     long expServerSeq = -1;
     long expClientSeq = -1;
+    try (PcapHandle pcapHandle = Pcaps.openOffline(fileName)) {
 
-    while (true) {
-      double time;
-      try (PcapHandle pcapHandle = Pcaps.openOffline(fileName)) {
+      while (true) {
+        double time;
         try {
           nextEthPkt = pcapHandle.getNextPacketEx(); // get next Ethernet packet
         } catch (Exception e) {
@@ -294,183 +294,183 @@ class CpcapReaderHelp {
 
         Timestamp timestamp = pcapHandle.getTimestamp();
         time = timestamp.getSeconds() + (double) timestamp.getNanos() / 1000000000; // time
-      } catch (PcapNativeException e) {
-        throw new IllegalStateException("open pcap file failed", e);
-      }
-      double dtime = time;
-      double pktTime = 0;
-      if (lastTime == 0) {
-        pktTime = 0;
-      } else {
-        pktTime = dtime - lastTime;
-      }
-      lastTime = dtime;
+        double dtime = time;
+        double pktTime = 0;
+        if (lastTime == 0) {
+          pktTime = 0;
+        } else {
+          pktTime = dtime - lastTime;
+        }
+        lastTime = dtime;
 
-      IpPacket l3;
-      Packet next = nextEthPkt.getPayload(); // eth data, ip layer
-      if (next instanceof IpV4Packet) {
-        l3 = (IpV4Packet) next;
-      } else if (next instanceof IpV6Packet) {
-        l3 = (IpV6Packet) next;
-      } else {
-        throw new IllegalStateException(
-            String.format(
-                "Error for file %s: Packet #%s in pcap is not IPv4 or IPv6!",
-                this.fileName, index));
-      }
+        IpPacket l3;
+        Packet next = nextEthPkt.getPayload(); // eth data, ip layer
+        if (next instanceof IpV4Packet) {
+          l3 = (IpV4Packet) next;
+        } else if (next instanceof IpV6Packet) {
+          l3 = (IpV6Packet) next;
+        } else {
+          throw new IllegalStateException(
+              String.format(
+                  "Error for file %s: Packet #%s in pcap is not IPv4 or IPv6!",
+                  this.fileName, index));
+        }
 
-      // get ip packet header
-      IpPacket.IpHeader ipHeader = l3.getHeader();
+        // get ip packet header
+        IpPacket.IpHeader ipHeader = l3.getHeader();
 
-      if (clientIp == null) {
-        clientIp = ipHeader.getSrcAddr();
-        serverIp = ipHeader.getDstAddr();
-        direction = SideType.Client;
-      } else {
-        if (clientIp.equals(ipHeader.getSrcAddr()) && serverIp.equals(ipHeader.getDstAddr())) {
+        if (clientIp == null) {
+          clientIp = ipHeader.getSrcAddr();
+          serverIp = ipHeader.getDstAddr();
           direction = SideType.Client;
-        } else if (serverIp.equals(ipHeader.getSrcAddr())
-            && clientIp.equals(ipHeader.getDstAddr())) {
-          direction = SideType.Server;
         } else {
-          this.fail(
-              String.format(
-                  "Only one session is allowed in a file. Packet %s is from different session",
-                  index));
-        }
-      }
-
-      Packet l4 = l3.getPayload(); // Transport Layer ,l4
-      TcpPacket tcp = null;
-      UdpPacket udp = null;
-
-      if (l4 instanceof UdpPacket) {
-        udp = (UdpPacket) l4;
-      }
-      if (l4 instanceof TcpPacket) {
-        tcp = (TcpPacket) l4;
-      }
-
-      if (tcp == null && udp == null) {
-        this.fail(String.format("Packet #%s in pcap has is not TCP or UDP", index));
-      }
-
-      if (tcp != null && udp != null) {
-        this.fail(String.format("Packet #%s in pcap has both TCP and UDP", index));
-      }
-
-      String typel4 = getType(tcp, udp);
-
-      if (isTcp == null) {
-        isTcp = typel4;
-      } else if (!isTcp.equals(typel4)) {
-        this.fail(String.format("Packet #%s in pcap is %s and flow is %s", index, typel4, isTcp));
-      }
-
-      // TCP scenario
-      if (tcp != null) {
-        TcpPacket.TcpHeader l4Header = tcp.getHeader();
-
-        // SYN , connection status
-        if (l4Header.getSyn()) {
-          // SYN is true & ACK is true
-          if (l4Header.getAck()) {
-            // s_tcp_opts =tcp.opts
-            sTcpWin = l4Header.getWindowAsInt();
-            if (state == states.get(INIT)) {
-              this.fail(String.format("Packet #%s is SYN+ACK, but there was no SYN yet", index));
-            } else if (state != states.get(SYN)) {
-              this.fail(
-                  String.format(
-                      "Packet #%s is SYN+ACK, but there was already SYN+ACK in cap file", index));
-            }
-            state = states.get(SYN_ACK);
-            expServerSeq = l4Header.getSequenceNumberAsLong() + 1;
-          }
-          // SYN - no ACK. Should be first packet client->server
-          else {
-            cTcpWin = l4Header.getWindowAsInt();
-            expClientSeq = l4Header.getSequenceNumberAsLong() + 1;
-            // allowing syn retransmission because cap2/https.pcap contains this
-            if (state > states.get(SYN)) {
-              this.fail(
-                  String.format(
-                      "Packet #%s is TCP SYN, but there was already TCP SYN in cap file", index));
-            } else {
-              state = states.get(SYN);
-            }
-          }
-        } else if (state != states.get(SYN_ACK)) {
-          this.fail("Cap file must start with syn, syn+ack sequence");
-        }
-        if (!(l4Type == null || l4Type.equals(TCP))) {
-          this.fail(
-              String.format(
-                  "PCAP contains both TCP and %s. This is not supported currently.", l4Type));
-        }
-        l4Type = TCP;
-
-        if (srcPort == -1) {
-          srcPort = l4Header.getSrcPort().valueAsInt();
-          dstPort = l4Header.getDstPort().valueAsInt();
-        }
-      }
-      // UDP scenario
-      else if (udp != null) {
-        UdpPacket.UdpHeader l4Header = udp.getHeader();
-        if (!(l4Type == null || l4Type.equals(UDP))) {
-          this.fail(
-              String.format(
-                  "PCAP contains both UDP and %s. This is not supported currently.", l4Type));
-        }
-        l4Type = UDP;
-
-        if (srcPort == -1) {
-          srcPort = l4Header.getSrcPort().valueAsInt();
-          dstPort = l4Header.getDstPort().valueAsInt();
-        }
-      } else {
-        this.fail(String.format("Packet #%s in pcap is not TCP or UDP.", index));
-      }
-
-      int l4PayloadLen = 0;
-      if (l4.getPayload() != null) {
-        l4PayloadLen = l4.getPayload().length();
-        totalPayloadLen += l4PayloadLen;
-        pkts.add(new CPacketData(direction, l4.getPayload().getRawData()));
-      } else {
-        pkts.add(new CPacketData(direction, null));
-      }
-      times.add(pktTime);
-      dirs.add(direction);
-
-      // special handling for TCP FIN
-      if (tcp != null && tcp.getHeader().getFin()) {
-        l4PayloadLen = 1;
-      }
-
-      // verify there is no packet loss or retransmission in cap file
-      // don't check for SYN
-      if (tcp != null && !tcp.getHeader().getSyn()) {
-        if (tcp.getHeader().getSrcPort().valueAsInt() == this.srcPort) {
-          if (expClientSeq != tcp.getHeader().getSequenceNumberAsLong()) {
+          if (clientIp.equals(ipHeader.getSrcAddr()) && serverIp.equals(ipHeader.getDstAddr())) {
+            direction = SideType.Client;
+          } else if (serverIp.equals(ipHeader.getSrcAddr())
+              && clientIp.equals(ipHeader.getDstAddr())) {
+            direction = SideType.Server;
+          } else {
             this.fail(
                 String.format(
-                    "TCP seq in packet %s is %s. We expected %s. Please check that there are no packet loss or retransmission in cap file",
-                    index, tcp.getHeader().getSequenceNumberAsLong(), expClientSeq));
+                    "Only one session is allowed in a file. Packet %s is from different session",
+                    index));
           }
-          expClientSeq = tcp.getHeader().getSequenceNumberAsLong() + l4PayloadLen;
-        } else {
-          if (expServerSeq != tcp.getHeader().getSequenceNumberAsLong()) {
+        }
+
+        Packet l4 = l3.getPayload(); // Transport Layer ,l4
+        TcpPacket tcp = null;
+        UdpPacket udp = null;
+
+        if (l4 instanceof UdpPacket) {
+          udp = (UdpPacket) l4;
+        }
+        if (l4 instanceof TcpPacket) {
+          tcp = (TcpPacket) l4;
+        }
+
+        if (tcp == null && udp == null) {
+          this.fail(String.format("Packet #%s in pcap has is not TCP or UDP", index));
+        }
+
+        if (tcp != null && udp != null) {
+          this.fail(String.format("Packet #%s in pcap has both TCP and UDP", index));
+        }
+
+        String typel4 = getType(tcp, udp);
+
+        if (isTcp == null) {
+          isTcp = typel4;
+        } else if (!isTcp.equals(typel4)) {
+          this.fail(String.format("Packet #%s in pcap is %s and flow is %s", index, typel4, isTcp));
+        }
+
+        // TCP scenario
+        if (tcp != null) {
+          TcpPacket.TcpHeader l4Header = tcp.getHeader();
+
+          // SYN , connection status
+          if (l4Header.getSyn()) {
+            // SYN is true & ACK is true
+            if (l4Header.getAck()) {
+              // s_tcp_opts =tcp.opts
+              sTcpWin = l4Header.getWindowAsInt();
+              if (state == states.get(INIT)) {
+                this.fail(String.format("Packet #%s is SYN+ACK, but there was no SYN yet", index));
+              } else if (state != states.get(SYN)) {
+                this.fail(
+                    String.format(
+                        "Packet #%s is SYN+ACK, but there was already SYN+ACK in cap file", index));
+              }
+              state = states.get(SYN_ACK);
+              expServerSeq = l4Header.getSequenceNumberAsLong() + 1;
+            }
+            // SYN - no ACK. Should be first packet client->server
+            else {
+              cTcpWin = l4Header.getWindowAsInt();
+              expClientSeq = l4Header.getSequenceNumberAsLong() + 1;
+              // allowing syn retransmission because cap2/https.pcap contains this
+              if (state > states.get(SYN)) {
+                this.fail(
+                    String.format(
+                        "Packet #%s is TCP SYN, but there was already TCP SYN in cap file", index));
+              } else {
+                state = states.get(SYN);
+              }
+            }
+          } else if (state != states.get(SYN_ACK)) {
+            this.fail("Cap file must start with syn, syn+ack sequence");
+          }
+          if (!(l4Type == null || l4Type.equals(TCP))) {
             this.fail(
                 String.format(
-                    "TCP seq in packet %s is %s. We expected %s. Please check that there are no packet loss or retransmission in cap file",
-                    index, tcp.getHeader().getSequenceNumberAsLong(), expServerSeq));
+                    "PCAP contains both TCP and %s. This is not supported currently.", l4Type));
           }
-          expServerSeq = tcp.getHeader().getSequenceNumberAsLong() + l4PayloadLen;
+          l4Type = TCP;
+
+          if (srcPort == -1) {
+            srcPort = l4Header.getSrcPort().valueAsInt();
+            dstPort = l4Header.getDstPort().valueAsInt();
+          }
         }
+        // UDP scenario
+        else if (udp != null) {
+          UdpPacket.UdpHeader l4Header = udp.getHeader();
+          if (!(l4Type == null || l4Type.equals(UDP))) {
+            this.fail(
+                String.format(
+                    "PCAP contains both UDP and %s. This is not supported currently.", l4Type));
+          }
+          l4Type = UDP;
+
+          if (srcPort == -1) {
+            srcPort = l4Header.getSrcPort().valueAsInt();
+            dstPort = l4Header.getDstPort().valueAsInt();
+          }
+        } else {
+          this.fail(String.format("Packet #%s in pcap is not TCP or UDP.", index));
+        }
+
+        int l4PayloadLen = 0;
+        if (l4.getPayload() != null) {
+          l4PayloadLen = l4.getPayload().length();
+          totalPayloadLen += l4PayloadLen;
+          pkts.add(new CPacketData(direction, l4.getPayload().getRawData()));
+        } else {
+          pkts.add(new CPacketData(direction, null));
+        }
+        times.add(pktTime);
+        dirs.add(direction);
+
+        // special handling for TCP FIN
+        if (tcp != null && tcp.getHeader().getFin()) {
+          l4PayloadLen = 1;
+        }
+
+        // verify there is no packet loss or retransmission in cap file
+        // don't check for SYN
+        if (tcp != null && !tcp.getHeader().getSyn()) {
+          if (tcp.getHeader().getSrcPort().valueAsInt() == this.srcPort) {
+            if (expClientSeq != tcp.getHeader().getSequenceNumberAsLong()) {
+              this.fail(
+                  String.format(
+                      "TCP seq in packet %s is %s. We expected %s. Please check that there are no packet loss or retransmission in cap file",
+                      index, tcp.getHeader().getSequenceNumberAsLong(), expClientSeq));
+            }
+            expClientSeq = tcp.getHeader().getSequenceNumberAsLong() + l4PayloadLen;
+          } else {
+            if (expServerSeq != tcp.getHeader().getSequenceNumberAsLong()) {
+              this.fail(
+                  String.format(
+                      "TCP seq in packet %s is %s. We expected %s. Please check that there are no packet loss or retransmission in cap file",
+                      index, tcp.getHeader().getSequenceNumberAsLong(), expServerSeq));
+            }
+            expServerSeq = tcp.getHeader().getSequenceNumberAsLong() + l4PayloadLen;
+          }
+        }
+        index++;
       }
-      index++;
+    } catch (PcapNativeException e) {
+      throw new IllegalStateException("open pcap file failed", e);
     }
     this.analyzed = true;
   }
