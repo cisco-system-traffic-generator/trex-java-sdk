@@ -10,7 +10,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
 import org.pcap4j.core.Pcaps;
-import org.pcap4j.packet.*;
+import org.pcap4j.packet.IpPacket;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.IpV6Packet;
+import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.TcpPacket;
+import org.pcap4j.packet.UdpPacket;
 
 /** CapHandling to parse pcap file */
 class CapHandling {
@@ -129,7 +134,7 @@ class CpcapReader {
 }
 
 class CpcapReaderHelp {
-  private static final HashMap<String, Integer> states = new HashMap();
+  private static final HashMap<String, Integer> states = new HashMap<>();
   private static final String OTHER = "other";
   private static final String TCP = "tcp";
   private static final String UDP = "udp";
@@ -162,9 +167,9 @@ class CpcapReaderHelp {
 
   CpcapReaderHelp(String fileName) {
     this.fileName = fileName;
-    pkts = new ArrayList();
-    times = new ArrayList();
-    dirs = new ArrayList();
+    pkts = new ArrayList<>();
+    times = new ArrayList<>();
+    dirs = new ArrayList<>();
     clientIp = null;
     serverIp = null;
     isTcp = null;
@@ -229,8 +234,8 @@ class CpcapReaderHelp {
     }
     CPacketData combinedData = null;
 
-    List<CPacketData> newPkts = new ArrayList();
-    List<SideType> newDirs = new ArrayList();
+    List<CPacketData> newPkts = new ArrayList<>();
+    List<SideType> newDirs = new ArrayList<>();
 
     for (CPacketData pkt : pkts) {
       if (pkt.getPayload() == null) {
@@ -267,12 +272,6 @@ class CpcapReaderHelp {
     if (analyzed) {
       return;
     }
-    PcapHandle pcapHandle;
-    try {
-      pcapHandle = Pcaps.openOffline(fileName);
-    } catch (PcapNativeException e) {
-      throw new IllegalStateException("open pcap file failed", e);
-    }
 
     int index = 0; // index
     Packet nextEthPkt;
@@ -285,15 +284,19 @@ class CpcapReaderHelp {
     long expClientSeq = -1;
 
     while (true) {
-      try {
-        nextEthPkt = pcapHandle.getNextPacketEx(); // get next Ethernet packet
-      } catch (Exception e) {
-        break;
+      double time;
+      try (PcapHandle pcapHandle = Pcaps.openOffline(fileName)) {
+        try {
+          nextEthPkt = pcapHandle.getNextPacketEx(); // get next Ethernet packet
+        } catch (Exception e) {
+          break;
+        }
+
+        Timestamp timestamp = pcapHandle.getTimestamp();
+        time = timestamp.getSeconds() + (double) timestamp.getNanos() / 1000000000; // time
+      } catch (PcapNativeException e) {
+        throw new IllegalStateException("open pcap file failed", e);
       }
-
-      Timestamp timestamp = pcapHandle.getTimestamp();
-      double time = timestamp.getSeconds() + (double) timestamp.getNanos() / 1000000000; // time
-
       double dtime = time;
       double pktTime = 0;
       if (lastTime == 0) {
@@ -303,16 +306,17 @@ class CpcapReaderHelp {
       }
       lastTime = dtime;
 
-      IpPacket l3 = null;
-
+      IpPacket l3;
       Packet next = nextEthPkt.getPayload(); // eth data, ip layer
-
       if (next instanceof IpV4Packet) {
         l3 = (IpV4Packet) next;
       } else if (next instanceof IpV6Packet) {
         l3 = (IpV6Packet) next;
       } else {
-        this.fail(String.format("Packet #%s in pcap is not IPv4 or IPv6!", index));
+        throw new IllegalStateException(
+            String.format(
+                "Error for file %s: Packet #%s in pcap is not IPv4 or IPv6!",
+                this.fileName, index));
       }
 
       // get ip packet header
@@ -347,7 +351,7 @@ class CpcapReaderHelp {
         tcp = (TcpPacket) l4;
       }
 
-      if (tcp == null & udp == null) {
+      if (tcp == null && udp == null) {
         this.fail(String.format("Packet #%s in pcap has is not TCP or UDP", index));
       }
 
@@ -432,7 +436,6 @@ class CpcapReaderHelp {
       int l4PayloadLen = 0;
       if (l4.getPayload() != null) {
         l4PayloadLen = l4.getPayload().length();
-        byte[] rawData = l4.getPayload().getRawData();
         totalPayloadLen += l4PayloadLen;
         pkts.add(new CPacketData(direction, l4.getPayload().getRawData()));
       } else {
@@ -476,7 +479,7 @@ class CpcapReaderHelp {
     throw new IllegalStateException(String.format("Error for file %s: %s", this.fileName, msg));
   }
 
-  private String getType(TcpPacket tcpPacket, UdpPacket udpPacket) {
+  private static String getType(TcpPacket tcpPacket, UdpPacket udpPacket) {
     if (tcpPacket != null && udpPacket == null) {
       return TCP;
     }
