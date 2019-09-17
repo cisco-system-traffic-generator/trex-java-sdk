@@ -35,7 +35,7 @@ public class TRexTransport {
   public TRexTransport(String host, String port, int timeout, IDataCompressor dataCompressor) {
     this.host = host;
     this.port = port;
-    this.zmqSocket = zmqCtx.socket(ZMQ.REQ);
+    this.zmqSocket = zmqCtx.socket(SocketType.REQ);
     int actualTimeout = timeout <= 0 ? DEFAULT_TIMEOUT : timeout;
     zmqSocket.setReceiveTimeOut(actualTimeout);
     zmqSocket.setSendTimeOut(actualTimeout);
