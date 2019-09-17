@@ -19,7 +19,6 @@ import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.cisco.trex.util.Constants;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -515,7 +514,9 @@ public class TRexClient extends ClientBase {
 
   private static AbstractMap.SimpleEntry<EtherType, Packet.Builder> buildVlan(
       ArpPacket.Builder arpBuilder, PortVlan vlan) {
-    Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
+    List<Integer> tags = vlan.getTags();
+    Collections.reverse(tags);
+    Queue<Integer> vlanTags = new LinkedList<>(tags);
     Packet.Builder resultPayloadBuilder = arpBuilder;
     EtherType resultEtherType = EtherType.ARP;
 

@@ -551,7 +551,7 @@ public class ASTFProgram {
     }
   }
 
-  private boolean isNumber(String str) {
+  private static boolean isNumber(String str) {
     for (char c : str.toCharArray()) {
       if (c < 48 || c > 57) {
         return false;
@@ -584,12 +584,11 @@ public class ASTFProgram {
       String sha256Buf = encodeSha256(base64Buf);
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
-      } else {
-        bufList.add(base64Buf);
-        int newIndex = bufList.size() - 1;
-        bufHash.put(sha256Buf, newIndex);
-        return newIndex;
       }
+      bufList.add(base64Buf);
+      int newIndex = bufList.size() - 1;
+      bufHash.put(sha256Buf, newIndex);
+      return newIndex;
     }
 
     /**
