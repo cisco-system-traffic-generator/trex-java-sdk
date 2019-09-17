@@ -1,8 +1,8 @@
 package com.cisco.trex.stateful.model.stats;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** ASTF statistics */
 public class AstfStatistics {
@@ -70,13 +70,13 @@ public class AstfStatistics {
    */
   public AstfStatistics setCounterNames(MetaData metaData) {
     for (Map.Entry<Integer, Double> counter : clientCounters.entrySet()) {
-      matchedNameAndValuesForClient.put(getCounterName(counter.getKey(), metaData),
-          counter.getValue());
+      matchedNameAndValuesForClient.put(
+          getCounterName(counter.getKey(), metaData), counter.getValue());
     }
 
     for (Map.Entry<Integer, Double> counter : serverCounters.entrySet()) {
-      matchedNameAndValuesForServer.put(getCounterName(counter.getKey(), metaData),
-          counter.getValue());
+      matchedNameAndValuesForServer.put(
+          getCounterName(counter.getKey(), metaData), counter.getValue());
     }
 
     return this;

@@ -13,8 +13,8 @@ public class ASTFIpGen {
    * @param distServer
    * @param ipGenGlobal
    */
-  public ASTFIpGen(ASTFIpGenDist distClient, ASTFIpGenDist distServer,
-      ASTFIpGenGlobal ipGenGlobal) {
+  public ASTFIpGen(
+      ASTFIpGenDist distClient, ASTFIpGenDist distServer, ASTFIpGenGlobal ipGenGlobal) {
 
     this.fields.add("dist_client", distClient.toJson());
     distClient.setDirection("c");
@@ -33,5 +33,4 @@ public class ASTFIpGen {
   public JsonObject toJson() {
     return fields;
   }
-
 }

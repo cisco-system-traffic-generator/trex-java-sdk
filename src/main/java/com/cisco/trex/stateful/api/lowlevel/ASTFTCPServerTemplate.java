@@ -23,8 +23,8 @@ public class ASTFTCPServerTemplate extends ASTFTemplateBase {
    * @param assoc
    * @param globalInfo
    */
-  public ASTFTCPServerTemplate(ASTFProgram astfProgram, ASTFAssociation assoc,
-      ASTFGlobalInfoPerTemplate globalInfo) {
+  public ASTFTCPServerTemplate(
+      ASTFProgram astfProgram, ASTFAssociation assoc, ASTFGlobalInfoPerTemplate globalInfo) {
     super(astfProgram);
     if (assoc == null) {
       this.assoc = new ASTFAssociation(new ASTFAssociationRule(80));

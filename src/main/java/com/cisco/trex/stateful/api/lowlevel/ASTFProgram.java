@@ -1,5 +1,7 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -8,14 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 
 /**
  * Java implementation for TRex python sdk ASTFProgram class
  *
- * <p>
- * Emulation L7 program <code> ASTFProgram progServer =new ASTFProgram()
+ * <p>Emulation L7 program <code> ASTFProgram progServer =new ASTFProgram()
  * progServer.recv(http_req.length())
  * progServer.send(http_response)
  * progServer.delay(10)
@@ -89,8 +88,12 @@ public class ASTFProgram {
     }
   }
 
-  private void createCmdFromCap(boolean isTcp, List<CPacketData> cmds, List<Double> times,
-      List<SideType> dirs, SideType initSide) {
+  private void createCmdFromCap(
+      boolean isTcp,
+      List<CPacketData> cmds,
+      List<Double> times,
+      List<SideType> dirs,
+      SideType initSide) {
     if (cmds.size() != dirs.size()) {
       throw new IllegalStateException(
           String.format("cmds size %s is not equal to dirs size %s", cmds.size(), dirs.size()));
@@ -234,18 +237,14 @@ public class ASTFProgram {
    * send (l7_buffer) over TCP and wait for the buffer to be acked by peer. Rx side could work in
    * parallel
    *
-   * <p>
-   * example1 send (buffer1) send (buffer2)
+   * <p>example1 send (buffer1) send (buffer2)
    *
-   * <p>
-   * Will behave differently than
+   * <p>Will behave differently than
    *
-   * <p>
-   * example1 send (buffer1+ buffer2)
+   * <p>example1 send (buffer1+ buffer2)
    *
-   * <p>
-   * in the first example there would be PUSH in the last byte of the buffer and immediate ACK from
-   * peer while in the last example the buffer will be sent together (might be one segment)
+   * <p>in the first example there would be PUSH in the last byte of the buffer and immediate ACK
+   * from peer while in the last example the buffer will be sent together (might be one segment)
    *
    * @param buf l7 stream as string
    */
@@ -284,8 +283,7 @@ public class ASTFProgram {
    * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk. This is
    * a utility command that works on top of send/delay command
    *
-   * <p>
-   * example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
+   * <p>example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
    * 10usec
    *
    * @param l7Buf l7 stream as string
@@ -521,9 +519,10 @@ public class ASTFProgram {
     int i = 0;
     for (ASTFCmd cmd : fields.get(COMMANDS)) {
       if (null != cmd.isStream() && cmd.isStream() != this.stream) {
-        throw new IllegalStateException(String.format(
-            " Command %s stream mode is %s and different from the flow stream mode %s",
-            cmd.getName(), cmd.isStream(), this.stream));
+        throw new IllegalStateException(
+            String.format(
+                " Command %s stream mode is %s and different from the flow stream mode %s",
+                cmd.getName(), cmd.isStream(), this.stream));
       }
       if (cmd instanceof ASTFCmdJmpnz) {
         ASTFCmdJmpnz cmdJmpnz = (ASTFCmdJmpnz) cmd;
@@ -617,7 +616,8 @@ public class ASTFProgram {
 
   /** Side type */
   public enum SideType {
-    Client("client"), Server("server");
+    Client("client"),
+    Server("server");
 
     String type;
 

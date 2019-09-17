@@ -1,9 +1,9 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
+import com.google.gson.JsonObject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFGlobalInfoPerTemplate class */
 public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
@@ -25,8 +25,10 @@ public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
   @Override
   public ASTFGlobalInfoBase tcp(TcpParam tcpParam, int value) {
     if (!tcpParamSet.contains(tcpParam.getType())) {
-      throw new IllegalStateException(String.format(
-          "TcpParam: %s is not support in AstfGlobalInfoPerTemplate class", tcpParam.getType()));
+      throw new IllegalStateException(
+          String.format(
+              "TcpParam: %s is not support in AstfGlobalInfoPerTemplate class",
+              tcpParam.getType()));
     }
     tcp.addProperty(tcpParam.getType(), value);
     return this;
