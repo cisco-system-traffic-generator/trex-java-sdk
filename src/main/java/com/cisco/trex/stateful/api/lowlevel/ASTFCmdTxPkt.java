@@ -65,7 +65,7 @@ public class ASTFCmdTxPkt extends ASTFCmd {
     return bufLen;
   }
 
-  private String encodeBase64(byte[] bytes) {
+  private static String encodeBase64(byte[] bytes) {
     Base64.Encoder encoder = Base64.getEncoder();
     return encoder.encodeToString(bytes);
   }

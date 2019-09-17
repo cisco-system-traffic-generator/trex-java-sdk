@@ -10,13 +10,8 @@ public class SystemInfo {
   private Integer port_count;
   private List<Port> ports;
 
-  public SystemInfo(
-      String core_type,
-      Integer dp_core_count,
-      Integer dp_core_count_per_port,
-      String hostname,
-      Integer port_count,
-      List<Port> ports) {
+  public SystemInfo(String core_type, Integer dp_core_count, Integer dp_core_count_per_port,
+      String hostname, Integer port_count, List<Port> ports) {
     this.core_type = core_type;
     this.dp_core_count = dp_core_count;
     this.dp_core_count_per_port = dp_core_count_per_port;
@@ -27,5 +22,25 @@ public class SystemInfo {
 
   public List<Port> getPorts() {
     return ports;
+  }
+
+  public Integer getPortCount() {
+    return port_count;
+  }
+
+  public String getHostname() {
+    return hostname;
+  }
+
+  public Integer getCoreCountPerPort() {
+    return dp_core_count_per_port;
+  }
+
+  public Integer getCoreCount() {
+    return dp_core_count;
+  }
+
+  public String getCoreType() {
+    return core_type;
   }
 }

@@ -1,23 +1,23 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Java implementation for TRex python sdk _ASTFTemplateBase class
  *
- * <p>abstract AstfTemplateBase class
+ * <p>
+ * abstract AstfTemplateBase class
  */
 abstract class ASTFTemplateBase {
-  private static List<ASTFProgram> programList = new ArrayList();
-  private static Map<ASTFProgram, Integer> programHash = new HashMap();
+  private static List<ASTFProgram> programList = new ArrayList<>();
+  private static Map<ASTFProgram, Integer> programHash = new HashMap<>();
 
   private JsonObject fields = new JsonObject();
-  private int programIndex;
   private boolean isStream;
 
   /**

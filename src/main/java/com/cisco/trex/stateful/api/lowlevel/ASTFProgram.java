@@ -1,9 +1,6 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -11,11 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * Java implementation for TRex python sdk ASTFProgram class
  *
- * <p>Emulation L7 program <code> ASTFProgram progServer =new ASTFProgram()
+ * <p>
+ * Emulation L7 program <code> ASTFProgram progServer =new ASTFProgram()
  * progServer.recv(http_req.length())
  * progServer.send(http_response)
  * progServer.delay(10)
@@ -26,19 +26,15 @@ public class ASTFProgram {
   private static final int MIN_DELAY = 50;
   private static final int MAX_DELAY = 700000;
   private static final int MAX_KEEPALIVE = 500000;
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
   private static final String COMMANDS = "commands";
 
-  private Map<String, Integer> vars = new HashMap();
-  private Map<String, Integer> labels = new HashMap();
-  private Map<String, List<ASTFCmd>> fields = new HashMap();
+  private Map<String, Integer> vars = new HashMap<>();
+  private Map<String, Integer> labels = new HashMap<>();
+  private Map<String, List<ASTFCmd>> fields = new HashMap<>();
   private int totalSendBytes = 0;
   private int totalRcvBytes = 0;
   private int payloadLen = 0;
 
-  private String filePath;
-  private SideType side;
-  private List<ASTFCmd> commands;
   private boolean stream = true;
   private static BufferList bufList = new BufferList();
 
@@ -75,9 +71,6 @@ public class ASTFProgram {
    * @param stream
    */
   public ASTFProgram(String filePath, SideType side, List<ASTFCmd> commands, boolean stream) {
-    this.filePath = filePath;
-    this.side = side;
-    this.commands = commands;
     this.stream = stream;
     fields.put(COMMANDS, new ArrayList<ASTFCmd>());
     if (filePath != null) {
@@ -96,21 +89,17 @@ public class ASTFProgram {
     }
   }
 
-  private void createCmdFromCap(
-      boolean isTcp,
-      List<CPacketData> cmds,
-      List<Double> times,
-      List<SideType> dirs,
-      SideType initSide) {
+  private void createCmdFromCap(boolean isTcp, List<CPacketData> cmds, List<Double> times,
+      List<SideType> dirs, SideType initSide) {
     if (cmds.size() != dirs.size()) {
       throw new IllegalStateException(
           String.format("cmds size %s is not equal to dirs size %s", cmds.size(), dirs.size()));
     }
-    if (cmds.size() == 0) {
+    if (cmds.isEmpty()) {
       return;
     }
 
-    List<ASTFCmd> newCmds = new ArrayList();
+    List<ASTFCmd> newCmds = new ArrayList<>();
     int totRcvBytes = 0;
     boolean rx = false;
     int maxDelay = 0;
@@ -121,7 +110,7 @@ public class ASTFProgram {
         newCmds.add(new ASTFCmdConnect());
       }
 
-      ASTFCmd newCmd = null;
+      ASTFCmd newCmd;
       for (int i = 0; i < cmds.size(); i++) {
         SideType dir = dirs.get(i);
         CPacketData cmd = cmds.get(i);
@@ -143,7 +132,6 @@ public class ASTFProgram {
       SideType lastDir = null;
       for (int i = 0; i < cmds.size(); i++) {
         SideType dir = dirs.get(i);
-        CPacketData cmd = cmds.get(i);
         Double time = times.get(i);
 
         if (dir == initSide) {
@@ -208,7 +196,7 @@ public class ASTFProgram {
    * @param progS AstfProgram server
    */
   public void updateKeepAlive(ASTFProgram progS) {
-    if (fields.get(COMMANDS).size() > 0) {
+    if (!fields.get(COMMANDS).isEmpty()) {
       ASTFCmd cmd = fields.get(COMMANDS).get(0);
       if (cmd instanceof ASTFCmdKeepaliveMsg) {
         progS.fields.get(COMMANDS).add(0, cmd);
@@ -246,14 +234,18 @@ public class ASTFProgram {
    * send (l7_buffer) over TCP and wait for the buffer to be acked by peer. Rx side could work in
    * parallel
    *
-   * <p>example1 send (buffer1) send (buffer2)
+   * <p>
+   * example1 send (buffer1) send (buffer2)
    *
-   * <p>Will behave differently than
+   * <p>
+   * Will behave differently than
    *
-   * <p>example1 send (buffer1+ buffer2)
+   * <p>
+   * example1 send (buffer1+ buffer2)
    *
-   * <p>in the first example there would be PUSH in the last byte of the buffer and immediate ACK
-   * from peer while in the last example the buffer will be sent together (might be one segment)
+   * <p>
+   * in the first example there would be PUSH in the last byte of the buffer and immediate ACK from
+   * peer while in the last example the buffer will be sent together (might be one segment)
    *
    * @param buf l7 stream as string
    */
@@ -292,7 +284,8 @@ public class ASTFProgram {
    * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk. This is
    * a utility command that works on top of send/delay command
    *
-   * <p>example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
+   * <p>
+   * example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
    * 10usec
    *
    * @param l7Buf l7 stream as string
@@ -528,10 +521,9 @@ public class ASTFProgram {
     int i = 0;
     for (ASTFCmd cmd : fields.get(COMMANDS)) {
       if (null != cmd.isStream() && cmd.isStream() != this.stream) {
-        throw new IllegalStateException(
-            String.format(
-                " Command %s stream mode is %s and different from the flow stream mode %s",
-                cmd.getName(), cmd.isStream(), this.stream));
+        throw new IllegalStateException(String.format(
+            " Command %s stream mode is %s and different from the flow stream mode %s",
+            cmd.getName(), cmd.isStream(), this.stream));
       }
       if (cmd instanceof ASTFCmdJmpnz) {
         ASTFCmdJmpnz cmdJmpnz = (ASTFCmdJmpnz) cmd;
@@ -562,7 +554,7 @@ public class ASTFProgram {
 
   /** cached Buffer class for inner use */
   static class BufferList {
-    List<String> bufList = new ArrayList<>();
+    List<String> list = new ArrayList<>();
     Map<String, Integer> bufHash = new HashMap<>();
 
     /**
@@ -571,7 +563,7 @@ public class ASTFProgram {
      * @return buf list length
      */
     public int getLen() {
-      return bufList.size();
+      return list.size();
     }
 
     /**
@@ -585,10 +577,28 @@ public class ASTFProgram {
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
       }
-      bufList.add(base64Buf);
-      int newIndex = bufList.size() - 1;
+      list.add(base64Buf);
+      int newIndex = list.size() - 1;
       bufHash.put(sha256Buf, newIndex);
       return newIndex;
+    }
+
+    /**
+     * @param buf should be base64 encode string
+     * @return Hex string of the sha256 encode buf
+     */
+    private static String encodeSha256(String buf) {
+      try {
+        MessageDigest sha256 = MessageDigest.getInstance("MD5");
+        byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashInBytes) {
+          sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+      } catch (NoSuchAlgorithmException e) {
+        throw new IllegalStateException("Could not generate MD5", e);
+      }
     }
 
     /**
@@ -598,35 +608,16 @@ public class ASTFProgram {
      */
     public JsonArray toJson() {
       JsonArray jsonArray = new JsonArray();
-      for (String buf : bufList) {
+      for (String buf : list) {
         jsonArray.add(buf);
       }
       return jsonArray;
     }
   }
 
-  /**
-   * @param buf should be base64 encode string
-   * @return Hex string of the sha256 encode buf
-   */
-  private static String encodeSha256(String buf) {
-    try {
-      MessageDigest sha256 = MessageDigest.getInstance("MD5");
-      byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
-      StringBuilder sb = new StringBuilder();
-      for (byte b : hashInBytes) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("Could not generate MD5", e);
-    }
-  }
-
   /** Side type */
   public enum SideType {
-    Client("client"),
-    Server("server");
+    Client("client"), Server("server");
 
     String type;
 

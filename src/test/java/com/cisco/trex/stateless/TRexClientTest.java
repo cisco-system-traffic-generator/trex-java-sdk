@@ -1,12 +1,6 @@
 package com.cisco.trex.stateless;
 
 import static org.junit.Assert.assertTrue;
-
-import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.RPCResponse;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,6 +13,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import com.cisco.trex.stateless.exception.TRexConnectionException;
+import com.cisco.trex.stateless.model.RPCResponse;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SuppressWarnings("javadoc")
 public class TRexClientTest {
@@ -29,19 +28,9 @@ public class TRexClientTest {
 
   private static final String PORT_STATUS =
       "[{\"id\":1113911190,\"jsonrpc\":\"2.0\",\"result\":{\"attr\":{\"fc\":{\"mode\":0},\"layer_cfg\":{\"ether\":{\"dst\":\"00:00:00:00:00:00\",\"src\":\"08:00:27:1a:58:90\",\"state\":\"unconfigured\"},\"ipv4\":{\"state\":\"none\"},\"ipv6\":{\"enabled\":false}},\"link\":{\"up\":true},\"multicast\":{\"enabled\":false},\"promiscuous\":{\"enabled\":false},\"rx_filter_mode\":\"hw\",\"speed\":1.0,\"vlan\":{\"tags\":[]},\"vxlan_fs\":[]},\"max_stream_id\":0,\"owner\":\"\",\"profile_count\":1,\"rx_info\":{\"capture_port\":{\"is_active\":false},\"capwap_proxy\":{\"is_active\":false},\"grat_arp\":{\"is_active\":false},\"latency\":{\"is_active\":false},\"queue\":{\"is_active\":false},\"stack\":{\"is_active\":true}},\"service\":false,\"state\":\"IDLE\"}}]";
-  private static final String[] SET_VALUES =
-      new String[] {
-        "api_sync_v2",
-        "get_supported_cmds",
-        "acquire",
-        "get_port_status",
-        "get_profile_list",
-        "get_all_streams",
-        "start_traffic",
-        "stop_traffic",
-        "remove_all_streams",
-        "release"
-      };
+  private static final String[] SET_VALUES = new String[] {"api_sync_v2", "get_supported_cmds",
+      "acquire", "get_port_status", "get_profile_list", "get_all_streams", "start_traffic",
+      "stop_traffic", "remove_all_streams", "release"};
   private static final Set<String> SUPPORTED_COMMANDS = new HashSet<>(Arrays.asList(SET_VALUES));
 
   @BeforeClass
@@ -75,10 +64,9 @@ public class TRexClientTest {
   public void serverAPISyncTest()
       throws TRexConnectionException, JsonParseException, JsonMappingException, IOException {
     ObjectMapper objectMapper = new ObjectMapper();
-    RPCResponse[] response =
-        objectMapper.readValue(
-            "[{\"id\":1417504019,\"jsonrpc\":\"2.0\",\"result\":{\"api_h\":\"8jNorAXh\"}}]",
-            RPCResponse[].class);
+    RPCResponse[] response = objectMapper.readValue(
+        "[{\"id\":1417504019,\"jsonrpc\":\"2.0\",\"result\":{\"api_h\":\"8jNorAXh\"}}]",
+        RPCResponse[].class);
     Mockito.when(transport.sendCommand(ArgumentMatchers.any(TRexCommand.class)))
         .thenReturn(response[0]);
 
@@ -88,9 +76,8 @@ public class TRexClientTest {
   @Test(expected = TRexConnectionException.class)
   public void serverAPISyncExceptionTest()
       throws TRexConnectionException, JsonParseException, JsonMappingException, IOException {
-    RPCResponse[] response =
-        OBJECT_MAPPER.readValue(
-            "[{\"id\":1417504019,\"jsonrpc\":\"2.0\",\"result\":null}]", RPCResponse[].class);
+    RPCResponse[] response = OBJECT_MAPPER.readValue(
+        "[{\"id\":1417504019,\"jsonrpc\":\"2.0\",\"result\":null}]", RPCResponse[].class);
     Mockito.when(transport.sendCommand(ArgumentMatchers.any(TRexCommand.class)))
         .thenReturn(response[0]);
 
@@ -157,9 +144,8 @@ public class TRexClientTest {
    */
   @Test
   public void getAllStreamsTest() {
-    Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"get_all_streams\"")))
-        .thenReturn(
-            "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{\"streams\":{\"131040989\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":131040989},\"id\":131040989,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":131040989},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}},\"1360153259\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":1360153259},\"id\":1360153259,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":1360153259},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}}}}}]");
+    Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"get_all_streams\""))).thenReturn(
+        "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{\"streams\":{\"131040989\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":131040989},\"id\":131040989,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":131040989},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}},\"1360153259\":{\"action_count\":0,\"core_id\":-1,\"enabled\":true,\"flags\":3,\"flow_stats\":{\"enabled\":false,\"rule_type\":\"stats\",\"stream_id\":1360153259},\"id\":1360153259,\"isg\":0.0,\"mode\":{\"count\":0,\"ibg\":0.0,\"pkts_per_burst\":0,\"rate\":{\"type\":\"pps\",\"value\":1.0},\"total_pkts\":0,\"type\":\"continuous\"},\"next_stream_id\":-1,\"packet\":{\"binary\":\"////////AFBWlCHfCAYAAQgABgQAAQBQVpQh38CoCRv////////AqAkcAAAAAAAAAAAAAAAAAAAAAAAA\",\"meta\":\"\"},\"random_seed\":0,\"rx_stats\":{\"enabled\":true,\"latency_enabled\":true,\"seq_enabled\":true,\"stream_id\":1360153259},\"self_start\":true,\"vm\":{\"instructions\":[],\"split_by_var\":\"\"}}}}}]");
 
     client.getAllStreams(0);
   }
@@ -176,9 +162,8 @@ public class TRexClientTest {
     mul.put("op", "abs");
     mul.put("type", "pps");
     mul.put("value", 1.0);
-    Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"start_traffic\"")))
-        .thenReturn(
-            "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{\"multiplier\":1.0,\"ts\":1924.383710379147}}]");
+    Mockito.when(transport.sendJson(ArgumentMatchers.contains("\"start_traffic\""))).thenReturn(
+        "[{\"id\":\"aggogxls\",\"jsonrpc\":\"2.0\",\"result\":{\"multiplier\":1.0,\"ts\":1924.383710379147}}]");
 
     client.startTraffic(0, -1, true, mul, 0);
   }

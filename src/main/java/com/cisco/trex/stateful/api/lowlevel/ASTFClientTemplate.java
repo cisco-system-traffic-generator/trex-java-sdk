@@ -9,7 +9,6 @@ import com.google.gson.JsonObject;
 abstract class ASTFClientTemplate extends ASTFTemplateBase {
   private ASTFCluster astfCluster;
   private ASTFIpGen iPGen;
-  private ASTFProgram astfProgram;
 
   /**
    * construct
@@ -22,7 +21,6 @@ abstract class ASTFClientTemplate extends ASTFTemplateBase {
     super(astfProgram);
     this.iPGen = iPGen;
     this.astfCluster = astfCluster == null ? new ASTFCluster() : astfCluster;
-    this.astfProgram = astfProgram;
   }
 
   /**

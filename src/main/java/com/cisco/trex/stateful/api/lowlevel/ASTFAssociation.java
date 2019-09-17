@@ -1,8 +1,8 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-import com.google.gson.JsonArray;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.gson.JsonArray;
 
 /** Java implementation for TRex python sdk ASTFAssociation class */
 public class ASTFAssociation {
@@ -24,7 +24,7 @@ public class ASTFAssociation {
    * @param astfAssociationRule
    */
   public ASTFAssociation(ASTFAssociationRule astfAssociationRule) {
-    astfAssociationRuleList = new ArrayList();
+    astfAssociationRuleList = new ArrayList<>();
     astfAssociationRuleList.add(astfAssociationRule);
   }
 
@@ -48,9 +48,8 @@ public class ASTFAssociation {
    */
   public int getPort() {
     if (astfAssociationRuleList.size() != 1) {
-      throw new IllegalStateException(
-          String.format(
-              "rule list size should be 1, but it's %s now", astfAssociationRuleList.size()));
+      throw new IllegalStateException(String.format("rule list size should be 1, but it's %s now",
+          astfAssociationRuleList.size()));
     }
     return astfAssociationRuleList.get(0).getPort();
   }
