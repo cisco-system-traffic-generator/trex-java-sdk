@@ -49,13 +49,34 @@ task writePom {
     doLast {
         pom {
             project {
+                name 'TRex Java Sdk'
+                packaging 'jar'
             	artifactId 'trex-java-sdk'
+            	description 'Java client SDK provides an implementation for TRex RPC APIs'
+                url 'https://github.com/cisco-system-traffic-generator/trex-java-sdk'
                 licenses {
                     license {
                         name 'The Apache Software License, Version 2.0'
                         url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
                 }
+                
+                scm {
+		          connection 'scm:git:git://github.com/cisco-system-traffic-generator/trex-java-sdk.git'
+		          developerConnection 'scm:git:ssh://github.com:cisco-system-traffic-generator/trex-java-sdk.git'
+		          url 'https://github.com/cisco-system-traffic-generator/trex-java-sdk'
+		        }
+		        
+		        developers {
+		          developer {
+		            name 'Leo Ma'
+		            email 'leo.ma@ericsson.com'
+		          }
+		          developer {
+		            name 'Emil Gustafsson'
+		            email 'emil.gustafsson@ericsson.com'
+		          }
+        		}
             }
         }.writeTo("pom.xml")
     }
