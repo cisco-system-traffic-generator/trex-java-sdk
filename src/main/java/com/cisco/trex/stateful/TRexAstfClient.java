@@ -1,6 +1,7 @@
 package com.cisco.trex.stateful;
 
 import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateful.model.ServerStatus;
 import com.cisco.trex.stateful.model.stats.AstfStatistics;
 import com.cisco.trex.stateful.model.stats.LatencyPortData;
 import com.cisco.trex.stateful.model.stats.LatencyStats;
@@ -456,6 +457,16 @@ public class TRexAstfClient extends ClientBase {
         });
 
     return stats;
+  }
+  
+  /**
+   * get template group statistics
+   *
+   * @return Map key:tgName, value:AstfStatistics
+   */
+  public ServerStatus syncWithServer() {
+  	Map<String, Object> payload = createPayload("*");
+    return callMethod("sync", payload, ServerStatus.class).get();
   }
 
   /**
