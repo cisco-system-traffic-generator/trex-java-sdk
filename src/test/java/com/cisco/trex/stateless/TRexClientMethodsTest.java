@@ -21,7 +21,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 @SuppressWarnings("javadoc")
-public class TRexClientTest {
+public class TRexClientMethodsTest {
 
   private static TRexTransport transport = Mockito.mock(TRexTransport.class);
   private static TRexClient client;
