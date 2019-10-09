@@ -458,14 +458,14 @@ public class TRexAstfClient extends ClientBase {
 
     return stats;
   }
-  
+
   /**
    * get template group statistics
    *
    * @return Map key:tgName, value:AstfStatistics
    */
   public ServerStatus syncWithServer() {
-  	Map<String, Object> payload = createPayload("*");
+    Map<String, Object> payload = createPayload("*");
     return callMethod("sync", payload, ServerStatus.class).get();
   }
 
