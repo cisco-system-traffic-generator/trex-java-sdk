@@ -1,8 +1,24 @@
 group 'com.cisco.trex'
 
+ext {
+    projectName = "TRex Java Sdk"
+	projectDescription = "Java client SDK provides an implementation for TRex RPC APIs"
+	projectUrl = "https://github.com/cisco-system-traffic-generator/trex-java-sdk"
+	licenseName = "The Apache Software License, Version 2.0"
+	licenseUrl = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+	scmConnection = "scm:git:git://github.com/cisco-system-traffic-generator/trex-java-sdk.git"
+	scmDeveloperConnection = "scm:git:ssh://github.com:cisco-system-traffic-generator/trex-java-sdk.git"
+	scmUrl = "https://github.com/cisco-system-traffic-generator/trex-java-sdk"
+	develop1Name = "Leo Ma"
+	develop1Mail = "leo.ma@ericsson.com"
+	develop2Name = "Emil Gustafsson"
+	develop2Mail = "emil.gustafsson@ericsson.com"
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'com.github.sherter.google-java-format'
+apply plugin: 'signing'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -49,32 +65,31 @@ task writePom {
     doLast {
         pom {
             project {
-                name 'TRex Java Sdk'
+                name projectName
                 packaging 'jar'
-            	artifactId 'trex-java-sdk'
-            	description 'Java client SDK provides an implementation for TRex RPC APIs'
-                url 'https://github.com/cisco-system-traffic-generator/trex-java-sdk'
+            	description projectDescription
+                url projectUrl
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name licenseName
+                        url licenseUrl
                     }
                 }
                 
                 scm {
-		          connection 'scm:git:git://github.com/cisco-system-traffic-generator/trex-java-sdk.git'
-		          developerConnection 'scm:git:ssh://github.com:cisco-system-traffic-generator/trex-java-sdk.git'
-		          url 'https://github.com/cisco-system-traffic-generator/trex-java-sdk'
+		          connection scmConnection
+		          developerConnection scmDeveloperConnection
+		          url scmUrl
 		        }
 		        
 		        developers {
 		          developer {
-		            name 'Leo Ma'
-		            email 'leo.ma@ericsson.com'
+		            name develop1Name
+		            email develop1Mail
 		          }
 		          developer {
-		            name 'Emil Gustafsson'
-		            email 'emil.gustafsson@ericsson.com'
+		            name develop2Name
+		            email develop2Mail
 		          }
         		}
             }
@@ -108,7 +123,11 @@ task jarWithDependencies(type: Jar) {
 }
 
 artifacts {
-  archives javadocJar, sourcesJar, jarWithDependencies
+  archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
 }
 
 test {
@@ -131,4 +150,46 @@ task e2eTest(type: Test) {
             exceptionFormat "full"
         }
     }
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+    	beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+    	
+      	repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        	authentication(userName: ossrhUsername, password: ossrhPassword)
+      	}
+      	
+      	pom.project {
+	    	name projectName
+	        packaging 'jar'
+	    	description projectDescription
+	        url projectUrl
+	        licenses {
+	            license {
+	                name licenseName
+	                url licenseUrl
+	            }
+	        }
+	        
+	        scm {
+	          connection scmConnection
+	          developerConnection scmDeveloperConnection
+	          url scmUrl
+	        }
+	        
+	        developers {
+	          developer {
+	            name develop1Name
+	            email develop1Mail
+	          }
+	          developer {
+	            name develop2Name
+	            email develop2Mail
+	          }
+			}
+	    }
+    }
+  }
 }
