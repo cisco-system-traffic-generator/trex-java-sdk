@@ -8,7 +8,7 @@ notifications:
 
 before_deploy:
   - ./gradlew clean
-  - ./gradlew -Pversion=${TRAVIS_TAG:1} assemble
+  - ./gradlew -Pversion=${TRAVIS_TAG:1} assemble -x signArchives
   - cp pom.xml build/libs/trex-java-sdk-${TRAVIS_TAG:1}.pom
   
 deploy:
