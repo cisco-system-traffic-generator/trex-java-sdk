@@ -193,3 +193,6 @@ uploadArchives {
     }
   }
 }
+
+//disable signArchives in build due to no GPG key properties is configured in gradle.properties
+signArchives.enabled = false
