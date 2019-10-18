@@ -388,11 +388,21 @@ public class TRexClient extends ClientBase {
   }
 
   public String resolveArp(int portIndex, String srcIp, String dstIp) {
+    String srcMac = getPortByIndex(portIndex).hw_mac;
+    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+    return resolveArp(portIndex, vlan, srcIp, srcMac, dstIp);
+  }
+
+  public String resolveArp(int portIndex, String srcIp, String srcMac, String dstIp) {
+    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+    return resolveArp(portIndex, vlan, srcIp, srcMac, dstIp);
+  }
+
+  public String resolveArp(
+      int portIndex, PortVlan vlan, String srcIp, String srcMac, String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
-    String srcMac = getPortByIndex(portIndex).hw_mac;
-    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
     EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
     sendPacket(portIndex, pkt);
 
