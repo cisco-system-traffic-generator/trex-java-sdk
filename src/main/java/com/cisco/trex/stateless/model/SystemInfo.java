@@ -28,4 +28,24 @@ public class SystemInfo {
   public List<Port> getPorts() {
     return ports;
   }
+
+  public String getCoreType() {
+    return core_type;
+  }
+
+  public String getHostname() {
+    return hostname;
+  }
+
+  public int getCoreCount() {
+    return dp_core_count;
+  }
+
+  public int getCoreCountPerPort() {
+    return dp_core_count_per_port;
+  }
+
+  public int getPortCount() {
+    return port_count;
+  }
 }
