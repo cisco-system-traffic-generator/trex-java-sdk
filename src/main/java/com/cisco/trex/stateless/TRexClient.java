@@ -347,10 +347,7 @@ public class TRexClient extends ClientBase {
     callMethod("set_rx_feature", payload);
   }
   
-  /**
-   * Set promiscuous mode 
-   * Enable interface to receive packets from all mac addresses
-   */
+  /** Set promiscuous mode, Enable interface to receive packets from all mac addresses */
   public void setPromiscuousMode(int portIndex, boolean enabled) {
     Map<String, Object> payload = createPayload(portIndex);
     Map<String, Object> attributes = new HashMap<>();
@@ -361,10 +358,7 @@ public class TRexClient extends ClientBase {
     callMethod("set_port_attr", payload);
   }
 
-  /**
-   * Set flow control mode 
-   * Flow control: 0 = none, 1 = tx, 2 = rx, 3 = full
-   */
+  /** Set flow control mode, Flow control: 0 = none, 1 = tx, 2 = rx, 3 = full */
   public void setFlowControlMode(int portIndex, int mode) {
     Map<String, Object> payload = createPayload(portIndex);
     Map<String, Object> attributes = new HashMap<>();
