@@ -346,7 +346,7 @@ public class TRexClient extends ClientBase {
     payload.put("enabled", false);
     callMethod("set_rx_feature", payload);
   }
-  
+
   /** Set promiscuous mode, Enable interface to receive packets from all mac addresses */
   public void setPromiscuousMode(int portIndex, boolean enabled) {
     Map<String, Object> payload = createPayload(portIndex);
