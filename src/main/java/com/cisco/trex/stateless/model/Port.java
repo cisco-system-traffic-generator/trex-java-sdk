@@ -19,8 +19,28 @@ public class Port {
   public String src_macaddr;
   public List<Integer> supp_speeds;
 
+  public String getDescription() {
+    return description;
+  }
+
+  public String getDriver() {
+    return driver;
+  }
+
+  public String getHwMac() {
+    return hw_mac;
+  }
+
+  public String getDstMac() {
+    return dst_macaddr;
+  }
+
   public int getIndex() {
     return index;
+  }
+
+  public List<Integer> getSupportedSpeeds() {
+    return supp_speeds;
   }
 
   class RxStats {
