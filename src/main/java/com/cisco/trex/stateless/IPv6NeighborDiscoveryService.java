@@ -172,8 +172,12 @@ public class IPv6NeighborDiscoveryService {
     return icmpUnicastReply;
   }
 
-  public EthernetPacket sendNeighborSolicitation(int portIdx, int timeout, String dstIp) {
+  public EthernetPacket sendNeighborSolicitation(int portIdx, int timeout, String dstIp)
+      throws ServiceModeRequiredException {
     PortStatus portStatus = tRexClient.getPortStatus(portIdx).get();
+    if (!portStatus.getService()) {
+      throw new ServiceModeRequiredException();
+    }
     String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
     return sendNeighborSolicitation(portIdx, timeout, srcMac, dstIp);
   }
