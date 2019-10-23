@@ -49,7 +49,6 @@ import org.pcap4j.util.MacAddress;
 public class IPv6NeighborDiscoveryService {
 
   private TRexClient tRexClient;
-  private String srcMac;
 
   public IPv6NeighborDiscoveryService(TRexClient tRexClient) {
     this.tRexClient = tRexClient;
@@ -67,7 +66,7 @@ public class IPv6NeighborDiscoveryService {
       throw new ServiceModeRequiredException();
     }
 
-    srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
+    String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
 
     Packet pingPkt =
         buildICMPV6EchoReq(
@@ -92,8 +91,8 @@ public class IPv6NeighborDiscoveryService {
                 String nodeIp = ipV6Packet.getHeader().getSrcAddr().toString().substring(1);
                 String nodeMac = getLinkLayerAddress(ipV6Packet);
 
-                nsNaStreams.add(buildStream(buildICMPV6NSPkt(nodeMac, nodeIp, srcIP)));
-                nsNaStreams.add(buildStream(buildICMPV6NAPkt(nodeMac, nodeIp, srcIP)));
+                nsNaStreams.add(buildStream(buildICMPV6NSPkt(srcMac, nodeMac, nodeIp, srcIP)));
+                nsNaStreams.add(buildStream(buildICMPV6NAPkt(srcMac, nodeMac, nodeIp, srcIP)));
               });
     }
 
@@ -134,8 +133,15 @@ public class IPv6NeighborDiscoveryService {
 
   public EthernetPacket sendIcmpV6Echo(
       int portIdx, String dstIp, int icmpId, int icmpSeq, int timeOut) {
+    PortStatus portStatus = tRexClient.getPortStatus(portIdx).get();
+    String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
+    return sendIcmpV6Echo(portIdx, srcMac, dstIp, icmpId, icmpSeq, timeOut);
+  }
+
+  public EthernetPacket sendIcmpV6Echo(
+      int portIdx, String srcMac, String dstIp, int icmpId, int icmpSeq, int timeOut) {
     Map<String, EthernetPacket> stringEthernetPacketMap =
-        sendNSandIcmpV6Req(portIdx, timeOut, dstIp);
+        sendNSandIcmpV6Req(portIdx, timeOut, srcMac, dstIp);
 
     Optional<Map.Entry<String, EthernetPacket>> icmpMulticastResponse =
         stringEthernetPacketMap.entrySet().stream().findFirst();
@@ -167,12 +173,17 @@ public class IPv6NeighborDiscoveryService {
   }
 
   public EthernetPacket sendNeighborSolicitation(int portIdx, int timeout, String dstIp) {
-    long endTs = System.currentTimeMillis() + timeout * 1000;
     PortStatus portStatus = tRexClient.getPortStatus(portIdx).get();
+    String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
+    return sendNeighborSolicitation(portIdx, timeout, srcMac, dstIp);
+  }
 
-    srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
+  public EthernetPacket sendNeighborSolicitation(
+      int portIdx, int timeout, String srcMac, String dstIp) {
+    long endTs = System.currentTimeMillis() + timeout * 1000;
 
-    Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp, null);
+    Packet icmpv6NSPkt =
+        buildICMPV6NSPkt(srcMac, multicastMacFromIPv6(dstIp).toString(), dstIp, null);
 
     tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
@@ -221,15 +232,13 @@ public class IPv6NeighborDiscoveryService {
   }
 
   private Map<String, EthernetPacket> sendNSandIcmpV6Req(
-      int portIdx, int timeDuration, String dstIp) {
+      int portIdx, int timeDuration, String srcMac, String dstIp) {
     long endTs = System.currentTimeMillis() + timeDuration * 1000;
     TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
-    PortStatus portStatus = portStatusResult.get();
-
-    srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
 
     Packet pingPkt = buildICMPV6EchoReq(null, srcMac, null, dstIp);
-    Packet icmpv6NSPkt = buildICMPV6NSPkt(multicastMacFromIPv6(dstIp).toString(), dstIp, null);
+    Packet icmpv6NSPkt =
+        buildICMPV6NSPkt(srcMac, multicastMacFromIPv6(dstIp).toString(), dstIp, null);
 
     List<com.cisco.trex.stateless.model.Stream> stlStreams =
         Stream.of(buildStream(pingPkt), buildStream(icmpv6NSPkt)).collect(Collectors.toList());
@@ -300,7 +309,7 @@ public class IPv6NeighborDiscoveryService {
         null);
   }
 
-  private Packet buildICMPV6NSPkt(String dstMac, String dstIp, String srcIp) {
+  private Packet buildICMPV6NSPkt(String srcMac, String dstMac, String dstIp, String srcIp) {
     EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
     try {
 
@@ -379,7 +388,7 @@ public class IPv6NeighborDiscoveryService {
     return ByteArrays.toHexString(linkLayerAddress, ":");
   }
 
-  private Packet buildICMPV6NAPkt(String dstMac, String dstIp, String srcIP) {
+  private Packet buildICMPV6NAPkt(String srcMac, String dstMac, String dstIp, String srcIP) {
     final String specifiedSrcIP = srcIP != null ? srcIP : generateIPv6AddrFromMAC(srcMac);
 
     EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
