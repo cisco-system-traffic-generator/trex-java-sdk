@@ -599,12 +599,26 @@ public class TRexClient extends ClientBase {
         -1);
   }
 
-  public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
+  public String resolveIpv6(int portIndex, String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
     EthernetPacket naPacket =
         new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
+    if (naPacket != null) {
+      return naPacket.getHeader().getSrcAddr().toString();
+    }
+
+    return null;
+  }
+
+  public String resolveIpv6(int portIndex, String srcMac, String dstIp) {
+    removeRxQueue(portIndex);
+    setRxQueue(portIndex, 1000);
+
+    EthernetPacket naPacket =
+        new IPv6NeighborDiscoveryService(this)
+            .sendNeighborSolicitation(portIndex, 5, srcMac, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }
@@ -687,7 +701,7 @@ public class TRexClient extends ClientBase {
   }
 
   // TODO: move to upper layer
-  private EthernetPacket buildIcmpV4Request(
+  private static EthernetPacket buildIcmpV4Request(
       String srcMac, String dstMac, String srcIp, String dstIp, int reqId, int seqNumber)
       throws UnknownHostException {
 
@@ -745,8 +759,7 @@ public class TRexClient extends ClientBase {
   }
 
   public EthernetPacket sendIcmpV6Echo(
-      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut)
-      throws ServiceModeRequiredException {
+      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) {
     return new IPv6NeighborDiscoveryService(this)
         .sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
   }
