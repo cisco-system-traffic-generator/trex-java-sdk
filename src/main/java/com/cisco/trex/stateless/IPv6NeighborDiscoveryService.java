@@ -141,7 +141,7 @@ public class IPv6NeighborDiscoveryService {
   public EthernetPacket sendIcmpV6Echo(
       int portIdx, String srcMac, String dstIp, int icmpId, int icmpSeq, int timeOut) {
     Map<String, EthernetPacket> stringEthernetPacketMap =
-        sendNSandIcmpV6Req(portIdx, timeOut, dstIp);
+        sendNSandIcmpV6Req(portIdx, timeOut, srcMac, dstIp);
 
     Optional<Map.Entry<String, EthernetPacket>> icmpMulticastResponse =
         stringEthernetPacketMap.entrySet().stream().findFirst();
@@ -232,12 +232,9 @@ public class IPv6NeighborDiscoveryService {
   }
 
   private Map<String, EthernetPacket> sendNSandIcmpV6Req(
-      int portIdx, int timeDuration, String dstIp) {
+      int portIdx, int timeDuration, String srcMac, String dstIp) {
     long endTs = System.currentTimeMillis() + timeDuration * 1000;
     TRexClientResult<PortStatus> portStatusResult = tRexClient.getPortStatus(portIdx);
-    PortStatus portStatus = portStatusResult.get();
-
-    String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
 
     Packet pingPkt = buildICMPV6EchoReq(null, srcMac, null, dstIp);
     Packet icmpv6NSPkt =
