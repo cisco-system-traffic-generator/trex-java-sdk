@@ -599,7 +599,7 @@ public class TRexClient extends ClientBase {
         -1);
   }
 
-  public String resolveIpv6(int portIndex, String dstIp) {
+  public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
