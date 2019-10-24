@@ -612,13 +612,14 @@ public class TRexClient extends ClientBase {
     return null;
   }
 
-  public String resolveIpv6(int portIndex, String srcMac, String dstIp) {
+  public String resolveIpv6(
+      PortVlan vlan, int portIndex, String srcMac, String srcIp, String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
     EthernetPacket naPacket =
         new IPv6NeighborDiscoveryService(this)
-            .sendNeighborSolicitation(portIndex, 5, srcMac, dstIp);
+            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, srcIp, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }
