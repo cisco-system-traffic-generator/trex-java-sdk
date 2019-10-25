@@ -14,6 +14,7 @@ import com.cisco.trex.stateless.model.port.PortVlan;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -173,7 +174,7 @@ public class IPv6NeighborDiscoveryService {
       while (endTimeSec > System.currentTimeMillis()) {
         List<EthernetPacket> rxQueue =
             tRexClient.getRxQueue(portIdx, pkt -> pkt.contains(IcmpV6EchoReplyPacket.class));
-        if (rxQueue.size() > 0) {
+        if (!rxQueue.isEmpty()) {
           icmpUnicastReply = rxQueue.get(0);
         }
       }
@@ -221,19 +222,18 @@ public class IPv6NeighborDiscoveryService {
           String dstAddr = ipV6Header.getDstAddr().toString().substring(1);
 
           try {
-            Inet6Address dstIPv6Addr = (Inet6Address) Inet6Address.getByName(dstAddr);
+            Inet6Address dstIPv6Addr = (Inet6Address) InetAddress.getByName(dstAddr);
             Inet6Address srcIPv6Addr =
-                (Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac));
+                (Inet6Address) InetAddress.getByName(generateIPv6AddrFromMAC(srcMac));
 
-            Inet6Address nodeIpv6 = (Inet6Address) Inet6Address.getByName(nodeIp);
-            Inet6Address targetIpv6inNS = (Inet6Address) Inet6Address.getByName(dstIp);
+            Inet6Address nodeIpv6 = (Inet6Address) InetAddress.getByName(nodeIp);
+            Inet6Address targetIpv6inNS = (Inet6Address) InetAddress.getByName(dstIp);
             return icmpV6NaHdr.getSolicitedFlag()
                 && nodeIpv6.equals(targetIpv6inNS)
                 && dstIPv6Addr.equals(srcIPv6Addr);
-          } catch (UnknownHostException ignored) {
-            // Do nothing
+          } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid address", e);
           }
-          return false;
         };
 
     EthernetPacket na = null;
@@ -312,14 +312,13 @@ public class IPv6NeighborDiscoveryService {
           String dstAddr = ipV6Header.getDstAddr().toString().substring(1);
 
           try {
-            Inet6Address dstIPv6Addr = (Inet6Address) Inet6Address.getByName(dstAddr);
+            Inet6Address dstIPv6Addr = (Inet6Address) InetAddress.getByName(dstAddr);
             Inet6Address srcIPv6Addr =
-                (Inet6Address) Inet6Address.getByName(generateIPv6AddrFromMAC(srcMac));
+                (Inet6Address) InetAddress.getByName(generateIPv6AddrFromMAC(srcMac));
             return !naIncomingRequests.containsKey(nodeIp) && dstIPv6Addr.equals(srcIPv6Addr);
-          } catch (UnknownHostException ignored) {
-            // Do nothing
+          } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid address", e);
           }
-          return false;
         };
 
     while (endTs > System.currentTimeMillis()) {
@@ -337,7 +336,7 @@ public class IPv6NeighborDiscoveryService {
     return naIncomingRequests;
   }
 
-  private com.cisco.trex.stateless.model.Stream buildStream(Packet pkt) {
+  private static com.cisco.trex.stateless.model.Stream buildStream(Packet pkt) {
     int streamId = (int) (Math.random() * 1000);
     return new com.cisco.trex.stateless.model.Stream(
         streamId,
@@ -360,7 +359,7 @@ public class IPv6NeighborDiscoveryService {
         null);
   }
 
-  private Packet buildICMPV6NSPkt(
+  private static Packet buildICMPV6NSPkt(
       PortVlan vlan, String srcMac, String dstMac, String dstIp, String srcIp) {
     EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
     try {
@@ -375,14 +374,14 @@ public class IPv6NeighborDiscoveryService {
           new IcmpV6NeighborSolicitationPacket.Builder();
       ipv6NSBuilder
           .options(Arrays.asList(sourceLLAddr))
-          .targetAddress((Inet6Address) Inet6Address.getByName(dstIp));
+          .targetAddress((Inet6Address) InetAddress.getByName(dstIp));
 
       final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMac);
 
       IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
       icmpCommonPktBuilder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
+          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
           .type(IcmpV6Type.NEIGHBOR_SOLICITATION)
           .code(IcmpV6Code.NO_CODE)
           .correctChecksumAtBuild(true)
@@ -390,8 +389,8 @@ public class IPv6NeighborDiscoveryService {
 
       IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
       ipV6Builder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
+          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
           .version(IpVersion.IPV6)
           .hopLimit((byte) -1)
           .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
@@ -413,8 +412,8 @@ public class IPv6NeighborDiscoveryService {
           .payloadBuilder(payload.getValue())
           .paddingAtBuild(true);
 
-    } catch (UnknownHostException ignored) {
-      // Do nothing
+    } catch (UnknownHostException e) {
+      throw new IllegalArgumentException("Invalid address", e);
     }
     return ethBuilder.build();
   }
@@ -447,7 +446,7 @@ public class IPv6NeighborDiscoveryService {
     return ByteArrays.toHexString(linkLayerAddress, ":");
   }
 
-  private Packet buildICMPV6NAPkt(
+  private static Packet buildICMPV6NAPkt(
       PortVlan vlan, String srcMac, String dstMac, String dstIp, String srcIP) {
     final String specifiedSrcIP = srcIP != null ? srcIP : generateIPv6AddrFromMAC(srcMac);
 
@@ -467,12 +466,12 @@ public class IPv6NeighborDiscoveryService {
           .options(Arrays.asList(tLLAddr))
           .solicitedFlag(true)
           .overrideFlag(true)
-          .targetAddress((Inet6Address) Inet6Address.getByName(specifiedSrcIP));
+          .targetAddress((Inet6Address) InetAddress.getByName(specifiedSrcIP));
 
       IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
       icmpCommonPktBuilder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
+          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
           .type(IcmpV6Type.NEIGHBOR_ADVERTISEMENT)
           .code(IcmpV6Code.NO_CODE)
           .correctChecksumAtBuild(true)
@@ -480,8 +479,8 @@ public class IPv6NeighborDiscoveryService {
 
       IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
       ipV6Builder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) Inet6Address.getByName(dstIp))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
+          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
           .version(IpVersion.IPV6)
           .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
           .flowLabel(IpV6SimpleFlowLabel.newInstance(0))
@@ -503,8 +502,8 @@ public class IPv6NeighborDiscoveryService {
           .payloadBuilder(payload.getValue())
           .paddingAtBuild(true);
 
-    } catch (UnknownHostException ignored) {
-      // Do nothing
+    } catch (UnknownHostException e) {
+      throw new IllegalArgumentException("Invalid address", e);
     }
 
     return ethBuilder.build();
@@ -521,6 +520,19 @@ public class IPv6NeighborDiscoveryService {
   }
 
   public static EthernetPacket buildICMPV6EchoReq(
+      String srcIp,
+      String srcMacString,
+      String dstMacString,
+      String dstIp,
+      int icmpId,
+      int icmpSeq) {
+    PortVlan vlan = new PortVlan();
+    vlan.setTags(new ArrayList<Integer>());
+    return buildICMPV6EchoReq(vlan, srcIp, srcMacString, dstMacString, dstIp, icmpId, icmpSeq);
+  }
+
+  public static EthernetPacket buildICMPV6EchoReq(
+      PortVlan vlan,
       String srcIp,
       String srcMacString,
       String dstMacString,
@@ -544,18 +556,18 @@ public class IPv6NeighborDiscoveryService {
     IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
     try {
       icmpCommonPktBuilder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
           .dstAddr(
-              (Inet6Address) Inet6Address.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
+              (Inet6Address) InetAddress.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
           .type(IcmpV6Type.ECHO_REQUEST)
           .code(IcmpV6Code.NO_CODE)
           .correctChecksumAtBuild(true)
           .payloadBuilder(icmpV6ERBuilder);
       IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
       ipV6Builder
-          .srcAddr((Inet6Address) Inet6Address.getByName(specifiedSrcIP))
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
           .dstAddr(
-              (Inet6Address) Inet6Address.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
+              (Inet6Address) InetAddress.getByName(dstIp != null ? dstIp : "ff02:0:0:0:0:0:0:1"))
           .version(IpVersion.IPV6)
           .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
           .flowLabel(IpV6SimpleFlowLabel.newInstance(0))
@@ -573,18 +585,24 @@ public class IPv6NeighborDiscoveryService {
       }
 
       EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
+      AbstractMap.SimpleEntry<EtherType, Packet.Builder> payload =
+          new AbstractMap.SimpleEntry<>(EtherType.IPV6, ipV6Builder);
+      if (!vlan.getTags().isEmpty()) {
+        payload = buildVlan(ipV6Builder, vlan);
+      }
+
       ethBuilder
-          .type(EtherType.IPV6)
           .srcAddr(MacAddress.getByName(srcMacString))
           .dstAddr(dstMac)
-          .payloadBuilder(ipV6Builder)
+          .dstAddr(dstMac)
+          .type(payload.getKey())
+          .payloadBuilder(payload.getValue())
           .paddingAtBuild(true);
 
       return ethBuilder.build();
-    } catch (UnknownHostException ignore) {
-      // Do nothing
+    } catch (UnknownHostException e) {
+      throw new IllegalArgumentException("Invalid address", e);
     }
-    return null;
   }
 
   public static EthernetPacket buildICMPV6EchoReq(
@@ -613,10 +631,8 @@ public class IPv6NeighborDiscoveryService {
 
   private static long[] divMod(long a, long b) {
     long[] result = new long[2];
-
     result[1] = a % b;
     result[0] = (a - result[1]) / b;
-
     return result;
   }
 
