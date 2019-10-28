@@ -387,10 +387,16 @@ public class IPv6NeighborDiscoveryService {
           .correctChecksumAtBuild(true)
           .payloadBuilder(ipv6NSBuilder);
 
+      // Calculate the Solicited-Node multicast address, RFC 4291 chapter 2.7.1
+      String[] destIpParts = dstIp.split(":");
+      String multicastIp =
+          String.format(
+              "FF02::1:FF%s:%s", destIpParts[6].substring(2, 4), destIpParts[7].substring(0, 4));
+
       IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
       ipV6Builder
           .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
+          .dstAddr((Inet6Address) InetAddress.getByName(multicastIp))
           .version(IpVersion.IPV6)
           .hopLimit((byte) -1)
           .trafficClass(IpV6SimpleTrafficClass.newInstance((byte) 0))
