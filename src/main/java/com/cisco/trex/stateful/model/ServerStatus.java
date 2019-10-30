@@ -29,7 +29,7 @@ public class ServerStatus {
   private int epoch;
 
   @JsonProperty("state")
-  private int state;
+  private State state;
 
   @JsonProperty("state_profile")
   private Map<String, State> stateProfile;
@@ -45,12 +45,12 @@ public class ServerStatus {
   }
 
   @JsonProperty("state")
-  public int getState() {
+  public State getState() {
     return state;
   }
 
   @JsonProperty("state")
-  public void setState(int state) {
+  public void setState(State state) {
     this.state = state;
   }
 
