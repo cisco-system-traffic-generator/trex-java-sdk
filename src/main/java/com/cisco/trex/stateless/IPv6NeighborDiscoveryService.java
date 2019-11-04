@@ -11,8 +11,6 @@ import com.cisco.trex.stateless.model.StreamRxStats;
 import com.cisco.trex.stateless.model.StreamVM;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
-import com.cisco.trex.stateless.model.vm.FixChecksumHw;
-import com.cisco.trex.stateless.model.vm.FixChecksumHw.L4Type;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
@@ -219,14 +217,7 @@ public class IPv6NeighborDiscoveryService {
     }
 
     Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, dstMac, dstIp, srcIp);
-    List<VMInstruction> instructions = new ArrayList<>();
-    int layer2Length = L2LENGTH;
-    if (!vlan.getTags().isEmpty()) {
-      layer2Length = 18;
-    }
-    instructions.add(new FixChecksumHw(layer2Length, L3LENGTH, L4Type.IP));
-    tRexClient.startStreamsIntermediate(
-        portIdx, Arrays.asList(buildStream(icmpv6NSPkt, instructions)));
+    tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
     Predicate<EthernetPacket> ipV6NAPktFilter =
         etherPkt -> {
@@ -366,7 +357,7 @@ public class IPv6NeighborDiscoveryService {
     return new com.cisco.trex.stateless.model.Stream(
         streamId,
         true,
-        3,
+        0,
         0.0,
         new StreamMode(
             2,
@@ -403,20 +394,20 @@ public class IPv6NeighborDiscoveryService {
 
       final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMac);
 
-      IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
-      icmpCommonPktBuilder
-          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
-          .dstAddr((Inet6Address) InetAddress.getByName(dstIp))
-          .type(IcmpV6Type.NEIGHBOR_SOLICITATION)
-          .code(IcmpV6Code.NO_CODE)
-          .correctChecksumAtBuild(true)
-          .payloadBuilder(ipv6NSBuilder);
-
       // Calculate the Solicited-Node multicast address, RFC 4291 chapter 2.7.1
       String[] destIpParts = dstIp.split(":");
       String multicastIp =
           String.format(
               "FF02::1:FF%s:%s", destIpParts[6].substring(2, 4), destIpParts[7].substring(0, 4));
+
+      IcmpV6CommonPacket.Builder icmpCommonPktBuilder = new IcmpV6CommonPacket.Builder();
+      icmpCommonPktBuilder
+          .srcAddr((Inet6Address) InetAddress.getByName(specifiedSrcIP))
+          .dstAddr((Inet6Address) InetAddress.getByName(multicastIp))
+          .type(IcmpV6Type.NEIGHBOR_SOLICITATION)
+          .code(IcmpV6Code.NO_CODE)
+          .correctChecksumAtBuild(true)
+          .payloadBuilder(ipv6NSBuilder);
 
       IpV6Packet.Builder ipV6Builder = new IpV6Packet.Builder();
       ipV6Builder
