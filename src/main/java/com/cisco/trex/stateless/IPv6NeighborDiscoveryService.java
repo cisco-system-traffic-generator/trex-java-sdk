@@ -11,6 +11,9 @@ import com.cisco.trex.stateless.model.StreamRxStats;
 import com.cisco.trex.stateless.model.StreamVM;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.vm.FixChecksumHw;
+import com.cisco.trex.stateless.model.vm.FixChecksumHw.L4Type;
+import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.google.common.collect.Lists;
 import com.google.common.net.InetAddresses;
 import java.net.Inet6Address;
@@ -57,6 +60,8 @@ public class IPv6NeighborDiscoveryService {
 
   private static final EtherType QInQ =
       new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
+  private static final int L3LENGTH = 40;
+  private static final int L2LENGTH = 14;
   private TRexClient tRexClient;
 
   public IPv6NeighborDiscoveryService(TRexClient tRexClient) {
@@ -214,8 +219,14 @@ public class IPv6NeighborDiscoveryService {
     }
 
     Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, dstMac, dstIp, srcIp);
-
-    tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
+    List<VMInstruction> instructions = new ArrayList<>();
+    int layer2Length = L2LENGTH;
+    if (!vlan.getTags().isEmpty()) {
+      layer2Length = 18;
+    }
+    instructions.add(new FixChecksumHw(layer2Length, L3LENGTH, L4Type.IP));
+    tRexClient.startStreamsIntermediate(
+        portIdx, Arrays.asList(buildStream(icmpv6NSPkt, instructions)));
 
     Predicate<EthernetPacket> ipV6NAPktFilter =
         etherPkt -> {
@@ -346,6 +357,11 @@ public class IPv6NeighborDiscoveryService {
   }
 
   private static com.cisco.trex.stateless.model.Stream buildStream(Packet pkt) {
+    return buildStream(pkt, Collections.emptyList());
+  }
+
+  private static com.cisco.trex.stateless.model.Stream buildStream(
+      Packet pkt, List<VMInstruction> instructions) {
     int streamId = (int) (Math.random() * 1000);
     return new com.cisco.trex.stateless.model.Stream(
         streamId,
@@ -362,7 +378,7 @@ public class IPv6NeighborDiscoveryService {
         -1,
         pkt,
         new StreamRxStats(false, false, true, streamId),
-        new StreamVM("", Collections.emptyList()),
+        new StreamVM("", instructions),
         true,
         false,
         null);
