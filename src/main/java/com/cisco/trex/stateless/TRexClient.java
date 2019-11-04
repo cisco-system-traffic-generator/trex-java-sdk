@@ -619,7 +619,7 @@ public class TRexClient extends ClientBase {
 
     EthernetPacket naPacket =
         new IPv6NeighborDiscoveryService(this)
-            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, srcIp, dstIp);
+            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, null, srcIp, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }

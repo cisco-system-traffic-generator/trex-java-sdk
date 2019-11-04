@@ -196,15 +196,24 @@ public class IPv6NeighborDiscoveryService {
     }
     String srcMac = portStatus.getAttr().getLayerConiguration().getL2Configuration().getSrc();
     PortVlan vlan = portStatus.getAttr().getVlan();
-    return sendNeighborSolicitation(vlan, portIdx, timeout, srcMac, null, dstIp);
+    return sendNeighborSolicitation(vlan, portIdx, timeout, srcMac, null, null, dstIp);
   }
 
   public EthernetPacket sendNeighborSolicitation(
-      PortVlan vlan, int portIdx, int timeout, String srcMac, String srcIp, String dstIp) {
+      PortVlan vlan,
+      int portIdx,
+      int timeout,
+      String srcMac,
+      String dstMac,
+      String srcIp,
+      String dstIp) {
     long endTs = System.currentTimeMillis() + timeout * 1000;
 
-    Packet icmpv6NSPkt =
-        buildICMPV6NSPkt(vlan, srcMac, multicastMacFromIPv6(dstIp).toString(), dstIp, srcIp);
+    if (dstMac == null) {
+      dstMac = multicastMacFromIPv6(dstIp).toString();
+    }
+
+    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, dstMac, dstIp, srcIp);
 
     tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
@@ -616,7 +625,13 @@ public class IPv6NeighborDiscoveryService {
     return buildICMPV6EchoReq(srcIp, srcMacString, dstMacString, dstIp, 0, 0);
   }
 
-  private static MacAddress multicastMacFromIPv6(String ipV6) {
+  /**
+   * Convert to solicitated-node multicast described in RFC 2624 section 7
+   *
+   * @param ipV6
+   * @return
+   */
+  static MacAddress multicastMacFromIPv6(String ipV6) {
     String expandedIPv6 = expandIPv6Address(ipV6);
     List<Long> ipv6Octets =
         Arrays.stream(expandedIPv6.split(":"))
@@ -627,8 +642,7 @@ public class IPv6NeighborDiscoveryService {
     int preLastIdx = ipv6Octets.size() - 2;
     String macAddressStr =
         String.format(
-            "33:33:%02x:%02x:%02x:%02x",
-            divMod(ipv6Octets.get(preLastIdx), 256)[0],
+            "33:33:ff:%02x:%02x:%02x",
             divMod(ipv6Octets.get(preLastIdx), 256)[1],
             divMod(ipv6Octets.get(lastIdx), 256)[0],
             divMod(ipv6Octets.get(lastIdx), 256)[1]);
