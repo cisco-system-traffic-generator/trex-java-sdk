@@ -214,8 +214,9 @@ public class IPv6NeighborDiscoveryService {
     long endTs = System.currentTimeMillis() + timeout * 1000;
 
     final String multicastMac = dstMac != null ? dstMac : multicastMacFromIPv6(dstIp).toString();
+    final String specifiedSrcIP = srcIp != null ? srcIp : generateIPv6AddrFromMAC(srcMac);
 
-    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, multicastMac, dstIp, srcIp);
+    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, multicastMac, dstIp, specifiedSrcIP);
     LOGGER.trace("Sending IPv6 Neighbor Solicitation packet:\n{}", icmpv6NSPkt);
     tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
@@ -235,7 +236,7 @@ public class IPv6NeighborDiscoveryService {
           try {
             Inet6Address dstIPv6Addr = (Inet6Address) InetAddress.getByName(dstAddr);
             Inet6Address srcIPv6Addr =
-                (Inet6Address) InetAddress.getByName(generateIPv6AddrFromMAC(srcMac));
+                (Inet6Address) InetAddress.getByName(specifiedSrcIP);
 
             Inet6Address nodeIpv6 = (Inet6Address) InetAddress.getByName(nodeIp);
             Inet6Address targetIpv6inNS = (Inet6Address) InetAddress.getByName(dstIp);
