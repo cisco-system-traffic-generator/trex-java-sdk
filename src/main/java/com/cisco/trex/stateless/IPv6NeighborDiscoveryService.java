@@ -235,8 +235,7 @@ public class IPv6NeighborDiscoveryService {
 
           try {
             Inet6Address dstIPv6Addr = (Inet6Address) InetAddress.getByName(dstAddr);
-            Inet6Address srcIPv6Addr =
-                (Inet6Address) InetAddress.getByName(specifiedSrcIP);
+            Inet6Address srcIPv6Addr = (Inet6Address) InetAddress.getByName(specifiedSrcIP);
 
             Inet6Address nodeIpv6 = (Inet6Address) InetAddress.getByName(nodeIp);
             Inet6Address targetIpv6inNS = (Inet6Address) InetAddress.getByName(dstIp);
