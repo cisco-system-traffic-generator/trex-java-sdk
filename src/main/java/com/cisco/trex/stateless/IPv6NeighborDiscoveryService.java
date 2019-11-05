@@ -53,13 +53,14 @@ import org.pcap4j.packet.namednumber.IpNumber;
 import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IPv6NeighborDiscoveryService {
 
   private static final EtherType QInQ =
       new EtherType((short) 0x88a8, "802.1Q Provider Bridge (Q-in-Q)");
-  private static final int L3LENGTH = 40;
-  private static final int L2LENGTH = 14;
+  private static final Logger LOGGER = LoggerFactory.getLogger(IPv6NeighborDiscoveryService.class);
   private TRexClient tRexClient;
 
   public IPv6NeighborDiscoveryService(TRexClient tRexClient) {
@@ -212,11 +213,10 @@ public class IPv6NeighborDiscoveryService {
       String dstIp) {
     long endTs = System.currentTimeMillis() + timeout * 1000;
 
-    if (dstMac == null) {
-      dstMac = multicastMacFromIPv6(dstIp).toString();
-    }
+    final String multicastMac = dstMac != null ? dstMac : multicastMacFromIPv6(dstIp).toString();
 
-    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, dstMac, dstIp, srcIp);
+    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, multicastMac, dstIp, srcIp);
+    LOGGER.trace("Sending IPv6 Neighbor Solicitation packet:\n{}", icmpv6NSPkt);
     tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
     Predicate<EthernetPacket> ipV6NAPktFilter =
@@ -360,8 +360,8 @@ public class IPv6NeighborDiscoveryService {
         0,
         0.0,
         new StreamMode(
-            2,
-            2,
+            10,
+            10,
             5,
             1.0,
             new StreamModeRate(StreamModeRate.Type.percentage, 100.0),
@@ -375,7 +375,7 @@ public class IPv6NeighborDiscoveryService {
         null);
   }
 
-  private static Packet buildICMPV6NSPkt(
+  static Packet buildICMPV6NSPkt(
       PortVlan vlan, String srcMac, String dstMac, String dstIp, String srcIp) {
     EthernetPacket.Builder ethBuilder = new EthernetPacket.Builder();
     try {
