@@ -212,11 +212,9 @@ public class IPv6NeighborDiscoveryService {
       String dstIp) {
     long endTs = System.currentTimeMillis() + timeout * 1000;
 
-    if (dstMac == null) {
-      dstMac = multicastMacFromIPv6(dstIp).toString();
-    }
+    final String multicastMac = dstMac != null ? dstMac : multicastMacFromIPv6(dstIp).toString();
 
-    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, dstMac, dstIp, srcIp);
+    Packet icmpv6NSPkt = buildICMPV6NSPkt(vlan, srcMac, multicastMac, dstIp, srcIp);
     tRexClient.startStreamsIntermediate(portIdx, Arrays.asList(buildStream(icmpv6NSPkt)));
 
     Predicate<EthernetPacket> ipV6NAPktFilter =
@@ -360,8 +358,8 @@ public class IPv6NeighborDiscoveryService {
         0,
         0.0,
         new StreamMode(
-            2,
-            2,
+            10,
+            10,
             5,
             1.0,
             new StreamModeRate(StreamModeRate.Type.percentage, 100.0),
