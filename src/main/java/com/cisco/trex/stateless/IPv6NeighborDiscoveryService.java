@@ -357,7 +357,7 @@ public class IPv6NeighborDiscoveryService {
     return new com.cisco.trex.stateless.model.Stream(
         streamId,
         true,
-        0,
+        3,
         0.0,
         new StreamMode(
             10,
