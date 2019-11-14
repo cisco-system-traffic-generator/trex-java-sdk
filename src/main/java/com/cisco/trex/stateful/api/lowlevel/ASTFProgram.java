@@ -408,6 +408,17 @@ public class ASTFProgram {
    */
   public void setVar(String varId, int value) {
     addVar(varId);
+    fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, (long) value));
+  }
+
+  /**
+   * set var command
+   *
+   * @param varId
+   * @param value
+   */
+  public void setVar(String varId, Long value) {
+    addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, value));
   }
 
