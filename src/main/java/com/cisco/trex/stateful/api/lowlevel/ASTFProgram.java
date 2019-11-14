@@ -410,7 +410,7 @@ public class ASTFProgram {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, (long) value));
   }
-  
+
   /**
    * set var command
    *
