@@ -406,7 +406,7 @@ public class ASTFProgram {
    * @param varId
    * @param value
    */
-  public void setVar(String varId, int value) {
+  public void setVar(String varId, Long value) {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, value));
   }
