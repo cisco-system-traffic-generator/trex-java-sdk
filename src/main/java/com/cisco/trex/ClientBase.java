@@ -106,7 +106,7 @@ public abstract class ClientBase {
    * @return port list
    */
   public List<Port> getPorts() {
-    LOGGER.info("Getting ports list.");
+    LOGGER.debug("Getting ports list.");
     List<Port> ports = getSystemInfo().getPorts();
     ports
         .stream()
@@ -151,7 +151,7 @@ public abstract class ClientBase {
    * @return result
    */
   public String callMethod(String methodName, Map<String, Object> payload) {
-    LOGGER.info("Call {} method.", methodName);
+    LOGGER.debug("Call {} method.", methodName);
     if (!this.supportedCmds.contains(methodName)) {
       LOGGER.error("Unsupported {} method.", methodName);
       throw new UnsupportedOperationException();
@@ -191,7 +191,7 @@ public abstract class ClientBase {
    */
   public <T> TRexClientResult<T> callMethod(
       String methodName, Map<String, Object> parameters, Class<T> responseType) {
-    LOGGER.info("Call {} method.", methodName);
+    LOGGER.debug("Call {} method.", methodName);
     if (!this.supportedCmds.contains(methodName)) {
       LOGGER.error("Unsupported {} method.", methodName);
       throw new UnsupportedOperationException();
