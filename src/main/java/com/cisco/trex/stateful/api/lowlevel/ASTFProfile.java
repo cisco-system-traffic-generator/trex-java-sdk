@@ -24,8 +24,8 @@ public class ASTFProfile {
   private List<ASTFTemplate> astfTemplateList;
   private List<ASTFCapInfo> astfCapInfoList;
 
-  private Map<String, Integer> tgName2TgId =
-      new LinkedHashMap<>(); // template group name -> template group id
+  private Map<String, Integer> tgName2TgId = new LinkedHashMap<>(); // template group name ->
+                                                                    // template group id
 
   /**
    * construct
@@ -46,19 +46,15 @@ public class ASTFProfile {
    * @param astfTemplateList
    * @param astfCapInfoList
    */
-  public ASTFProfile(
-      ASTFIpGen defaultIpGen,
-      ASTFGlobalInfo astfClientGlobalInfo,
-      ASTFGlobalInfo astfServerGlobalInfo,
-      List<ASTFTemplate> astfTemplateList,
+  public ASTFProfile(ASTFIpGen defaultIpGen, ASTFGlobalInfo astfClientGlobalInfo,
+      ASTFGlobalInfo astfServerGlobalInfo, List<ASTFTemplate> astfTemplateList,
       List<ASTFCapInfo> astfCapInfoList) {
     this.astfClientGlobalInfo = astfClientGlobalInfo;
     this.astfServerGlobalInfo = astfServerGlobalInfo;
 
     if (astfTemplateList == null && astfCapInfoList == null) {
-      throw new IllegalStateException(
-          String.format(
-              "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time "));
+      throw new IllegalStateException(String.format(
+          "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time "));
     }
     this.astfTemplateList = astfTemplateList;
     this.astfCapInfoList = astfCapInfoList;
@@ -121,9 +117,8 @@ public class ASTFProfile {
         } else {
           dPort = capInfo.getAssoc().getPort();
           myAssoc = capInfo.getAssoc();
-          throw new IllegalStateException(
-              String.format(
-                  "More than one cap use dest port %s. This is currently not supported.", dPort));
+          throw new IllegalStateException(String.format(
+              "More than one cap use dest port %s. This is currently not supported.", dPort));
         }
         dPorts.add(dPort);
 
@@ -155,20 +150,11 @@ public class ASTFProfile {
       }
 
       for (Map<String, Object> map : allCapInfo) {
-        ASTFTCPClientTemplate tempC =
-            new ASTFTCPClientTemplate(
-                (ASTFProgram) map.get("prog_c"),
-                (ASTFIpGen) map.get("ip_gen"),
-                null,
-                (int) map.get("d_port"),
-                (float) map.get("cps"),
-                (ASTFGlobalInfoPerTemplate) map.get("glob_c"),
-                (int) map.get("limit"));
-        ASTFTCPServerTemplate tempS =
-            new ASTFTCPServerTemplate(
-                (ASTFProgram) map.get("prog_s"),
-                (ASTFAssociation) map.get("my_assoc"),
-                (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
+        ASTFTCPClientTemplate tempC = new ASTFTCPClientTemplate((ASTFProgram) map.get("prog_c"),
+            (ASTFIpGen) map.get("ip_gen"), null, (int) map.get("d_port"), (float) map.get("cps"),
+            (ASTFGlobalInfoPerTemplate) map.get("glob_c"), (int) map.get("limit"));
+        ASTFTCPServerTemplate tempS = new ASTFTCPServerTemplate((ASTFProgram) map.get("prog_s"),
+            (ASTFAssociation) map.get("my_assoc"), (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
         ASTFTemplate template = new ASTFTemplate(tempC, tempS);
         astfTemplateList.add(template);
       }
@@ -225,9 +211,8 @@ public class ASTFProfile {
           tempJson.getAsJsonObject("client_template").get("program_index").getAsInt();
       int serverProgInd =
           tempJson.getAsJsonObject("server_template").get("program_index").getAsInt();
-      int totalBytes =
-          ASTFTemplateBase.getTotalSendBytes(clientProgInd)
-              + ASTFTemplateBase.getTotalSendBytes(serverProgInd);
+      int totalBytes = ASTFTemplateBase.getTotalSendBytes(clientProgInd)
+          + ASTFTemplateBase.getTotalSendBytes(serverProgInd);
 
       float tempCps = tempJson.getAsJsonObject("client_template").get("cps").getAsFloat();
       float tempBps = totalBytes * tempCps * 8;
@@ -237,7 +222,7 @@ public class ASTFProfile {
     }
     LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);
   }
-  
+
   public List<ASTFTemplate> getAstfTemplateList() {
     return this.astfTemplateList;
   }
