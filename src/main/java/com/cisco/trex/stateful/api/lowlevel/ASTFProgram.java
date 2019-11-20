@@ -397,7 +397,7 @@ public class ASTFProgram {
   }
 
   public void setKeepAliveMsg(int msec) {
-    this.fields.get(COMMANDS).add(new ASTFCmdRecvMsg(this.totalRcvBytes, false));
+    this.fields.get(COMMANDS).add(new ASTFCmdKeepaliveMsg(msec));
   }
 
   /**
