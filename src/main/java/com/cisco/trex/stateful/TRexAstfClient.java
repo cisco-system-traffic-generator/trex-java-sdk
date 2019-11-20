@@ -403,10 +403,11 @@ public class TRexAstfClient extends ClientBase {
    */
   public List<String> getTemplateGroupNames(String profileId) {
     if (profileId == null || !getProfileIds().contains(profileId)) {
-      LOGGER.warn("can not fetch template group names due to invalid profileId, or relative profile is not loaded yet.");
+      LOGGER.warn(
+          "can not fetch template group names due to invalid profileId, or relative profile is not loaded yet.");
       return Collections.emptyList();
     }
-    
+
     Map<String, Object> payload = createPayload(profileId);
     payload.put("initialized", false);
     String json = callMethod("get_tg_names", payload);
