@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -401,6 +402,11 @@ public class TRexAstfClient extends ClientBase {
    * @return template group names
    */
   public List<String> getTemplateGroupNames(String profileId) {
+    if (profileId == null || !getProfileIds().contains(profileId)) {
+      LOGGER.warn("can not fetch template group names due to invalid profileId, or relative profile is not loaded yet.");
+      return Collections.emptyList();
+    }
+    
     Map<String, Object> payload = createPayload(profileId);
     payload.put("initialized", false);
     String json = callMethod("get_tg_names", payload);
