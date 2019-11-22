@@ -10,7 +10,7 @@ public class ASTFCmdRecv extends ASTFCmd {
    * @param minBytes minimal receive bytes
    * @param clear true if clear data
    */
-  public ASTFCmdRecv(int minBytes, boolean clear) {
+  public ASTFCmdRecv(long minBytes, boolean clear) {
     super();
     fields.addProperty("name", NAME);
     fields.addProperty("min_bytes", minBytes);

@@ -10,7 +10,7 @@ public class ASTFCmdRecvMsg extends ASTFCmd {
    * @param minPkts
    * @param clear
    */
-  public ASTFCmdRecvMsg(int minPkts, boolean clear) {
+  public ASTFCmdRecvMsg(long minPkts, boolean clear) {
     super();
     fields.addProperty("name", NAME);
     fields.addProperty("min_pkts", minPkts);
