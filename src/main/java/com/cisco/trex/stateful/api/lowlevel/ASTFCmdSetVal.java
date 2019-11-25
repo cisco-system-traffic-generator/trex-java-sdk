@@ -10,7 +10,7 @@ public class ASTFCmdSetVal extends ASTFCmd {
    * @param idVal
    * @param val
    */
-  public ASTFCmdSetVal(String idVal, Long val) {
+  public ASTFCmdSetVal(String idVal, long val) {
     super();
     this.fields.addProperty("name", NAME);
     this.fields.addProperty("id", idVal);
