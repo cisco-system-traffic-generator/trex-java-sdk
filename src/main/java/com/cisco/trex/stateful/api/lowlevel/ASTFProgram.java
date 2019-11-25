@@ -3,7 +3,6 @@ package com.cisco.trex.stateful.api.lowlevel;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,19 +25,15 @@ public class ASTFProgram {
   private static final int MIN_DELAY = 50;
   private static final int MAX_DELAY = 700000;
   private static final int MAX_KEEPALIVE = 500000;
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
   private static final String COMMANDS = "commands";
 
-  private Map<String, Integer> vars = new HashMap();
-  private Map<String, Integer> labels = new HashMap();
-  private Map<String, List<ASTFCmd>> fields = new HashMap();
-  private int totalSendBytes = 0;
-  private int totalRcvBytes = 0;
-  private int payloadLen = 0;
+  private Map<String, Integer> vars = new HashMap<>();
+  private Map<String, Integer> labels = new HashMap<>();
+  private Map<String, List<ASTFCmd>> fields = new HashMap<>();
+  private long totalSendBytes;
+  private long totalRcvBytes;
+  private int payloadLen;
 
-  private String filePath;
-  private SideType side;
-  private List<ASTFCmd> commands;
   private boolean stream = true;
   private static BufferList bufList = new BufferList();
 
@@ -75,9 +70,6 @@ public class ASTFProgram {
    * @param stream
    */
   public ASTFProgram(String filePath, SideType side, List<ASTFCmd> commands, boolean stream) {
-    this.filePath = filePath;
-    this.side = side;
-    this.commands = commands;
     this.stream = stream;
     fields.put(COMMANDS, new ArrayList<ASTFCmd>());
     if (filePath != null) {
@@ -106,12 +98,12 @@ public class ASTFProgram {
       throw new IllegalStateException(
           String.format("cmds size %s is not equal to dirs size %s", cmds.size(), dirs.size()));
     }
-    if (cmds.size() == 0) {
+    if (cmds.isEmpty()) {
       return;
     }
 
-    List<ASTFCmd> newCmds = new ArrayList();
-    int totRcvBytes = 0;
+    List<ASTFCmd> newCmds = new ArrayList<>();
+    long totRcvBytes = 0;
     boolean rx = false;
     int maxDelay = 0;
 
@@ -143,7 +135,6 @@ public class ASTFProgram {
       SideType lastDir = null;
       for (int i = 0; i < cmds.size(); i++) {
         SideType dir = dirs.get(i);
-        CPacketData cmd = cmds.get(i);
         Double time = times.get(i);
 
         if (dir == initSide) {
@@ -208,7 +199,7 @@ public class ASTFProgram {
    * @param progS AstfProgram server
    */
   public void updateKeepAlive(ASTFProgram progS) {
-    if (fields.get(COMMANDS).size() > 0) {
+    if (!fields.get(COMMANDS).isEmpty()) {
       ASTFCmd cmd = fields.get(COMMANDS).get(0);
       if (cmd instanceof ASTFCmdKeepaliveMsg) {
         progS.fields.get(COMMANDS).add(0, cmd);
@@ -217,7 +208,7 @@ public class ASTFProgram {
   }
 
   /**
-   * delay for a random time betwean min-max usec with uniform distribution
+   * delay for a random time between min-max usec with uniform distribution
    *
    * @param minUsec
    * @param maxUsec
@@ -289,7 +280,7 @@ public class ASTFProgram {
   }
 
   /**
-   * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk. This is
+   * Send l7_buffer by splitting it into small chunks and issue a delay between each chunk. This is
    * a utility command that works on top of send/delay command
    *
    * <p>example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
@@ -297,7 +288,7 @@ public class ASTFProgram {
    *
    * @param l7Buf l7 stream as string
    * @param chunkSize size of each chunk
-   * @param delayUsec the delay in usec to insert betwean each write
+   * @param delayUsec the delay in usec to insert between each write
    */
   public void sendChunk(String l7Buf, int chunkSize, int delayUsec) {
     int size = l7Buf.length();
@@ -320,8 +311,9 @@ public class ASTFProgram {
   /**
    * recv bytes command
    *
-   * @param bytes
+   * @param bytes @Deprecated use method with Long instead
    */
+  @Deprecated
   public void recv(int bytes) {
     recv(bytes, false);
   }
@@ -330,9 +322,29 @@ public class ASTFProgram {
    * recv bytes command
    *
    * @param bytes
+   */
+  public void recv(long bytes) {
+    recv(bytes, false);
+  }
+
+  /**
+   * recv bytes command
+   *
+   * @param bytes
+   * @param clear @Deprecated use method with long instead
+   */
+  @Deprecated
+  public void recv(int bytes, boolean clear) {
+    recv((long) bytes, clear);
+  }
+
+  /**
+   * recv bytes command
+   *
+   * @param bytes
    * @param clear
    */
-  public void recv(int bytes, boolean clear) {
+  public void recv(long bytes, boolean clear) {
     this.totalRcvBytes += bytes;
     fields.get(COMMANDS).add(new ASTFCmdRecv(totalRcvBytes, clear));
   }
@@ -340,10 +352,33 @@ public class ASTFProgram {
   /**
    * recv msg, works for UDP flow
    *
+   * @param pkts wait until the rx packet watermark is reached on flow counter. @Deprecated use
+   *     method with long instead
+   */
+  @Deprecated
+  public void recvMsg(int pkts) {
+    recvMsg((long) pkts, false);
+  }
+
+  /**
+   * recv msg, works for UDP flow
+   *
    * @param pkts wait until the rx packet watermark is reached on flow counter.
    */
-  public void recvMsg(int pkts) {
+  public void recvMsg(long pkts) {
     recvMsg(pkts, false);
+  }
+
+  /**
+   * recv Msg cmd
+   *
+   * @param pkts wait until the rx packet watermark is reached on flow counter.
+   * @param clear when reach the watermark clear the flow counter @Deprecated use method with long
+   *     instead
+   */
+  @Deprecated
+  public void recvMsg(int pkts, boolean clear) {
+    recvMsg((long) pkts, clear);
   }
 
   /**
@@ -352,7 +387,7 @@ public class ASTFProgram {
    * @param pkts wait until the rx packet watermark is reached on flow counter.
    * @param clear when reach the watermark clear the flow counter
    */
-  public void recvMsg(int pkts, boolean clear) {
+  public void recvMsg(long pkts, boolean clear) {
     this.totalRcvBytes += pkts;
     fields.get(COMMANDS).add(new ASTFCmdRecvMsg(this.totalRcvBytes, clear));
   }
@@ -404,8 +439,9 @@ public class ASTFProgram {
    * set var command
    *
    * @param varId
-   * @param value
+   * @param value @Deprecated use method with Long instead
    */
+  @Deprecated
   public void setVar(String varId, int value) {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, (long) value));
@@ -447,9 +483,19 @@ public class ASTFProgram {
   /**
    * get the total send bytes of the program
    *
+   * @return sent bytes @Deprecated use getTotalSendBytesLong instead
+   */
+  @Deprecated
+  public int getTotalSendBytes() {
+    return (int) totalSendBytes;
+  }
+
+  /**
+   * get the total send bytes of the program
+   *
    * @return sent bytes
    */
-  public int getTotalSendBytes() {
+  public long getTotalSendBytesLong() {
     return totalSendBytes;
   }
 
@@ -562,7 +608,7 @@ public class ASTFProgram {
     }
   }
 
-  private boolean isNumber(String str) {
+  private static boolean isNumber(String str) {
     for (char c : str.toCharArray()) {
       if (c < 48 || c > 57) {
         return false;
@@ -595,12 +641,11 @@ public class ASTFProgram {
       String sha256Buf = encodeSha256(base64Buf);
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
-      } else {
-        bufList.add(base64Buf);
-        int newIndex = bufList.size() - 1;
-        bufHash.put(sha256Buf, newIndex);
-        return newIndex;
       }
+      bufList.add(base64Buf);
+      int newIndex = bufList.size() - 1;
+      bufHash.put(sha256Buf, newIndex);
+      return newIndex;
     }
 
     /**
@@ -621,7 +666,7 @@ public class ASTFProgram {
    * @param buf should be base64 encode string
    * @return Hex string of the sha256 encode buf
    */
-  private static String encodeSha256(String buf) {
+  static String encodeSha256(String buf) {
     try {
       MessageDigest sha256 = MessageDigest.getInstance("MD5");
       byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
