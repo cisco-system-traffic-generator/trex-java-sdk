@@ -122,8 +122,6 @@ public class TRexClient extends ClientBase {
     LOGGER.info("Received api_H: {}", apiH);
   }
 
-  @Deprecated
-  @Override
   public PortStatus acquirePort(int portIndex, Boolean force) {
     Map<String, Object> payload = createPayload(portIndex);
     payload.put("session_id", SESSON_ID);
@@ -132,6 +130,27 @@ public class TRexClient extends ClientBase {
     String json = callMethod("acquire", payload);
     String handler = getResultFromResponse(json).getAsString();
     portHandlers.put(portIndex, handler);
+    return getPortStatus(portIndex).get();
+  }
+
+  /**
+   * Release Port
+   *
+   * @param portIndex
+   * @return PortStatus
+   */
+  public PortStatus releasePort(int portIndex) {
+    if (!portHandlers.containsKey(portIndex)) {
+      LOGGER.debug("No handler assigned, port is not acquired.");
+    } else {
+      Map<String, Object> payload = createPayload(portIndex);
+      payload.put("user", userName);
+      String result = callMethod("release", payload);
+      if (result.contains("must acquire the context")) {
+        LOGGER.info("Port is not owned by this session, already released or never acquired");
+      }
+      portHandlers.remove(portIndex);
+    }
     return getPortStatus(portIndex).get();
   }
 
