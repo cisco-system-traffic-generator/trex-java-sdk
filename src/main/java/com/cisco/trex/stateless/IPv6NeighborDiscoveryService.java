@@ -123,8 +123,7 @@ public class IPv6NeighborDiscoveryService {
       icmpNAReplies.addAll(tRexClient.getRxQueue(portIdx, ipV6NAPktFilter));
     }
     tRexClient.removeRxQueue(portIdx);
-    return icmpNAReplies
-        .stream()
+    return icmpNAReplies.stream()
         .map(this::toIpv6Node)
         .distinct()
         .filter(

@@ -678,9 +678,7 @@ public class TRexClientTest {
 
   @AfterClass
   public static void tierDown() {
-    client
-        .getPorts()
-        .stream()
+    client.getPorts().stream()
         .forEach(
             port -> {
               client.stopTraffic(port.getIndex());
@@ -693,9 +691,7 @@ public class TRexClientTest {
   @After
   public void tearDownMethod() {
     client.removeAllCaptures();
-    client
-        .getPorts()
-        .stream()
+    client.getPorts().stream()
         .forEach(
             port -> {
               client.stopTraffic(port.getIndex());
