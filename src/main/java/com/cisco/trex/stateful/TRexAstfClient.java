@@ -8,7 +8,6 @@ import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateful.model.stats.MetaData;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
-import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.util.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -219,12 +218,15 @@ public class TRexAstfClient extends ClientBase {
     this.callMethod("update_latency", payload);
   }
 
-  @Override
-  public PortStatus acquirePort(int portIndex, Boolean force) {
+  /**
+   * In ASTF mode all ports will be acquired in a single call, not support to acquire a single port
+   *
+   * @param force
+   */
+  public void acquirePorts(Boolean force) {
     Map<String, Object> payload = createPayload();
     payload.put("user", userName);
     payload.put("force", force);
-    payload.put(PORT_ID, portIndex);
     String json = callMethod("acquire", payload);
     Set<Entry<String, JsonElement>> entrySet;
     try {
@@ -243,7 +245,21 @@ public class TRexAstfClient extends ClientBase {
       portHandlers.put(Integer.parseInt(entry.getKey()), entry.getValue().getAsString());
     }
     LOGGER.info("portHandlers is: {} ", portHandlers);
-    return getPortStatus(portIndex).get();
+  }
+
+  /** Release Ports */
+  public void releasePorts() {
+    if (StringUtils.isEmpty(masterHandler)) {
+      LOGGER.debug("No handler assigned, ports are not acquired.");
+    } else {
+      Map<String, Object> payload = createPayload();
+      payload.put("user", userName);
+      String result = callMethod("release", payload);
+      if (result.contains("must acquire the context")) {
+        LOGGER.info("Ports are not owned by this session, already released or never acquired");
+      }
+      portHandlers.clear();
+    }
   }
 
   /**
@@ -306,6 +322,9 @@ public class TRexAstfClient extends ClientBase {
    * @return profile id list
    */
   public List<String> getProfileIds() {
+    if (StringUtils.isEmpty(masterHandler)) {
+      return Collections.emptyList();
+    }
     Map<String, Object> payload = createPayload();
     String json = callMethod("get_profile_list", payload);
     JsonArray ids = getResultFromResponse(json).getAsJsonArray();
