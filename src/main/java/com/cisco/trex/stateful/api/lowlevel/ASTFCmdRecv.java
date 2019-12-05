@@ -15,7 +15,7 @@ public class ASTFCmdRecv extends ASTFCmd {
     fields.addProperty("name", NAME);
     fields.addProperty("min_bytes", minBytes);
     if (clear) {
-      fields.addProperty("clear", true);
+      fields.addProperty("clear", clear);
     }
     stream = true;
   }
