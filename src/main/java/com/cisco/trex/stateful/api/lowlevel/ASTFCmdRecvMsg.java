@@ -15,7 +15,7 @@ public class ASTFCmdRecvMsg extends ASTFCmd {
     fields.addProperty("name", NAME);
     fields.addProperty("min_pkts", minPkts);
     if (clear) {
-      fields.addProperty("clear", "true");
+      fields.addProperty("clear", clear);
     }
     stream = false;
   }
