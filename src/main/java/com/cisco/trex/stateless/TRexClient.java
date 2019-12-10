@@ -123,13 +123,17 @@ public class TRexClient extends ClientBase {
   }
 
   public PortStatus acquirePort(int portIndex, Boolean force) {
-    Map<String, Object> payload = createPayload(portIndex);
-    payload.put("session_id", SESSON_ID);
-    payload.put("user", userName);
-    payload.put("force", force);
-    String json = callMethod("acquire", payload);
-    String handler = getResultFromResponse(json).getAsString();
-    portHandlers.put(portIndex, handler);
+    if (!portHandlers.containsKey(portIndex)) {
+      Map<String, Object> payload = createPayload(portIndex);
+      payload.put("session_id", SESSON_ID);
+      payload.put("user", userName);
+      payload.put("force", force);
+      String json = callMethod("acquire", payload);
+      String handler = getResultFromResponse(json).getAsString();
+      portHandlers.put(portIndex, handler);
+    } else {
+      LOGGER.debug("Port already acquired, continueing");
+    }
     return getPortStatus(portIndex).get();
   }
 
