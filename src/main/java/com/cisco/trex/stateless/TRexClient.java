@@ -1,28 +1,5 @@
 package com.cisco.trex.stateless;
 
-import com.cisco.trex.ClientBase;
-import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
-import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.ApiVersionHandler;
-import com.cisco.trex.stateless.model.Ipv6Node;
-import com.cisco.trex.stateless.model.Port;
-import com.cisco.trex.stateless.model.PortStatus;
-import com.cisco.trex.stateless.model.Stream;
-import com.cisco.trex.stateless.model.StreamMode;
-import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
-import com.cisco.trex.stateless.model.StreamVM;
-import com.cisco.trex.stateless.model.TRexClientResult;
-import com.cisco.trex.stateless.model.port.PortVlan;
-import com.cisco.trex.stateless.model.stats.ActivePGIds;
-import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
-import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
-import com.cisco.trex.stateless.model.vm.VMInstruction;
-import com.cisco.trex.util.Constants;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -59,6 +36,29 @@ import org.pcap4j.packet.namednumber.IpNumber;
 import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.ByteArrays;
 import org.pcap4j.util.MacAddress;
+import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
+import com.cisco.trex.stateless.exception.TRexConnectionException;
+import com.cisco.trex.stateless.model.ApiVersionHandler;
+import com.cisco.trex.stateless.model.Ipv6Node;
+import com.cisco.trex.stateless.model.Port;
+import com.cisco.trex.stateless.model.PortStatus;
+import com.cisco.trex.stateless.model.Stream;
+import com.cisco.trex.stateless.model.StreamMode;
+import com.cisco.trex.stateless.model.StreamModeRate;
+import com.cisco.trex.stateless.model.StreamRxStats;
+import com.cisco.trex.stateless.model.StreamVM;
+import com.cisco.trex.stateless.model.TRexClientResult;
+import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.stateless.model.stats.ActivePGIds;
+import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
+import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
+import com.cisco.trex.stateless.model.vm.VMInstruction;
+import com.cisco.trex.util.Constants;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /** TRex client for stateless traffic */
 public class TRexClient extends ClientBase {
@@ -108,13 +108,9 @@ public class TRexClient extends ClientBase {
         callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
     if (result.get() == null) {
-      TRexConnectionException e =
-          new TRexConnectionException(
-              MessageFormat.format(
-                  "Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
-                  Constants.STL_API_VERSION_MAJOR,
-                  Constants.STL_API_VERSION_MINOR,
-                  result.getError()));
+      TRexConnectionException e = new TRexConnectionException(MessageFormat.format(
+          "Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
+          Constants.STL_API_VERSION_MAJOR, Constants.STL_API_VERSION_MINOR, result.getError()));
       LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
       throw e;
     }
@@ -123,13 +119,17 @@ public class TRexClient extends ClientBase {
   }
 
   public PortStatus acquirePort(int portIndex, Boolean force) {
-    Map<String, Object> payload = createPayload(portIndex);
-    payload.put("session_id", SESSON_ID);
-    payload.put("user", userName);
-    payload.put("force", force);
-    String json = callMethod("acquire", payload);
-    String handler = getResultFromResponse(json).getAsString();
-    portHandlers.put(portIndex, handler);
+    if (!portHandlers.containsKey(portIndex)) {
+      Map<String, Object> payload = createPayload(portIndex);
+      payload.put("session_id", SESSON_ID);
+      payload.put("user", userName);
+      payload.put("force", force);
+      String json = callMethod("acquire", payload);
+      String handler = getResultFromResponse(json).getAsString();
+      portHandlers.put(portIndex, handler);
+    } else {
+      LOGGER.debug("Port already acquired, continueing");
+    }
     return getPortStatus(portIndex).get();
   }
 
@@ -266,8 +266,7 @@ public class TRexClient extends ClientBase {
     Map<String, Object> payload = createPayload(portIndex, profileId);
     String json = callMethod("get_stream_list", payload);
     JsonArray ids = getResultFromResponse(json).getAsJsonArray();
-    return StreamSupport.stream(ids.spliterator(), false)
-        .map(JsonElement::getAsInt)
+    return StreamSupport.stream(ids.spliterator(), false).map(JsonElement::getAsInt)
         .collect(Collectors.toList());
   }
 
@@ -283,8 +282,8 @@ public class TRexClient extends ClientBase {
     callMethod("resume_streams", payload);
   }
 
-  public void updateStreams(
-      int portIndex, List<Integer> streams, boolean force, Map<String, Object> multiplier) {
+  public void updateStreams(int portIndex, List<Integer> streams, boolean force,
+      Map<String, Object> multiplier) {
     Map<String, Object> payload = createPayload(portIndex);
     payload.put("force", force);
     payload.put("mul", multiplier);
@@ -296,8 +295,7 @@ public class TRexClient extends ClientBase {
     Map<String, Object> payload = createPayload(portIndex);
     String json = callMethod("get_profile_list", payload);
     JsonArray ids = getResultFromResponse(json).getAsJsonArray();
-    return StreamSupport.stream(ids.spliterator(), false)
-        .map(JsonElement::getAsString)
+    return StreamSupport.stream(ids.spliterator(), false).map(JsonElement::getAsString)
         .collect(Collectors.toList());
   }
 
@@ -313,18 +311,13 @@ public class TRexClient extends ClientBase {
     return callMethod("get_pgid_stats", parameters, PGIdStatsRPCResult.class).get();
   }
 
-  public void startTraffic(
-      int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+  public void startTraffic(int portIndex, double duration, boolean force, Map<String, Object> mul,
+      int coreMask) {
     startTraffic(portIndex, "", duration, force, mul, coreMask);
   }
 
-  public void startTraffic(
-      int portIndex,
-      String profileId,
-      double duration,
-      boolean force,
-      Map<String, Object> mul,
-      int coreMask) {
+  public void startTraffic(int portIndex, String profileId, double duration, boolean force,
+      Map<String, Object> mul, int coreMask) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
     payload.put("core_mask", coreMask);
     payload.put("mul", mul);
@@ -333,8 +326,8 @@ public class TRexClient extends ClientBase {
     callMethod("start_traffic", payload);
   }
 
-  public void startAllTraffic(
-      int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+  public void startAllTraffic(int portIndex, double duration, boolean force,
+      Map<String, Object> mul, int coreMask) {
     List<String> profileIds = getProfileIds(portIndex);
     for (String profileId : profileIds) {
       startTraffic(portIndex, profileId, duration, force, mul, coreMask);
@@ -439,51 +432,47 @@ public class TRexClient extends ClientBase {
     return resolveArp(portIndex, vlan, srcIp, srcMac, dstIp);
   }
 
-  public String resolveArp(
-      int portIndex, PortVlan vlan, String srcIp, String srcMac, String dstIp) {
+  public String resolveArp(int portIndex, PortVlan vlan, String srcIp, String srcMac,
+      String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
     EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
     sendPacket(portIndex, pkt);
 
-    Predicate<EthernetPacket> arpReplyFilter =
-        etherPkt -> {
-          Queue<Integer> vlanTags = new LinkedList<>(vlan.getTags());
-          Packet nextPkt = etherPkt;
+    Predicate<EthernetPacket> arpReplyFilter = etherPkt -> {
+      Queue<Integer> vlanTags = new LinkedList<>(vlan.getTags());
+      Packet nextPkt = etherPkt;
 
-          boolean vlanOutsideMatches = true;
-          if (etherPkt.getHeader().getType() == QInQ) {
-            try {
-              Dot1qVlanTagPacket qInqPkt =
-                  Dot1qVlanTagPacket.newPacket(
-                      etherPkt.getRawData(),
-                      etherPkt.getHeader().length(),
-                      etherPkt.getPayload().length());
-              vlanOutsideMatches = qInqPkt.getHeader().getVidAsInt() == vlanTags.poll();
+      boolean vlanOutsideMatches = true;
+      if (etherPkt.getHeader().getType() == QInQ) {
+        try {
+          Dot1qVlanTagPacket qInqPkt = Dot1qVlanTagPacket.newPacket(etherPkt.getRawData(),
+              etherPkt.getHeader().length(), etherPkt.getPayload().length());
+          vlanOutsideMatches = qInqPkt.getHeader().getVidAsInt() == vlanTags.poll();
 
-              nextPkt = qInqPkt.getPayload();
-            } catch (IllegalRawDataException e) {
-              return false;
-            }
-          }
-
-          boolean vlanInsideMatches = true;
-          if (nextPkt.contains(Dot1qVlanTagPacket.class)) {
-            Dot1qVlanTagPacket dot1qVlanTagPacket = nextPkt.get(Dot1qVlanTagPacket.class);
-            vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
-          }
-
-          if (nextPkt.contains(ArpPacket.class)) {
-            ArpPacket arp = nextPkt.get(ArpPacket.class);
-            ArpOperation arpOp = arp.getHeader().getOperation();
-            String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
-            boolean arpMatches = ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
-
-            return arpMatches && vlanOutsideMatches && vlanInsideMatches;
-          }
+          nextPkt = qInqPkt.getPayload();
+        } catch (IllegalRawDataException e) {
           return false;
-        };
+        }
+      }
+
+      boolean vlanInsideMatches = true;
+      if (nextPkt.contains(Dot1qVlanTagPacket.class)) {
+        Dot1qVlanTagPacket dot1qVlanTagPacket = nextPkt.get(Dot1qVlanTagPacket.class);
+        vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
+      }
+
+      if (nextPkt.contains(ArpPacket.class)) {
+        ArpPacket arp = nextPkt.get(ArpPacket.class);
+        ArpOperation arpOp = arp.getHeader().getOperation();
+        String replyDstMac = arp.getHeader().getDstHardwareAddr().toString();
+        boolean arpMatches = ArpOperation.REPLY.equals(arpOp) && replyDstMac.equals(srcMac);
+
+        return arpMatches && vlanOutsideMatches && vlanInsideMatches;
+      }
+      return false;
+    };
 
     List<org.pcap4j.packet.Packet> pkts = new ArrayList<>();
 
@@ -501,8 +490,7 @@ public class TRexClient extends ClientBase {
         }
       }
       LOGGER.info("Unable to get ARP reply in {} seconds", steps);
-    } catch (InterruptedException ignored) {
-    } finally {
+    } catch (InterruptedException ignored) {} finally {
       removeRxQueue(portIndex);
       if (getPortStatus(portIndex).get().getState().equals("TX")) {
         stopTraffic(portIndex);
@@ -517,29 +505,24 @@ public class TRexClient extends ClientBase {
       return pkt.get(ArpPacket.class);
     }
     try {
-      Dot1qVlanTagPacket unwrapedFromVlanPkt =
-          Dot1qVlanTagPacket.newPacket(
-              pkt.getRawData(), pkt.getHeader().length(), pkt.getPayload().length());
+      Dot1qVlanTagPacket unwrapedFromVlanPkt = Dot1qVlanTagPacket.newPacket(pkt.getRawData(),
+          pkt.getHeader().length(), pkt.getPayload().length());
 
       return unwrapedFromVlanPkt.get(ArpPacket.class);
-    } catch (IllegalRawDataException ignored) {
-    }
+    } catch (IllegalRawDataException ignored) {}
 
     return null;
   }
 
-  private static EthernetPacket buildArpPkt(
-      String srcMac, String srcIp, String dstIp, PortVlan vlan) {
+  private static EthernetPacket buildArpPkt(String srcMac, String srcIp, String dstIp,
+      PortVlan vlan) {
     ArpPacket.Builder arpBuilder = new ArpPacket.Builder();
     MacAddress srcMacAddress = MacAddress.getByName(srcMac);
     try {
-      arpBuilder
-          .hardwareType(ArpHardwareType.ETHERNET)
-          .protocolType(EtherType.IPV4)
+      arpBuilder.hardwareType(ArpHardwareType.ETHERNET).protocolType(EtherType.IPV4)
           .hardwareAddrLength((byte) MacAddress.SIZE_IN_BYTES)
           .protocolAddrLength((byte) ByteArrays.INET4_ADDRESS_SIZE_IN_BYTES)
-          .operation(ArpOperation.REQUEST)
-          .srcHardwareAddr(srcMacAddress)
+          .operation(ArpOperation.REQUEST).srcHardwareAddr(srcMacAddress)
           .srcProtocolAddr(InetAddress.getByName(srcIp))
           .dstHardwareAddr(MacAddress.getByName("00:00:00:00:00:00"))
           .dstProtocolAddr(InetAddress.getByName(dstIp));
@@ -554,12 +537,8 @@ public class TRexClient extends ClientBase {
     }
 
     EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
-    etherBuilder
-        .dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
-        .srcAddr(srcMacAddress)
-        .type(payload.getKey())
-        .payloadBuilder(payload.getValue())
-        .paddingAtBuild(true);
+    etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS).srcAddr(srcMacAddress)
+        .type(payload.getKey()).payloadBuilder(payload.getValue()).paddingAtBuild(true);
 
     return etherBuilder.build();
   }
@@ -572,9 +551,7 @@ public class TRexClient extends ClientBase {
 
     if (vlanTags.peek() != null) {
       Dot1qVlanTagPacket.Builder vlanInsideBuilder = new Dot1qVlanTagPacket.Builder();
-      vlanInsideBuilder
-          .type(EtherType.ARP)
-          .vid(vlanTags.poll().shortValue())
+      vlanInsideBuilder.type(EtherType.ARP).vid(vlanTags.poll().shortValue())
           .payloadBuilder(arpBuilder);
 
       resultPayloadBuilder = vlanInsideBuilder;
@@ -582,10 +559,8 @@ public class TRexClient extends ClientBase {
 
       if (vlanTags.peek() != null) {
         Dot1qVlanTagPacket.Builder vlanOutsideBuilder = new Dot1qVlanTagPacket.Builder();
-        vlanOutsideBuilder
-            .type(EtherType.DOT1Q_VLAN_TAGGED_FRAMES)
-            .vid(vlanTags.poll().shortValue())
-            .payloadBuilder(vlanInsideBuilder);
+        vlanOutsideBuilder.type(EtherType.DOT1Q_VLAN_TAGGED_FRAMES)
+            .vid(vlanTags.poll().shortValue()).payloadBuilder(vlanInsideBuilder);
         resultPayloadBuilder = vlanOutsideBuilder;
         resultEtherType = QInQ;
       }
@@ -596,26 +571,11 @@ public class TRexClient extends ClientBase {
 
   private static Stream build1PktSingleBurstStream(Packet pkt) {
     int streamId = (int) (Math.random() * 1000);
-    return new Stream(
-        streamId,
-        true,
-        3,
-        0.0,
-        new StreamMode(
-            2,
-            2,
-            1,
-            1.0,
-            new StreamModeRate(StreamModeRate.Type.pps, 1.0),
+    return new Stream(streamId, true, 3, 0.0,
+        new StreamMode(2, 2, 1, 1.0, new StreamModeRate(StreamModeRate.Type.pps, 1.0),
             StreamMode.Type.single_burst),
-        -1,
-        pkt,
-        new StreamRxStats(true, true, true, streamId),
-        new StreamVM("", Collections.<VMInstruction>emptyList()),
-        true,
-        false,
-        null,
-        -1);
+        -1, pkt, new StreamRxStats(true, true, true, streamId),
+        new StreamVM("", Collections.<VMInstruction>emptyList()), true, false, null, -1);
   }
 
   public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
@@ -631,14 +591,13 @@ public class TRexClient extends ClientBase {
     return null;
   }
 
-  public String resolveIpv6(
-      PortVlan vlan, int portIndex, String srcMac, String srcIp, String dstIp) {
+  public String resolveIpv6(PortVlan vlan, int portIndex, String srcMac, String srcIp,
+      String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
-    EthernetPacket naPacket =
-        new IPv6NeighborDiscoveryService(this)
-            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, null, srcIp, dstIp);
+    EthernetPacket naPacket = new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(vlan,
+        portIndex, 5, srcMac, null, srcIp, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }
@@ -650,10 +609,8 @@ public class TRexClient extends ClientBase {
     Map<String, Object> payload = createPayload(portIndex);
     String json = callMethod("get_rx_queue_pkts", payload);
     JsonArray pkts = getResultFromResponse(json).getAsJsonObject().getAsJsonArray("pkts");
-    return StreamSupport.stream(pkts.spliterator(), false)
-        .map(this::buildEthernetPkt)
-        .filter(filter)
-        .collect(Collectors.toList());
+    return StreamSupport.stream(pkts.spliterator(), false).map(this::buildEthernetPkt)
+        .filter(filter).collect(Collectors.toList());
   }
 
   private EthernetPacket buildEthernetPkt(JsonElement jsonElement) {
@@ -668,8 +625,8 @@ public class TRexClient extends ClientBase {
     }
   }
 
-  public boolean setL3Mode(
-      int portIndex, String nextHopMac, String sourceIp, String destinationIp) {
+  public boolean setL3Mode(int portIndex, String nextHopMac, String sourceIp,
+      String destinationIp) {
     Map<String, Object> payload = createPayload(portIndex);
     payload.put("src_addr", sourceIp);
     payload.put("dst_addr", destinationIp);
@@ -690,9 +647,8 @@ public class TRexClient extends ClientBase {
   }
 
   // TODO: move to upper layer
-  public EthernetPacket sendIcmpEcho(
-      int portIndex, String host, int reqId, int seqNumber, long waitResponse)
-      throws UnknownHostException {
+  public EthernetPacket sendIcmpEcho(int portIndex, String host, int reqId, int seqNumber,
+      long waitResponse) throws UnknownHostException {
     Port port = getPortByIndex(portIndex);
     PortStatus portStatus = getPortStatus(portIndex).get();
     String srcIp = portStatus.getAttr().getLayerConiguration().getL3Configuration().getSrc();
@@ -705,8 +661,7 @@ public class TRexClient extends ClientBase {
     sendPacket(portIndex, icmpRequest);
     try {
       Thread.sleep(waitResponse);
-    } catch (InterruptedException ignored) {
-    }
+    } catch (InterruptedException ignored) {}
 
     try {
       List<EthernetPacket> receivedPkts =
@@ -721,39 +676,26 @@ public class TRexClient extends ClientBase {
   }
 
   // TODO: move to upper layer
-  private static EthernetPacket buildIcmpV4Request(
-      String srcMac, String dstMac, String srcIp, String dstIp, int reqId, int seqNumber)
-      throws UnknownHostException {
+  private static EthernetPacket buildIcmpV4Request(String srcMac, String dstMac, String srcIp,
+      String dstIp, int reqId, int seqNumber) throws UnknownHostException {
 
     IcmpV4EchoPacket.Builder icmpReqBuilder = new IcmpV4EchoPacket.Builder();
     icmpReqBuilder.identifier((short) reqId);
     icmpReqBuilder.sequenceNumber((short) seqNumber);
 
     IcmpV4CommonPacket.Builder icmpv4CommonPacketBuilder = new IcmpV4CommonPacket.Builder();
-    icmpv4CommonPacketBuilder
-        .type(IcmpV4Type.ECHO)
-        .code(IcmpV4Code.NO_CODE)
-        .correctChecksumAtBuild(true)
-        .payloadBuilder(icmpReqBuilder);
+    icmpv4CommonPacketBuilder.type(IcmpV4Type.ECHO).code(IcmpV4Code.NO_CODE)
+        .correctChecksumAtBuild(true).payloadBuilder(icmpReqBuilder);
 
     IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
-    ipv4Builder
-        .version(IpVersion.IPV4)
-        .tos(IpV4Rfc791Tos.newInstance((byte) 0))
-        .ttl((byte) 64)
-        .protocol(IpNumber.ICMPV4)
-        .srcAddr((Inet4Address) Inet4Address.getByName(srcIp))
-        .dstAddr((Inet4Address) Inet4Address.getByName(dstIp))
-        .correctChecksumAtBuild(true)
-        .correctLengthAtBuild(true)
-        .payloadBuilder(icmpv4CommonPacketBuilder);
+    ipv4Builder.version(IpVersion.IPV4).tos(IpV4Rfc791Tos.newInstance((byte) 0)).ttl((byte) 64)
+        .protocol(IpNumber.ICMPV4).srcAddr((Inet4Address) Inet4Address.getByName(srcIp))
+        .dstAddr((Inet4Address) Inet4Address.getByName(dstIp)).correctChecksumAtBuild(true)
+        .correctLengthAtBuild(true).payloadBuilder(icmpv4CommonPacketBuilder);
 
     EthernetPacket.Builder eb = new EthernetPacket.Builder();
-    eb.srcAddr(MacAddress.getByName(srcMac))
-        .dstAddr(MacAddress.getByName(dstMac))
-        .type(EtherType.IPV4)
-        .paddingAtBuild(true)
-        .payloadBuilder(ipv4Builder);
+    eb.srcAddr(MacAddress.getByName(srcMac)).dstAddr(MacAddress.getByName(dstMac))
+        .type(EtherType.IPV4).paddingAtBuild(true).payloadBuilder(ipv4Builder);
 
     return eb.build();
   }
@@ -778,10 +720,9 @@ public class TRexClient extends ClientBase {
     return new IPv6NeighborDiscoveryService(this).scan(portIndex, 10, null, null);
   }
 
-  public EthernetPacket sendIcmpV6Echo(
-      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut)
-      throws ServiceModeRequiredException {
-    return new IPv6NeighborDiscoveryService(this)
-        .sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
+  public EthernetPacket sendIcmpV6Echo(int portIndex, String dstIp, int icmpId, int icmpSeq,
+      int timeOut) throws ServiceModeRequiredException {
+    return new IPv6NeighborDiscoveryService(this).sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq,
+        timeOut);
   }
 }
