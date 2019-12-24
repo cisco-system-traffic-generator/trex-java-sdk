@@ -345,6 +345,9 @@ public class ASTFProgram {
    * @param clear
    */
   public void recv(long bytes, boolean clear) {
+    if (clear) {
+      this.totalRcvBytes = 0;
+    }
     this.totalRcvBytes += bytes;
     fields.get(COMMANDS).add(new ASTFCmdRecv(totalRcvBytes, clear));
   }
@@ -388,6 +391,9 @@ public class ASTFProgram {
    * @param clear when reach the watermark clear the flow counter
    */
   public void recvMsg(long pkts, boolean clear) {
+    if (clear) {
+      this.totalRcvBytes = 0;
+    }
     this.totalRcvBytes += pkts;
     fields.get(COMMANDS).add(new ASTFCmdRecvMsg(this.totalRcvBytes, clear));
   }
