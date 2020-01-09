@@ -330,7 +330,9 @@ public class TRexClient extends ClientBase {
       Map<String, Object> mul,
       int coreMask) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
-    payload.put("core_mask", coreMask);
+    if (coreMask > 0) {
+      payload.put("core_mask", coreMask);
+    }
     payload.put("mul", mul);
     payload.put("duration", duration);
     payload.put("force", force);
