@@ -1,0 +1,74 @@
+package com.cisco.trex.stateless.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+public class ServerConfiguration {
+
+    @JsonProperty(value = "version")
+    private String version;
+
+    @JsonProperty(value = "port_limit")
+    private String portLimit;
+
+    @JsonProperty(value = "interfaces")
+    private List<String> interfaces;
+
+    @JsonProperty(value = "port_info")
+    private List<PortInfo> portInfos;
+
+    @JsonProperty(value = "low_end")
+    private Boolean lowEnd = false;
+
+    @JsonProperty(value = "platform")
+    private Platform platform;
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setPortLimit(String portLimit) {
+        this.portLimit = portLimit;
+    }
+
+    public String getPortLimit() {
+        return portLimit;
+    }
+
+    public void setInterfaces(List<String> interfaces) {
+        this.interfaces = interfaces;
+    }
+
+    public List<String> getInterfaces() {
+        return interfaces;
+    }
+
+    public void setPortInfos(List<PortInfo> portInfos) {
+        this.portInfos = portInfos;
+    }
+
+    public List<PortInfo> getPortInfos() {
+        return portInfos;
+    }
+
+    public void setLowEnd(Boolean lowEnd) {
+        this.lowEnd = lowEnd;
+    }
+
+    public Boolean getLowEnd() {
+        return lowEnd;
+    }
+
+    public void setPlatform(Platform platform) {
+        this.platform = platform;
+    }
+
+    public Platform getPlatform() {
+        return platform;
+    }
+}
