@@ -1,0 +1,30 @@
+package com.cisco.trex.stateless.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
+
+public class DualIf {
+
+    @JsonProperty(value = "socket")
+    private Integer socket;
+
+    @JsonProperty(value = "threads")
+    private List<Integer> threads;
+
+    public Integer getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Integer socket) {
+        this.socket = socket;
+    }
+
+    public List<Integer> getThreads() {
+        return threads;
+    }
+
+    public void setThreads(List<Integer> threads) {
+        this.threads = threads;
+    }
+}
