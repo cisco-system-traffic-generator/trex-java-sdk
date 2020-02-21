@@ -14,7 +14,7 @@ public class ASTFCmdDelayRnd extends ASTFCmd {
     super();
     fields.addProperty("name", NAME);
     fields.addProperty("min_usec", minSec);
-    fields.addProperty("max_usex", maxSec);
+    fields.addProperty("max_usec", maxSec);
   }
 
   @Override
