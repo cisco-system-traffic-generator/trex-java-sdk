@@ -371,7 +371,7 @@ public class TRexClient extends ClientBase {
     payload.put("enabled", false);
     callMethod("set_rx_feature", payload);
   }
-  
+
   public void removeRxFilters(int portIndex, int profileId) {
     Map<String, Object> payload = createPayload(portIndex);
     if (profileId > 0) {
