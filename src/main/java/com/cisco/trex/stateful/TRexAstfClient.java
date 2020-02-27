@@ -1,13 +1,13 @@
 package com.cisco.trex.stateful;
 
 import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateful.model.ServerStatus;
 import com.cisco.trex.stateful.model.stats.AstfStatistics;
 import com.cisco.trex.stateful.model.stats.LatencyPortData;
 import com.cisco.trex.stateful.model.stats.LatencyStats;
 import com.cisco.trex.stateful.model.stats.MetaData;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
-import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.util.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -217,12 +218,15 @@ public class TRexAstfClient extends ClientBase {
     this.callMethod("update_latency", payload);
   }
 
-  @Override
-  public PortStatus acquirePort(int portIndex, Boolean force) {
+  /**
+   * In ASTF mode all ports will be acquired in a single call, not support to acquire a single port
+   *
+   * @param force
+   */
+  public void acquirePorts(Boolean force) {
     Map<String, Object> payload = createPayload();
     payload.put("user", userName);
     payload.put("force", force);
-    payload.put(PORT_ID, portIndex);
     String json = callMethod("acquire", payload);
     Set<Entry<String, JsonElement>> entrySet;
     try {
@@ -241,7 +245,21 @@ public class TRexAstfClient extends ClientBase {
       portHandlers.put(Integer.parseInt(entry.getKey()), entry.getValue().getAsString());
     }
     LOGGER.info("portHandlers is: {} ", portHandlers);
-    return getPortStatus(portIndex).get();
+  }
+
+  /** Release Ports */
+  public void releasePorts() {
+    if (StringUtils.isEmpty(masterHandler)) {
+      LOGGER.debug("No handler assigned, ports are not acquired.");
+    } else {
+      Map<String, Object> payload = createPayload();
+      payload.put("user", userName);
+      String result = callMethod("release", payload);
+      if (result.contains("must acquire the context")) {
+        LOGGER.info("Ports are not owned by this session, already released or never acquired");
+      }
+      portHandlers.clear();
+    }
   }
 
   /**
@@ -304,6 +322,9 @@ public class TRexAstfClient extends ClientBase {
    * @return profile id list
    */
   public List<String> getProfileIds() {
+    if (StringUtils.isEmpty(masterHandler)) {
+      return Collections.emptyList();
+    }
     Map<String, Object> payload = createPayload();
     String json = callMethod("get_profile_list", payload);
     JsonArray ids = getResultFromResponse(json).getAsJsonArray();
@@ -400,6 +421,12 @@ public class TRexAstfClient extends ClientBase {
    * @return template group names
    */
   public List<String> getTemplateGroupNames(String profileId) {
+    if (profileId == null || !getProfileIds().contains(profileId)) {
+      LOGGER.warn(
+          "can not fetch template group names due to invalid profileId, or relative profile is not loaded yet.");
+      return Collections.emptyList();
+    }
+
     Map<String, Object> payload = createPayload(profileId);
     payload.put("initialized", false);
     String json = callMethod("get_tg_names", payload);
@@ -456,6 +483,16 @@ public class TRexAstfClient extends ClientBase {
         });
 
     return stats;
+  }
+
+  /**
+   * get template group statistics
+   *
+   * @return Map key:tgName, value:AstfStatistics
+   */
+  public ServerStatus syncWithServer() {
+    Map<String, Object> payload = createPayload("*");
+    return callMethod("sync", payload, ServerStatus.class).get();
   }
 
   /**

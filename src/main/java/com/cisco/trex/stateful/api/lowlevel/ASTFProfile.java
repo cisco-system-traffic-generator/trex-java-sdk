@@ -231,4 +231,8 @@ public class ASTFProfile {
     }
     LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);
   }
+
+  public List<ASTFTemplate> getAstfTemplateList() {
+    return this.astfTemplateList;
+  }
 }

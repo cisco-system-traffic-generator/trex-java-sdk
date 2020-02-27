@@ -22,6 +22,9 @@ public class LatencyStatLat {
   @JsonProperty("total_max")
   private long totalMax = 0;
 
+  @JsonProperty("total_min")
+  private long totalMin = 0;
+
   @JsonProperty("average")
   public double getAverage() {
     return average;
@@ -70,5 +73,15 @@ public class LatencyStatLat {
   @JsonProperty("total_max")
   public void setTotalMax(final long totalMax) {
     this.totalMax = totalMax;
+  }
+
+  @JsonProperty("total_min")
+  public long getTotalMin() {
+    return totalMin;
+  }
+
+  @JsonProperty("total_min")
+  public void setTotalMin(final long totalMin) {
+    this.totalMin = totalMin;
   }
 }

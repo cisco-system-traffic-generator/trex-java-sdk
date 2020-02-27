@@ -88,8 +88,7 @@ public abstract class ClientBase {
   }
 
   private List<TRexCommand> buildRemoveCaptureCommand(List<Integer> captureIds) {
-    return captureIds
-        .stream()
+    return captureIds.stream()
         .map(
             captureId -> {
               Map<String, Object> parameters = new HashMap<>();
@@ -106,10 +105,9 @@ public abstract class ClientBase {
    * @return port list
    */
   public List<Port> getPorts() {
-    LOGGER.info("Getting ports list.");
+    LOGGER.debug("Getting ports list.");
     List<Port> ports = getSystemInfo().getPorts();
-    ports
-        .stream()
+    ports.stream()
         .forEach(
             port -> {
               TRexClientResult<PortStatus> result = getPortStatus(port.getIndex());
@@ -136,8 +134,7 @@ public abstract class ClientBase {
       LOGGER.error(
           String.format("Port with index %s was not found. Returning empty port", portIndex));
     }
-    return getPorts()
-        .stream()
+    return getPorts().stream()
         .filter(p -> p.getIndex() == portIndex)
         .findFirst()
         .orElse(new Port());
@@ -151,7 +148,7 @@ public abstract class ClientBase {
    * @return result
    */
   public String callMethod(String methodName, Map<String, Object> payload) {
-    LOGGER.info("Call {} method.", methodName);
+    LOGGER.debug("Call {} method.", methodName);
     if (!this.supportedCmds.contains(methodName)) {
       LOGGER.error("Unsupported {} method.", methodName);
       throw new UnsupportedOperationException();
@@ -191,7 +188,7 @@ public abstract class ClientBase {
    */
   public <T> TRexClientResult<T> callMethod(
       String methodName, Map<String, Object> parameters, Class<T> responseType) {
-    LOGGER.info("Call {} method.", methodName);
+    LOGGER.debug("Call {} method.", methodName);
     if (!this.supportedCmds.contains(methodName)) {
       LOGGER.error("Unsupported {} method.", methodName);
       throw new UnsupportedOperationException();
@@ -511,23 +508,6 @@ public abstract class ClientBase {
     return GSON.fromJson(getResultFromResponse(json), SystemInfo.class);
   }
 
-  /**
-   * Release Port
-   *
-   * @param portIndex
-   * @return PortStatus
-   */
-  public PortStatus releasePort(int portIndex) {
-    Map<String, Object> payload = createPayload(portIndex);
-    payload.put("user", userName);
-    String result = callMethod("release", payload);
-    if (result.contains("must acquire the context")) {
-      LOGGER.info("Port is not owned by this session, already released or never acquired");
-    }
-    portHandlers.remove(portIndex);
-    return getPortStatus(portIndex).get();
-  }
-
   protected Map<String, Object> createPayload(int portIndex) {
     Map<String, Object> payload = new HashMap<>();
     payload.put(PORT_ID, portIndex);
@@ -552,13 +532,4 @@ public abstract class ClientBase {
   }
 
   protected abstract void serverAPISync() throws TRexConnectionException;
-
-  /**
-   * Acquire Port to be able to apply configuration to it
-   *
-   * @param port
-   * @param force
-   * @return PortStatus
-   */
-  public abstract PortStatus acquirePort(int port, Boolean force);
 }

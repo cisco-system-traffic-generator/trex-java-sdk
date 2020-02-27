@@ -121,16 +121,39 @@ public class TRexClient extends ClientBase {
     LOGGER.info("Received api_H: {}", apiH);
   }
 
-  @Deprecated
-  @Override
   public PortStatus acquirePort(int portIndex, Boolean force) {
-    Map<String, Object> payload = createPayload(portIndex);
-    payload.put("session_id", SESSON_ID);
-    payload.put("user", userName);
-    payload.put("force", force);
-    String json = callMethod("acquire", payload);
-    String handler = getResultFromResponse(json).getAsString();
-    portHandlers.put(portIndex, handler);
+    if (!portHandlers.containsKey(portIndex)) {
+      Map<String, Object> payload = createPayload(portIndex);
+      payload.put("session_id", SESSON_ID);
+      payload.put("user", userName);
+      payload.put("force", force);
+      String json = callMethod("acquire", payload);
+      String handler = getResultFromResponse(json).getAsString();
+      portHandlers.put(portIndex, handler);
+    } else {
+      LOGGER.debug("Port already acquired, continueing");
+    }
+    return getPortStatus(portIndex).get();
+  }
+
+  /**
+   * Release Port
+   *
+   * @param portIndex
+   * @return PortStatus
+   */
+  public PortStatus releasePort(int portIndex) {
+    if (!portHandlers.containsKey(portIndex)) {
+      LOGGER.debug("No handler assigned, port is not acquired.");
+    } else {
+      Map<String, Object> payload = createPayload(portIndex);
+      payload.put("user", userName);
+      String result = callMethod("release", payload);
+      if (result.contains("must acquire the context")) {
+        LOGGER.info("Port is not owned by this session, already released or never acquired");
+      }
+      portHandlers.remove(portIndex);
+    }
     return getPortStatus(portIndex).get();
   }
 
@@ -306,7 +329,9 @@ public class TRexClient extends ClientBase {
       Map<String, Object> mul,
       int coreMask) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
-    payload.put("core_mask", coreMask);
+    if (coreMask > 0) {
+      payload.put("core_mask", coreMask);
+    }
     payload.put("mul", mul);
     payload.put("duration", duration);
     payload.put("force", force);
@@ -344,6 +369,36 @@ public class TRexClient extends ClientBase {
     payload.put(TYPE, "queue");
     payload.put("enabled", false);
     callMethod("set_rx_feature", payload);
+  }
+
+  public void removeRxFilters(int portIndex, int profileId) {
+    Map<String, Object> payload = createPayload(portIndex);
+    if (profileId > 0) {
+      payload.put("profile_id", profileId);
+    }
+    callMethod("remove_rx_filters", payload);
+  }
+
+  /** Set promiscuous mode, Enable interface to receive packets from all mac addresses */
+  public void setPromiscuousMode(int portIndex, boolean enabled) {
+    Map<String, Object> payload = createPayload(portIndex);
+    Map<String, Object> attributes = new HashMap<>();
+    Map<String, Object> promiscuousValue = new HashMap<>();
+    promiscuousValue.put("enabled", enabled);
+    attributes.put("promiscuous", promiscuousValue);
+    payload.put("attr", attributes);
+    callMethod("set_port_attr", payload);
+  }
+
+  /** Set flow control mode, Flow control: 0 = none, 1 = tx, 2 = rx, 3 = full */
+  public void setFlowControlMode(int portIndex, int mode) {
+    Map<String, Object> payload = createPayload(portIndex);
+    Map<String, Object> attributes = new HashMap<>();
+    Map<String, Object> flowCtrlValue = new HashMap<>();
+    flowCtrlValue.put("enabled", mode);
+    attributes.put("flow_ctrl_mode", flowCtrlValue);
+    payload.put("attr", attributes);
+    callMethod("set_port_attr", payload);
   }
 
   public synchronized void sendPacket(int portIndex, Packet pkt) {
@@ -387,11 +442,21 @@ public class TRexClient extends ClientBase {
   }
 
   public String resolveArp(int portIndex, String srcIp, String dstIp) {
+    String srcMac = getPortByIndex(portIndex).hw_mac;
+    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+    return resolveArp(portIndex, vlan, srcIp, srcMac, dstIp);
+  }
+
+  public String resolveArp(int portIndex, String srcIp, String srcMac, String dstIp) {
+    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
+    return resolveArp(portIndex, vlan, srcIp, srcMac, dstIp);
+  }
+
+  public String resolveArp(
+      int portIndex, PortVlan vlan, String srcIp, String srcMac, String dstIp) {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
-    String srcMac = getPortByIndex(portIndex).hw_mac;
-    PortVlan vlan = getPortStatus(portIndex).get().getAttr().getVlan();
     EthernetPacket pkt = buildArpPkt(srcMac, srcIp, dstIp, vlan);
     sendPacket(portIndex, pkt);
 
@@ -574,6 +639,21 @@ public class TRexClient extends ClientBase {
 
     EthernetPacket naPacket =
         new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
+    if (naPacket != null) {
+      return naPacket.getHeader().getSrcAddr().toString();
+    }
+
+    return null;
+  }
+
+  public String resolveIpv6(
+      PortVlan vlan, int portIndex, String srcMac, String srcIp, String dstIp) {
+    removeRxQueue(portIndex);
+    setRxQueue(portIndex, 1000);
+
+    EthernetPacket naPacket =
+        new IPv6NeighborDiscoveryService(this)
+            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, null, srcIp, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }

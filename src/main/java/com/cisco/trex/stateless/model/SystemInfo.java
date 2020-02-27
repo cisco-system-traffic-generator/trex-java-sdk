@@ -29,23 +29,23 @@ public class SystemInfo {
     return ports;
   }
 
-  public Integer getPortCount() {
-    return port_count;
+  public String getCoreType() {
+    return core_type;
   }
 
   public String getHostname() {
     return hostname;
   }
 
-  public Integer getCoreCountPerPort() {
-    return dp_core_count_per_port;
-  }
-
-  public Integer getCoreCount() {
+  public int getCoreCount() {
     return dp_core_count;
   }
 
-  public String getCoreType() {
-    return core_type;
+  public int getCoreCountPerPort() {
+    return dp_core_count_per_port;
+  }
+
+  public int getPortCount() {
+    return port_count;
   }
 }

@@ -30,9 +30,9 @@ public class ASTFProgram {
   private Map<String, Integer> vars = new HashMap<>();
   private Map<String, Integer> labels = new HashMap<>();
   private Map<String, List<ASTFCmd>> fields = new HashMap<>();
-  private int totalSendBytes = 0;
-  private int totalRcvBytes = 0;
-  private int payloadLen = 0;
+  private long totalSendBytes;
+  private long totalRcvBytes;
+  private int payloadLen;
 
   private boolean stream = true;
   private static BufferList bufList = new BufferList();
@@ -103,7 +103,7 @@ public class ASTFProgram {
     }
 
     List<ASTFCmd> newCmds = new ArrayList<>();
-    int totRcvBytes = 0;
+    long totRcvBytes = 0;
     boolean rx = false;
     int maxDelay = 0;
 
@@ -208,7 +208,7 @@ public class ASTFProgram {
   }
 
   /**
-   * delay for a random time betwean min-max usec with uniform distribution
+   * delay for a random time between min-max usec with uniform distribution
    *
    * @param minUsec
    * @param maxUsec
@@ -280,7 +280,7 @@ public class ASTFProgram {
   }
 
   /**
-   * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk. This is
+   * Send l7_buffer by splitting it into small chunks and issue a delay between each chunk. This is
    * a utility command that works on top of send/delay command
    *
    * <p>example1: send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
@@ -288,7 +288,7 @@ public class ASTFProgram {
    *
    * @param l7Buf l7 stream as string
    * @param chunkSize size of each chunk
-   * @param delayUsec the delay in usec to insert betwean each write
+   * @param delayUsec the delay in usec to insert between each write
    */
   public void sendChunk(String l7Buf, int chunkSize, int delayUsec) {
     int size = l7Buf.length();
@@ -311,8 +311,9 @@ public class ASTFProgram {
   /**
    * recv bytes command
    *
-   * @param bytes
+   * @param bytes @Deprecated use method with Long instead
    */
+  @Deprecated
   public void recv(int bytes) {
     recv(bytes, false);
   }
@@ -321,9 +322,32 @@ public class ASTFProgram {
    * recv bytes command
    *
    * @param bytes
+   */
+  public void recv(long bytes) {
+    recv(bytes, false);
+  }
+
+  /**
+   * recv bytes command
+   *
+   * @param bytes
+   * @param clear @Deprecated use method with long instead
+   */
+  @Deprecated
+  public void recv(int bytes, boolean clear) {
+    recv((long) bytes, clear);
+  }
+
+  /**
+   * recv bytes command
+   *
+   * @param bytes
    * @param clear
    */
-  public void recv(int bytes, boolean clear) {
+  public void recv(long bytes, boolean clear) {
+    if (clear) {
+      this.totalRcvBytes = 0;
+    }
     this.totalRcvBytes += bytes;
     fields.get(COMMANDS).add(new ASTFCmdRecv(totalRcvBytes, clear));
   }
@@ -331,10 +355,33 @@ public class ASTFProgram {
   /**
    * recv msg, works for UDP flow
    *
+   * @param pkts wait until the rx packet watermark is reached on flow counter. @Deprecated use
+   *     method with long instead
+   */
+  @Deprecated
+  public void recvMsg(int pkts) {
+    recvMsg((long) pkts, false);
+  }
+
+  /**
+   * recv msg, works for UDP flow
+   *
    * @param pkts wait until the rx packet watermark is reached on flow counter.
    */
-  public void recvMsg(int pkts) {
+  public void recvMsg(long pkts) {
     recvMsg(pkts, false);
+  }
+
+  /**
+   * recv Msg cmd
+   *
+   * @param pkts wait until the rx packet watermark is reached on flow counter.
+   * @param clear when reach the watermark clear the flow counter @Deprecated use method with long
+   *     instead
+   */
+  @Deprecated
+  public void recvMsg(int pkts, boolean clear) {
+    recvMsg((long) pkts, clear);
   }
 
   /**
@@ -343,7 +390,10 @@ public class ASTFProgram {
    * @param pkts wait until the rx packet watermark is reached on flow counter.
    * @param clear when reach the watermark clear the flow counter
    */
-  public void recvMsg(int pkts, boolean clear) {
+  public void recvMsg(long pkts, boolean clear) {
+    if (clear) {
+      this.totalRcvBytes = 0;
+    }
     this.totalRcvBytes += pkts;
     fields.get(COMMANDS).add(new ASTFCmdRecvMsg(this.totalRcvBytes, clear));
   }
@@ -388,7 +438,19 @@ public class ASTFProgram {
   }
 
   public void setKeepAliveMsg(int msec) {
-    this.fields.get(COMMANDS).add(new ASTFCmdRecvMsg(this.totalRcvBytes, false));
+    this.fields.get(COMMANDS).add(new ASTFCmdKeepaliveMsg(msec));
+  }
+
+  /**
+   * set var command
+   *
+   * @param varId
+   * @param value @Deprecated use method with Long instead
+   */
+  @Deprecated
+  public void setVar(String varId, int value) {
+    addVar(varId);
+    fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, (long) value));
   }
 
   /**
@@ -397,7 +459,7 @@ public class ASTFProgram {
    * @param varId
    * @param value
    */
-  public void setVar(String varId, int value) {
+  public void setVar(String varId, Long value) {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, value));
   }
@@ -427,9 +489,19 @@ public class ASTFProgram {
   /**
    * get the total send bytes of the program
    *
+   * @return sent bytes @Deprecated use getTotalSendBytesLong instead
+   */
+  @Deprecated
+  public int getTotalSendBytes() {
+    return (int) totalSendBytes;
+  }
+
+  /**
+   * get the total send bytes of the program
+   *
    * @return sent bytes
    */
-  public int getTotalSendBytes() {
+  public long getTotalSendBytesLong() {
     return totalSendBytes;
   }
 
@@ -576,28 +648,10 @@ public class ASTFProgram {
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
       }
-      list.add(base64Buf);
-      int newIndex = list.size() - 1;
+      bufList.add(base64Buf);
+      int newIndex = bufList.size() - 1;
       bufHash.put(sha256Buf, newIndex);
       return newIndex;
-    }
-
-    /**
-     * @param buf should be base64 encode string
-     * @return Hex string of the sha256 encode buf
-     */
-    private static String encodeSha256(String buf) {
-      try {
-        MessageDigest sha256 = MessageDigest.getInstance("MD5");
-        byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashInBytes) {
-          sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-      } catch (NoSuchAlgorithmException e) {
-        throw new IllegalStateException("Could not generate MD5", e);
-      }
     }
 
     /**
@@ -611,6 +665,24 @@ public class ASTFProgram {
         jsonArray.add(buf);
       }
       return jsonArray;
+    }
+  }
+
+  /**
+   * @param buf should be base64 encode string
+   * @return Hex string of the sha256 encode buf
+   */
+  static String encodeSha256(String buf) {
+    try {
+      MessageDigest sha256 = MessageDigest.getInstance("MD5");
+      byte[] hashInBytes = sha256.digest(buf.getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder();
+      for (byte b : hashInBytes) {
+        sb.append(String.format("%02x", b));
+      }
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      throw new IllegalStateException("Could not generate MD5", e);
     }
   }
 
