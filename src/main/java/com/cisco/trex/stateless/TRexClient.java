@@ -318,7 +318,7 @@ public class TRexClient extends ClientBase {
   }
 
   public void startTraffic(
-      int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+      int portIndex, double duration, boolean force, Map<String, Object> mul, long coreMask) {
     startTraffic(portIndex, "", duration, force, mul, coreMask);
   }
 
@@ -328,7 +328,7 @@ public class TRexClient extends ClientBase {
       double duration,
       boolean force,
       Map<String, Object> mul,
-      int coreMask) {
+      long coreMask) {
     Map<String, Object> payload = createPayload(portIndex, profileId);
     if (coreMask > 0) {
       payload.put("core_mask", coreMask);
@@ -340,7 +340,7 @@ public class TRexClient extends ClientBase {
   }
 
   public void startAllTraffic(
-      int portIndex, double duration, boolean force, Map<String, Object> mul, int coreMask) {
+      int portIndex, double duration, boolean force, Map<String, Object> mul, long coreMask) {
     List<String> profileIds = getProfileIds(portIndex);
     for (String profileId : profileIds) {
       startTraffic(portIndex, profileId, duration, force, mul, coreMask);
