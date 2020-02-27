@@ -382,9 +382,9 @@ public class TRexClient extends ClientBase {
   }
 
   /**
-   * Block until traffic on specified port(s) has ended
+   * Wait until traffic on specified port(s) has ended
    *
-   * @param timeoutInSecounds 0 means blocking
+   * @param timeoutInSecounds
    * @param rxDelayMs Time to wait (in milliseconds) after last packet was sent, until RX filters
    *     used for measuring flow statistics and latency are removed. This value should reflect the
    *     time it takes packets which were transmitted to arrive to the destination. After this time,
