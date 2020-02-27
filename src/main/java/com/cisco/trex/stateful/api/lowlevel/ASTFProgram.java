@@ -648,8 +648,8 @@ public class ASTFProgram {
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
       }
-      bufList.add(base64Buf);
-      int newIndex = bufList.size() - 1;
+      list.add(base64Buf);
+      int newIndex = list.size() - 1;
       bufHash.put(sha256Buf, newIndex);
       return newIndex;
     }
