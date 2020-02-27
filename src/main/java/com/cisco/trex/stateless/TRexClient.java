@@ -633,7 +633,7 @@ public class TRexClient extends ClientBase {
         -1);
   }
 
-  public String resolveIpv6(int portIndex, String dstIp) {
+  public String resolveIpv6(int portIndex, String dstIp) throws ServiceModeRequiredException {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
@@ -794,7 +794,7 @@ public class TRexClient extends ClientBase {
   }
 
   public EthernetPacket sendIcmpV6Echo(
-      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) {
+      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) throws ServiceModeRequiredException {
     return new IPv6NeighborDiscoveryService(this)
         .sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
   }
