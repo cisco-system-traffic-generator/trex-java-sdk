@@ -794,7 +794,8 @@ public class TRexClient extends ClientBase {
   }
 
   public EthernetPacket sendIcmpV6Echo(
-      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut) throws ServiceModeRequiredException {
+      int portIndex, String dstIp, int icmpId, int icmpSeq, int timeOut)
+      throws ServiceModeRequiredException {
     return new IPv6NeighborDiscoveryService(this)
         .sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
   }

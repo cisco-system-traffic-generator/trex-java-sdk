@@ -13,7 +13,6 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.google.common.collect.Lists;
-import com.google.common.net.InetAddresses;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
