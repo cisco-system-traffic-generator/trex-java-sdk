@@ -380,14 +380,6 @@ public class TRexClient extends ClientBase {
     callMethod("remove_rx_filters", payload);
   }
 
-  public void removeRxFilters(int portIndex, int profileId) {
-    Map<String, Object> payload = createPayload(portIndex);
-    if (profileId > 0) {
-      payload.put("profile_id", profileId);
-    }
-    callMethod("remove_rx_filters", payload);
-  }
-
   /** Set promiscuous mode, Enable interface to receive packets from all mac addresses */
   public void setPromiscuousMode(int portIndex, boolean enabled) {
     Map<String, Object> payload = createPayload(portIndex);
