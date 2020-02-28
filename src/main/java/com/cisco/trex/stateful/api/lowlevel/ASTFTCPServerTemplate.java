@@ -39,6 +39,7 @@ public class ASTFTCPServerTemplate extends ASTFTemplateBase {
    *
    * @return JsonObject
    */
+  @Override
   public JsonObject toJson() {
     JsonObject json = super.toJson();
     json.add("assoc", assoc.toJson());

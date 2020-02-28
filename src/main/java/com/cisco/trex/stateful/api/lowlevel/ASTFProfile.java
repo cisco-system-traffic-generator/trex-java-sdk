@@ -17,15 +17,11 @@ public class ASTFProfile {
 
   private static final String L7_PRECENT = "l7_percent";
   private static final String CPS = "cps";
-
-  private ASTFIpGen astfIpGen;
   private ASTFGlobalInfo astfClientGlobalInfo;
   private ASTFGlobalInfo astfServerGlobalInfo;
   private List<ASTFTemplate> astfTemplateList;
-  private List<ASTFCapInfo> astfCapInfoList;
-
-  private Map<String, Integer> tgName2TgId =
-      new LinkedHashMap<>(); // template group name -> template group id
+  private Map<String, Integer> tgName2TgId = new LinkedHashMap<>(); // template group name ->
+  // template group id
 
   /**
    * construct
@@ -57,11 +53,9 @@ public class ASTFProfile {
 
     if (astfTemplateList == null && astfCapInfoList == null) {
       throw new IllegalStateException(
-          String.format(
-              "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time "));
+          "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time ");
     }
     this.astfTemplateList = astfTemplateList;
-    this.astfCapInfoList = astfCapInfoList;
 
     for (ASTFTemplate template : astfTemplateList) {
       if (template.getTgName() == null) {
@@ -77,10 +71,10 @@ public class ASTFProfile {
     }
 
     /** for pcap file parse scenario */
-    if (astfCapInfoList != null && astfCapInfoList.size() != 0) {
+    if (astfCapInfoList != null && !astfCapInfoList.isEmpty()) {
       String mode = null;
-      List<Map<String, Object>> allCapInfo = new ArrayList();
-      List<Integer> dPorts = new ArrayList();
+      List<Map<String, Object>> allCapInfo = new ArrayList<>();
+      List<Integer> dPorts = new ArrayList<>();
       int totalPayload = 0;
       for (ASTFCapInfo capInfo : astfCapInfoList) {
         String capFile = capInfo.getFilePath();
@@ -128,7 +122,7 @@ public class ASTFProfile {
         dPorts.add(dPort);
 
         /** add param to cap info map */
-        HashMap<String, Object> map = new HashMap();
+        HashMap<String, Object> map = new HashMap<>();
         map.put("ip_gen", ipGen);
         map.put("prog_c", progC);
         map.put("prog_s", progS);

@@ -13,7 +13,6 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.google.common.collect.Lists;
-import com.google.common.net.InetAddresses;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -129,8 +128,12 @@ public class IPv6NeighborDiscoveryService {
         .filter(
             ipv6Node -> {
               if (dstIP != null) {
-                return InetAddresses.forString(dstIP)
-                    .equals(InetAddresses.forString(ipv6Node.getIp()));
+                try {
+                  return InetAddress.getAllByName(dstIP)
+                      .equals(InetAddress.getAllByName(ipv6Node.getIp()));
+                } catch (UnknownHostException e) {
+                  return false;
+                }
               }
               return true;
             })

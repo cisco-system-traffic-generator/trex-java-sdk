@@ -10,7 +10,7 @@ public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
   private JsonObject tcp = new JsonObject();
   private JsonObject ip = new JsonObject();
   private static final Set<String> tcpParamSet =
-      new HashSet(Arrays.asList("initwnd", "mss", "no_delay", "rxbufsize", "txbufsize"));
+      new HashSet<>(Arrays.asList("initwnd", "mss", "no_delay", "rxbufsize", "txbufsize"));
 
   @Override
   public ASTFGlobalInfoBase scheduler(SchedulerParam schedulerParam, int value) {

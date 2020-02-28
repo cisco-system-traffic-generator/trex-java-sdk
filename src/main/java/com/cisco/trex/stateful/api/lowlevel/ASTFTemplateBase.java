@@ -13,11 +13,10 @@ import java.util.Map;
  * <p>abstract AstfTemplateBase class
  */
 abstract class ASTFTemplateBase {
-  private static List<ASTFProgram> programList = new ArrayList();
-  private static Map<ASTFProgram, Integer> programHash = new HashMap();
+  private static List<ASTFProgram> programList = new ArrayList<>();
+  private static Map<ASTFProgram, Integer> programHash = new HashMap<>();
 
   private JsonObject fields = new JsonObject();
-  private int programIndex;
   private boolean isStream;
 
   /**

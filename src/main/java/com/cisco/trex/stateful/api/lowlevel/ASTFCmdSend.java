@@ -60,7 +60,7 @@ public class ASTFCmdSend extends ASTFCmd {
     return base64Buf;
   }
 
-  private String encodeBase64(byte[] bytes) {
+  private static String encodeBase64(byte[] bytes) {
     Base64.Encoder encoder = Base64.getEncoder();
     return encoder.encodeToString(bytes);
   }

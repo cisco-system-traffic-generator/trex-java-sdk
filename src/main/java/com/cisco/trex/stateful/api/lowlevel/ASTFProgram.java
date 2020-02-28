@@ -113,7 +113,7 @@ public class ASTFProgram {
         newCmds.add(new ASTFCmdConnect());
       }
 
-      ASTFCmd newCmd = null;
+      ASTFCmd newCmd;
       for (int i = 0; i < cmds.size(); i++) {
         SideType dir = dirs.get(i);
         CPacketData cmd = cmds.get(i);
@@ -625,7 +625,7 @@ public class ASTFProgram {
 
   /** cached Buffer class for inner use */
   static class BufferList {
-    List<String> bufList = new ArrayList<>();
+    List<String> list = new ArrayList<>();
     Map<String, Integer> bufHash = new HashMap<>();
 
     /**
@@ -634,7 +634,7 @@ public class ASTFProgram {
      * @return buf list length
      */
     public int getLen() {
-      return bufList.size();
+      return list.size();
     }
 
     /**
@@ -648,8 +648,8 @@ public class ASTFProgram {
       if (bufHash.containsKey(sha256Buf)) {
         return bufHash.get(sha256Buf);
       }
-      bufList.add(base64Buf);
-      int newIndex = bufList.size() - 1;
+      list.add(base64Buf);
+      int newIndex = list.size() - 1;
       bufHash.put(sha256Buf, newIndex);
       return newIndex;
     }
@@ -661,7 +661,7 @@ public class ASTFProgram {
      */
     public JsonArray toJson() {
       JsonArray jsonArray = new JsonArray();
-      for (String buf : bufList) {
+      for (String buf : list) {
         jsonArray.add(buf);
       }
       return jsonArray;

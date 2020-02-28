@@ -15,15 +15,12 @@ import org.slf4j.LoggerFactory;
 public final class TRexClientUtil {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TRexClientUtil.class);
-
   private static final Random randomizer = new Random();
-
-  private static TRexTransport transport;
 
   private TRexClientUtil() {}
 
   public static TRexServerMode getMode(String host, String port) {
-    transport = new TRexTransport(host, port, 3000);
+    TRexTransport transport = new TRexTransport(host, port, 3000);
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("name", "ASTF");
     parameters.put("major", Constants.ASTF_API_VERSION_MAJOR);
@@ -32,7 +29,7 @@ public final class TRexClientUtil {
     try {
       response = transport.sendCommand(buildCommand("api_sync_v2", parameters));
     } catch (IOException | NullPointerException e) {
-      LOGGER.debug("Unable to sync client with TRex server .", e.getMessage());
+      LOGGER.debug("Unable to sync client with TRex server .", e);
       return TRexServerMode.UNKNOWN;
     }
     if (!response.isFailed()) {

@@ -15,7 +15,7 @@ public class ASTFCapInfo {
   private ASTFGlobalInfoPerTemplate clientGlobInfo; // client global param
   private int limit; // Limit the number of flows
 
-  private ASTFCapInfo(AstfCapInfoBuilder builder) {
+  ASTFCapInfo(AstfCapInfoBuilder builder) {
     filePath = builder.filePath;
     cps = builder.cps;
     assoc = builder.assoc;
@@ -43,12 +43,9 @@ public class ASTFCapInfo {
         throw new IllegalStateException(
             String.format("bad param combination,l7Percent %s ,cps %s ", l7Percent, cps));
       }
-      l7Percent = l7Percent;
-      cps = cps;
+
     } else {
-      if (cps > 0) {
-        cps = cps;
-      } else {
+      if (cps <= 0) {
         cps = 1;
       }
     }
@@ -145,15 +142,15 @@ public class ASTFCapInfo {
   /** AstfCapInfo builder */
   public static final class AstfCapInfoBuilder {
 
-    private String filePath;
-    private float cps;
-    private ASTFAssociation assoc;
-    private ASTFIpGen astfIpGen;
-    private int port;
-    private float l7Percent;
-    private ASTFGlobalInfoPerTemplate serverGlobInfo;
-    private ASTFGlobalInfoPerTemplate clientGlobInfo;
-    private int limit;
+    String filePath;
+    float cps;
+    ASTFAssociation assoc;
+    ASTFIpGen astfIpGen;
+    int port;
+    float l7Percent;
+    ASTFGlobalInfoPerTemplate serverGlobInfo;
+    ASTFGlobalInfoPerTemplate clientGlobInfo;
+    int limit;
 
     public AstfCapInfoBuilder filePath(String val) {
       filePath = val;

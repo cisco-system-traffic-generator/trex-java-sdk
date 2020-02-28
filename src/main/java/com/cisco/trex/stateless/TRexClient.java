@@ -19,7 +19,6 @@ import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.cisco.trex.util.Constants;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -580,7 +579,9 @@ public class TRexClient extends ClientBase {
 
   private static AbstractMap.SimpleEntry<EtherType, Packet.Builder> buildVlan(
       ArpPacket.Builder arpBuilder, PortVlan vlan) {
-    Queue<Integer> vlanTags = new LinkedList<>(Lists.reverse(vlan.getTags()));
+    List<Integer> tags = vlan.getTags();
+    Collections.reverse(tags);
+    Queue<Integer> vlanTags = new LinkedList<>(tags);
     Packet.Builder resultPayloadBuilder = arpBuilder;
     EtherType resultEtherType = EtherType.ARP;
 
@@ -756,8 +757,8 @@ public class TRexClient extends ClientBase {
         .tos(IpV4Rfc791Tos.newInstance((byte) 0))
         .ttl((byte) 64)
         .protocol(IpNumber.ICMPV4)
-        .srcAddr((Inet4Address) Inet4Address.getByName(srcIp))
-        .dstAddr((Inet4Address) Inet4Address.getByName(dstIp))
+        .srcAddr((Inet4Address) InetAddress.getByName(srcIp))
+        .dstAddr((Inet4Address) InetAddress.getByName(dstIp))
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true)
         .payloadBuilder(icmpv4CommonPacketBuilder);

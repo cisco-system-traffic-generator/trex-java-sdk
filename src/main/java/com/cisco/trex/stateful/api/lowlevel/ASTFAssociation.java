@@ -24,7 +24,7 @@ public class ASTFAssociation {
    * @param astfAssociationRule
    */
   public ASTFAssociation(ASTFAssociationRule astfAssociationRule) {
-    astfAssociationRuleList = new ArrayList();
+    astfAssociationRuleList = new ArrayList<>();
     astfAssociationRuleList.add(astfAssociationRule);
   }
 

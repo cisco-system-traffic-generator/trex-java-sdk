@@ -4,10 +4,6 @@ import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFIpGen class */
 public class ASTFIpGen {
-  private ASTFIpGenDist distClient;
-  private ASTFIpGenDist distServer;
-  private ASTFIpGenGlobal ipGenGlobal;
-
   private JsonObject fields = new JsonObject();
 
   /**
@@ -19,9 +15,6 @@ public class ASTFIpGen {
    */
   public ASTFIpGen(
       ASTFIpGenDist distClient, ASTFIpGenDist distServer, ASTFIpGenGlobal ipGenGlobal) {
-    this.distClient = distClient;
-    this.distServer = distServer;
-    this.ipGenGlobal = ipGenGlobal;
 
     this.fields.add("dist_client", distClient.toJson());
     distClient.setDirection("c");

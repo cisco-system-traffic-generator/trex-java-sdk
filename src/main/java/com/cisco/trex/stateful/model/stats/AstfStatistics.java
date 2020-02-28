@@ -82,7 +82,7 @@ public class AstfStatistics {
     return this;
   }
 
-  private String getCounterName(int id, MetaData metaData) {
+  private static String getCounterName(int id, MetaData metaData) {
     for (CounterMeta meta : metaData.getData()) {
       if (meta.getId() == id) {
         return meta.getName();
