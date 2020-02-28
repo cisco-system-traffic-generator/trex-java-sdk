@@ -45,7 +45,7 @@ public class ASTFCapInfo {
       }
 
     } else {
-      if (cps < 0) {
+      if (cps <= 0) {
         cps = 1;
       }
     }
