@@ -29,13 +29,14 @@ import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -393,17 +394,14 @@ public class TRexClient extends ClientBase {
    * @param ports Ports on which to execute the command
    */
   public void waitOnTrafficToFinish(int timeoutInSecounds, int rxDelayMs, Port... ports) {
-    Map<Port, Boolean> portTrafficMap = new HashMap<>();
     long endTime = System.currentTimeMillis() + timeoutInSecounds * 1000;
+    List<Port> portsNotIdleYet = new ArrayList<>(Arrays.asList(ports));
 
-    for (Port port : ports) {
-      portTrafficMap.put(port, true);
-    }
-    while (portTrafficMap.containsValue(true)) {
-      for (Entry<Port, Boolean> entry : portTrafficMap.entrySet()) {
-        if (entry.getValue()) { // port is still true, meaning still running traffic
-          // set port to false if traffic is stopped(IDLE)
-          entry.setValue(!getPortStatus(entry.getKey().getIndex()).get().getState().equals("IDLE"));
+    while (!portsNotIdleYet.isEmpty()) {
+      Iterator<Port> iter = portsNotIdleYet.iterator();
+      while (iter.hasNext()) {
+        if (getPortStatus(iter.next().getIndex()).get().getState().equals("IDLE")) {
+          iter.remove();
         }
       }
       if (System.currentTimeMillis() > endTime) {
