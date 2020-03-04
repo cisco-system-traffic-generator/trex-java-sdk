@@ -472,14 +472,13 @@ public class TRexAstfClient extends ClientBase {
     MetaData metaData = getAstfStatsMetaData();
     name2Id.forEach(
         (tgName, tgId) -> {
+          if (result.get(tgId.toString()) == null) {
+            return;
+          }
           try {
             AstfStatistics astfStatistics =
                 new ObjectMapper()
-                    .readValue(
-                        Optional.ofNullable(result.get(tgId.toString()))
-                            .map(t -> t.toString())
-                            .orElse("{}"),
-                        AstfStatistics.class);
+                    .readValue(result.get(tgId.toString()).toString(), AstfStatistics.class);
             astfStatistics.setCounterNames(metaData);
             stats.put(tgName, astfStatistics);
           } catch (IOException e) {
