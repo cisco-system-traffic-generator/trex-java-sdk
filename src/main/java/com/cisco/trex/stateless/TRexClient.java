@@ -28,9 +28,11 @@ import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -377,6 +379,72 @@ public class TRexClient extends ClientBase {
       payload.put("profile_id", profileId);
     }
     callMethod("remove_rx_filters", payload);
+  }
+
+  /**
+   * Wait until traffic on specified port(s) has ended
+   *
+   * @param timeoutInSeconds
+   * @param rxDelayMs Time to wait (in milliseconds) after last packet was sent, until RX filters
+   *     used for measuring flow statistics and latency are removed. This value should reflect the
+   *     time it takes packets which were transmitted to arrive to the destination. After this time,
+   *     RX filters will be removed, and packets arriving for per flow statistics feature and
+   *     latency flows will be counted as errors.
+   * @param ports Ports on which to execute the command
+   */
+  public void waitOnTrafficToFinish(int timeoutInSeconds, int rxDelayMs, Port... ports) {
+    long endTime = System.currentTimeMillis() + timeoutInSeconds * 1000;
+    List<Port> portsStillSendingTraffic = new ArrayList<>(Arrays.asList(ports));
+
+    while (!portsStillSendingTraffic.isEmpty()) {
+      Iterator<Port> iter = portsStillSendingTraffic.iterator();
+      while (iter.hasNext()) {
+        if (getPortStatus(iter.next().getIndex()).get().getState() != "TX") {
+          iter.remove();
+        }
+      }
+      if (System.currentTimeMillis() > endTime) {
+        break;
+      }
+      if (!portsStillSendingTraffic.isEmpty()) {
+        sleepMilliSeconds(10);
+      }
+    }
+
+    removeRxFiltersWithDelay(rxDelayMs, ports);
+  }
+
+  /**
+   * Delay some time to let packets arrive at destination port before removing filters
+   *
+   * @param rxDelayMs
+   * @param ports
+   */
+  protected void removeRxFiltersWithDelay(int rxDelayMs, Port... ports) {
+    int rxDelayToUse;
+    if (rxDelayMs <= 0) {
+      if (ports[0].is_virtual) {
+        rxDelayToUse = 100;
+      } else {
+        rxDelayToUse = 10;
+      }
+    } else {
+      rxDelayToUse = rxDelayMs;
+    }
+
+    sleepMilliSeconds(rxDelayToUse);
+
+    for (Port port : ports) {
+      removeRxFilters(port.getIndex(), 0);
+    }
+  }
+
+  protected void sleepMilliSeconds(int milliSeconds) {
+    try {
+      Thread.sleep(milliSeconds);
+    } catch (InterruptedException e) {
+      // Do nothing
+    }
   }
 
   /** Set promiscuous mode, Enable interface to receive packets from all mac addresses */
