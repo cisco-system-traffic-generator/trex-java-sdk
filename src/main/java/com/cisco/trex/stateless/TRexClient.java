@@ -440,9 +440,9 @@ public class TRexClient extends ClientBase {
     }
   }
 
-  protected void sleepMilliSeconds(int secounds) {
+  protected void sleepMilliSeconds(int milliSeconds) {
     try {
-      Thread.sleep(secounds);
+      Thread.sleep(milliSeconds);
     } catch (InterruptedException e) {
       // Do nothing
     }
