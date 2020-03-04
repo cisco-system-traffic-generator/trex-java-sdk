@@ -395,10 +395,10 @@ public class TRexClient extends ClientBase {
    */
   public void waitOnTrafficToFinish(int timeoutInSecounds, int rxDelayMs, Port... ports) {
     long endTime = System.currentTimeMillis() + timeoutInSecounds * 1000;
-    List<Port> portsNotIdleYet = new ArrayList<>(Arrays.asList(ports));
+    List<Port> portsStillSendingTraffic = new ArrayList<>(Arrays.asList(ports));
 
-    while (!portsNotIdleYet.isEmpty()) {
-      Iterator<Port> iter = portsNotIdleYet.iterator();
+    while (!portsStillSendingTraffic.isEmpty()) {
+      Iterator<Port> iter = portsStillSendingTraffic.iterator();
       while (iter.hasNext()) {
         if (getPortStatus(iter.next().getIndex()).get().getState() != "TX") {
           iter.remove();
@@ -406,6 +406,9 @@ public class TRexClient extends ClientBase {
       }
       if (System.currentTimeMillis() > endTime) {
         break;
+      }
+      if (!portsStillSendingTraffic.isEmpty()) {
+        sleepMilliSecounds(10);
       }
     }
 
@@ -430,14 +433,18 @@ public class TRexClient extends ClientBase {
       rxDelayToUse = rxDelayMs;
     }
 
-    try {
-      Thread.sleep(rxDelayToUse);
-    } catch (InterruptedException e) {
-      // Do nothing
-    }
+    sleepMilliSecounds(rxDelayToUse);
 
     for (Port port : ports) {
       removeRxFilters(port.getIndex(), 0);
+    }
+  }
+
+  protected void sleepMilliSecounds(int secounds) {
+    try {
+      Thread.sleep(secounds);
+    } catch (InterruptedException e) {
+      // Do nothing
     }
   }
 
