@@ -400,7 +400,7 @@ public class TRexClient extends ClientBase {
     while (!portsNotIdleYet.isEmpty()) {
       Iterator<Port> iter = portsNotIdleYet.iterator();
       while (iter.hasNext()) {
-        if (getPortStatus(iter.next().getIndex()).get().getState().equals("IDLE")) {
+        if (getPortStatus(iter.next().getIndex()).get().getState() != "TX") {
           iter.remove();
         }
       }
