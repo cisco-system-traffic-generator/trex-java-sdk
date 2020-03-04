@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -474,7 +475,11 @@ public class TRexAstfClient extends ClientBase {
           try {
             AstfStatistics astfStatistics =
                 new ObjectMapper()
-                    .readValue(result.get(tgId.toString()).toString(), AstfStatistics.class);
+                    .readValue(
+                        Optional.ofNullable(result.get(tgId.toString()))
+                            .map(t -> t.toString())
+                            .orElse("{}"),
+                        AstfStatistics.class);
             astfStatistics.setCounterNames(metaData);
             stats.put(tgName, astfStatistics);
           } catch (IOException e) {
