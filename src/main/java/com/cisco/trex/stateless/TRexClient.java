@@ -385,7 +385,7 @@ public class TRexClient extends ClientBase {
   /**
    * Wait until traffic on specified port(s) has ended
    *
-   * @param timeoutInSecounds
+   * @param timeoutInSeconds
    * @param rxDelayMs Time to wait (in milliseconds) after last packet was sent, until RX filters
    *     used for measuring flow statistics and latency are removed. This value should reflect the
    *     time it takes packets which were transmitted to arrive to the destination. After this time,
@@ -393,8 +393,8 @@ public class TRexClient extends ClientBase {
    *     latency flows will be counted as errors.
    * @param ports Ports on which to execute the command
    */
-  public void waitOnTrafficToFinish(int timeoutInSecounds, int rxDelayMs, Port... ports) {
-    long endTime = System.currentTimeMillis() + timeoutInSecounds * 1000;
+  public void waitOnTrafficToFinish(int timeoutInSeconds, int rxDelayMs, Port... ports) {
+    long endTime = System.currentTimeMillis() + timeoutInSeconds * 1000;
     List<Port> portsStillSendingTraffic = new ArrayList<>(Arrays.asList(ports));
 
     while (!portsStillSendingTraffic.isEmpty()) {
@@ -408,7 +408,7 @@ public class TRexClient extends ClientBase {
         break;
       }
       if (!portsStillSendingTraffic.isEmpty()) {
-        sleepMilliSecounds(10);
+        sleepMilliSeconds(10);
       }
     }
 
@@ -433,14 +433,14 @@ public class TRexClient extends ClientBase {
       rxDelayToUse = rxDelayMs;
     }
 
-    sleepMilliSecounds(rxDelayToUse);
+    sleepMilliSeconds(rxDelayToUse);
 
     for (Port port : ports) {
       removeRxFilters(port.getIndex(), 0);
     }
   }
 
-  protected void sleepMilliSecounds(int secounds) {
+  protected void sleepMilliSeconds(int secounds) {
     try {
       Thread.sleep(secounds);
     } catch (InterruptedException e) {
