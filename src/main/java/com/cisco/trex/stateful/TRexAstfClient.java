@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -471,6 +472,9 @@ public class TRexAstfClient extends ClientBase {
     MetaData metaData = getAstfStatsMetaData();
     name2Id.forEach(
         (tgName, tgId) -> {
+          if (result.get(tgId.toString()) == null) {
+            return;
+          }
           try {
             AstfStatistics astfStatistics =
                 new ObjectMapper()
