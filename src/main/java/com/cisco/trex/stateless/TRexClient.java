@@ -867,4 +867,14 @@ public class TRexClient extends ClientBase {
     return new IPv6NeighborDiscoveryService(this)
         .sendIcmpV6Echo(portIndex, dstIp, icmpId, icmpSeq, timeOut);
   }
+  
+  public void setLinkState(int portIndex, boolean enabled) {
+    Map<String, Object> payload = createPayload(portIndex);
+    Map<String, Object> attributes = new HashMap<>();
+    Map<String, Object> linkValue = new HashMap<>();
+    linkValue.put("up", enabled);
+    attributes.put("link_status", linkValue);
+    payload.put("attr", attributes);
+    callMethod("set_port_attr", payload);
+  }
 }
