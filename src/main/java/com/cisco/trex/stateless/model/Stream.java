@@ -8,6 +8,7 @@ import org.pcap4j.packet.Packet;
 
 public class Stream {
   private Integer id;
+  private String name;
   private Integer flags = 1;
   private Integer action_count = 0;
   private Integer random_seed = 0;
@@ -37,6 +38,7 @@ public class Stream {
       RuleType rule_type,
       int core_id) {
     this.id = id;
+    this.name = "Stream" + id;
     this.core_id = core_id;
     this.flags = flags;
     this.enabled = enabled;
@@ -53,6 +55,38 @@ public class Stream {
     if (rule_type != null) {
       flow_stats.put("rule_type", rule_type.toString());
     }
+  }
+
+  public Stream(
+      Integer id,
+      String name,
+      Boolean enabled,
+      int flags,
+      Double isg,
+      StreamMode mode,
+      Integer next_stream_id,
+      Packet packet,
+      StreamRxStats rx_stats,
+      StreamVM vm,
+      Boolean self_start,
+      boolean use_flow_stats,
+      RuleType rule_type,
+      int core_id) {
+    this(
+        id,
+        enabled,
+        flags,
+        isg,
+        mode,
+        next_stream_id,
+        packet,
+        rx_stats,
+        vm,
+        self_start,
+        use_flow_stats,
+        rule_type,
+        core_id);
+    this.name = name;
   }
 
   public Stream(
@@ -115,6 +149,10 @@ public class Stream {
     return id;
   }
 
+  public String getName() {
+    return name;
+  }
+
   public Integer getCore_id() {
     return core_id;
   }
@@ -168,6 +206,7 @@ public class Stream {
     Stream s2 = (Stream) obj;
 
     return Objects.equals(this.id, s2.id)
+        && Objects.equals(this.name, s2.name)
         && Objects.equals(this.flags, s2.flags)
         && Objects.equals(this.action_count, s2.action_count)
         && Objects.equals(this.random_seed, s2.random_seed)
