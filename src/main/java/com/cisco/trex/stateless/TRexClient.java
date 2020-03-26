@@ -200,7 +200,7 @@ public class TRexClient extends ClientBase {
   }
 
   public void addStream(int portIndex, int streamId, JsonObject stream) {
-    addStream(portIndex, "", streamId, stream);
+    addStream(portIndex, "", streamId, (Object) stream);
   }
 
   public void addStream(int portIndex, String profileId, int streamId, JsonObject stream) {
