@@ -463,7 +463,7 @@ public class TRexClient extends ClientBase {
     Map<String, Object> payload = createPayload(portIndex);
     Map<String, Object> attributes = new HashMap<>();
     Map<String, Object> flowCtrlValue = new HashMap<>();
-    flowCtrlValue.put("enabled", mode);
+    flowCtrlValue.put("mode", mode);
     attributes.put("flow_ctrl_mode", flowCtrlValue);
     payload.put("attr", attributes);
     callMethod("set_port_attr", payload);
