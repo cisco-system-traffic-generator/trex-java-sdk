@@ -62,6 +62,7 @@ public abstract class ClientBase {
   protected TRexTransport transport;
   protected String apiH;
   protected String masterHandler;
+  private XstatsNames xstatsNames;
 
   private static Gson buildGson() {
     GsonBuilder gsonBuilder = new GsonBuilder();
@@ -360,9 +361,13 @@ public abstract class ClientBase {
   }
 
   private XstatsNames getPortStatNames(int portIndex) {
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put(PORT_ID, portIndex);
-    return callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
+    if (xstatsNames == null) {
+      Map<String, Object> parameters = new HashMap<>();
+      parameters.put(PORT_ID, portIndex);
+      xstatsNames = callMethod("get_port_xstats_names", parameters, XstatsNames.class).get();
+    }
+
+    return xstatsNames;
   }
 
   /**
