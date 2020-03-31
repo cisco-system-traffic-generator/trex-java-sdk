@@ -35,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 public class TRexAstfClient extends ClientBase {
 
   private static final String ASTF = "ASTF";
+  private MetaData counterMetaData;
 
   /**
    * @param host
@@ -359,8 +360,12 @@ public class TRexAstfClient extends ClientBase {
   }
 
   private MetaData getAstfStatsMetaData() {
-    Map<String, Object> payload = createPayload();
-    return callMethod("get_counter_desc", payload, MetaData.class).get();
+    if (counterMetaData == null) {
+      Map<String, Object> payload = createPayload();
+      counterMetaData = callMethod("get_counter_desc", payload, MetaData.class).get();
+    }
+
+    return counterMetaData;
   }
 
   /**
