@@ -1,7 +1,10 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -249,10 +252,32 @@ public class ASTFProgram {
    * @param buf l7 stream as string
    */
   public void send(String buf) {
+    send(buf, 0, null);
+  }
+
+  /**
+   * send (l7_buffer) over TCP and wait for the buffer to be acked by peer. Rx side could work in
+   * parallel
+   *
+   * <p>example1 send (buffer1) send (buffer2)
+   *
+   * <p>Will behave differently than
+   *
+   * <p>example1 send (buffer1+ buffer2)
+   *
+   * <p>in the first example there would be PUSH in the last byte of the buffer and immediate ACK
+   * from peer while in the last example the buffer will be sent together (might be one segment)
+   *
+   * @param buf l7 stream as string
+   * @param size total size of l7 stream, effective only when size > buf.length
+   * @param fill l7 stream filled by string, only if size is effective
+   */
+  public void send(String buf, int size, String fill) {
     // we support bytes or ascii strings
+      System.out.println("testing being by leo \n");
     ASTFCmdSend cmd = null;
     try {
-      cmd = new ASTFCmdSend(buf.getBytes("ascii"));
+      cmd = new ASTFCmdSend(buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
     } catch (UnsupportedEncodingException e) {
       throw new IllegalStateException("Unsupported Encoding Exception", e);
     }
@@ -268,9 +293,20 @@ public class ASTFProgram {
    * @param buf l7 stream as string
    */
   public void sendMsg(String buf) {
+      sendMsg(buf, 0, null);
+  }
+
+  /**
+   * send UDP message
+   *
+   * @param buf l7 stream as string
+   * @param size total size of l7 stream, effective only when size > buf.length
+   * @param fill l7 stream filled by string, only if size is effective
+   */
+  public void sendMsg(String buf, int size, String fill) {
     ASTFCmdTxPkt cmd = null;
     try {
-      cmd = new ASTFCmdTxPkt(buf.getBytes("ascii"));
+      cmd = new ASTFCmdTxPkt(buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
     } catch (UnsupportedEncodingException e) {
       throw new IllegalStateException("Unsupported Encoding Exception", e);
     }
@@ -662,7 +698,12 @@ public class ASTFProgram {
     public JsonArray toJson() {
       JsonArray jsonArray = new JsonArray();
       for (String buf : list) {
-        jsonArray.add(buf);
+        try {
+          JsonObject jsonObj = new Gson().fromJson(buf, JsonObject.class);
+          jsonArray.add(jsonObj);
+        } catch (JsonSyntaxException e) {
+          jsonArray.add(buf);
+        }
       }
       return jsonArray;
     }

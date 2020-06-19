@@ -15,11 +15,30 @@ public class ASTFCmdTxPkt extends ASTFCmd {
    * @param asciiBuf
    */
   public ASTFCmdTxPkt(byte[] asciiBuf) {
+      this(asciiBuf, 0, null);
+  }
+
+  /**
+   * construct
+   *
+   * @param asciiBuf
+   * @param size
+   * @param fill
+   */
+  public ASTFCmdTxPkt(byte[] asciiBuf, int size, byte[] fill) {
     super();
-    this.base64Buf = encodeBase64(asciiBuf);
+    String bufStr = encodeBase64(asciiBuf);
+    this.base64Buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
     this.bufLen = asciiBuf.length;
+    if (size > asciiBuf.length) {
+        this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
+        if (fill != null) {
+            this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"fill\": \"" + encodeBase64(fill) + "\", \"size\": " + size + " }";
+        }
+        this.bufLen = size;
+    }
     stream = false;
     buffer = true;
   }
