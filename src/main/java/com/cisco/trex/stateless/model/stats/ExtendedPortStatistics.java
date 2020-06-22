@@ -38,6 +38,11 @@ public class ExtendedPortStatistics {
     return Arrays.toString(values).replaceAll("\\[|\\]", "");
   }
 
+  /** @return one copy of matchedNameAndValues */
+  public Map<String, Long> getMatchedNameAndValues() {
+    return new HashMap<>(matchedNameAndValues);
+  }
+
   /** @return rx good packets */
   public Long getRxGoodPackets() {
     try {
