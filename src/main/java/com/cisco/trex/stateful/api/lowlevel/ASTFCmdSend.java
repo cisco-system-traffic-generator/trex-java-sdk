@@ -15,7 +15,7 @@ public class ASTFCmdSend extends ASTFCmd {
    * @param asciiBuf
    */
   public ASTFCmdSend(byte[] asciiBuf) {
-      this(asciiBuf, 0, null);
+    this(asciiBuf, 0, null);
   }
 
   /**
@@ -33,11 +33,18 @@ public class ASTFCmdSend extends ASTFCmd {
     fields.addProperty("buf_index", -1);
     this.bufLen = asciiBuf.length;
     if (size > asciiBuf.length) {
-        this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
-        if (fill != null) {
-            this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"fill\": \"" + encodeBase64(fill) + "\", \"size\": " + size + " }";
-        }
-        this.bufLen = size;
+      this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
+      if (fill != null) {
+        this.base64Buf =
+            "{ \"base\": \""
+                + bufStr
+                + "\", \"fill\": \""
+                + encodeBase64(fill)
+                + "\", \"size\": "
+                + size
+                + " }";
+      }
+      this.bufLen = size;
     }
     stream = true;
     buffer = true;

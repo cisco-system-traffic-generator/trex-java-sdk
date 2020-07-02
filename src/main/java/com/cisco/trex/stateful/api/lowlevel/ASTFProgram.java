@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -274,10 +273,12 @@ public class ASTFProgram {
    */
   public void send(String buf, int size, String fill) {
     // we support bytes or ascii strings
-      System.out.println("testing being by leo \n");
+    System.out.println("testing being by leo \n");
     ASTFCmdSend cmd = null;
     try {
-      cmd = new ASTFCmdSend(buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
+      cmd =
+          new ASTFCmdSend(
+              buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
     } catch (UnsupportedEncodingException e) {
       throw new IllegalStateException("Unsupported Encoding Exception", e);
     }
@@ -293,7 +294,7 @@ public class ASTFProgram {
    * @param buf l7 stream as string
    */
   public void sendMsg(String buf) {
-      sendMsg(buf, 0, null);
+    sendMsg(buf, 0, null);
   }
 
   /**
@@ -306,7 +307,9 @@ public class ASTFProgram {
   public void sendMsg(String buf, int size, String fill) {
     ASTFCmdTxPkt cmd = null;
     try {
-      cmd = new ASTFCmdTxPkt(buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
+      cmd =
+          new ASTFCmdTxPkt(
+              buf.getBytes("ascii"), size, (fill != null) ? fill.getBytes("ascii") : null);
     } catch (UnsupportedEncodingException e) {
       throw new IllegalStateException("Unsupported Encoding Exception", e);
     }
