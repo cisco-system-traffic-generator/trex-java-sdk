@@ -1,3 +1,11 @@
+plugins {
+    id 'java'
+	id 'com.github.sherter.google-java-format' version '0.8'
+	id 'signing'
+	id 'maven-publish'
+    id 'io.codearte.nexus-staging' version '0.21.2'
+}
+
 group 'com.cisco.trex'
 
 ext {
@@ -15,24 +23,8 @@ ext {
 	develop2Mail = "emil.gustafsson@ericsson.com"
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'com.github.sherter.google-java-format'
-apply plugin: 'signing'
-
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-buildscript {
-  repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-  }
-  dependencies {
-    classpath "gradle.plugin.com.github.sherter.google-java-format:google-java-format-gradle-plugin:0.8"
-  }
-}
 
 repositories {
     mavenCentral()
@@ -65,49 +57,6 @@ dependencies {
     }
 }
 
-task writePom {
-    doLast {
-        pom {
-            project {
-                name projectName
-                packaging 'jar'
-            	description projectDescription
-                url projectUrl
-                licenses {
-                    license {
-                        name licenseName
-                        url licenseUrl
-                    }
-                }
-                
-                scm {
-		          connection scmConnection
-		          developerConnection scmDeveloperConnection
-		          url scmUrl
-		        }
-		        
-		        developers {
-		          developer {
-		            name develop1Name
-		            email develop1Mail
-		          }
-		          developer {
-		            name develop2Name
-		            email develop2Mail
-		          }
-        		}
-            }
-        }.writeTo("pom.xml")
-    }
-}
-
-jar {
-    dependsOn writePom
-    into("META-INF/maven/$project.group/$project.name") {
-	from("pom.xml")
-    }
-}
-
 task javadocJar(type: Jar) {
 	classifier = 'javadoc'
 	javadoc.options.addStringOption('Xdoclint:none', '-quiet')
@@ -119,19 +68,8 @@ task sourcesJar(type: Jar) {
   from sourceSets.main.allSource
 }
 
-task jarWithDependencies(type: Jar) {
-    dependsOn writePom
-    baseName = project.name + '-with-dependencies'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
-}
-
 artifacts {
   archives javadocJar, sourcesJar
-}
-
-signing {
-    sign configurations.archives
 }
 
 test {
@@ -156,47 +94,81 @@ task e2eTest(type: Test) {
     }
 }
 
-uploadArchives {
-  repositories {
-    mavenDeployer {
-    	beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-    	
-      	repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        	authentication(userName: ossrhUsername, password: ossrhPassword)
-      	}
-      	
-      	pom.project {
-	    	name projectName
-	        packaging 'jar'
-	    	description projectDescription
-	        url projectUrl
-	        licenses {
-	            license {
-	                name licenseName
-	                url licenseUrl
-	            }
-	        }
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId archivesBaseName
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = projectName
+		        packaging = 'jar'
+		    	description = projectDescription
+		        url = projectUrl
 	        
-	        scm {
-	          connection scmConnection
-	          developerConnection scmDeveloperConnection
-	          url scmUrl
-	        }
-	        
-	        developers {
-	          developer {
-	            name develop1Name
-	            email develop1Mail
-	          }
-	          developer {
-	            name develop2Name
-	            email develop2Mail
-	          }
-			}
-	    }
+		        licenses {
+		            license {
+		                name = licenseName
+		                url = licenseUrl
+		            }
+		        }
+		        
+		        scm {
+		          connection = scmConnection
+		          developerConnection = scmDeveloperConnection
+		          url = scmUrl
+		        }
+		        
+		        developers {
+		          developer {
+		            name = develop1Name
+		            email = develop1Mail
+		          }
+		          developer {
+		            name = develop2Name
+		            email = develop2Mail
+		          }
+				}
+            }
+        }
     }
-  }
+    
+    repositories {
+        maven {
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username project.findProperty('nexusUsername') ?: 'secured'
+                password project.findProperty('nexusPassword') ?: 'secured'
+            }
+        }
+    }
+    
 }
 
-//disable signArchives in build due to no GPG key properties is configured in gradle.properties
-signArchives.enabled = false
+signing {
+    sign publishing.publications.mavenJava
+}
+
+generatePomFileForMavenJavaPublication {
+    destination = file("pom.xml")
+}
+
+jar {
+    dependsOn generatePomFileForMavenJavaPublication
+    into("META-INF/maven/$project.group/$project.name") {
+	from("pom.xml")
+    }
+}
+
+task jarWithDependencies(type: Jar) {
+    dependsOn generatePomFileForMavenJavaPublication
+    baseName = project.name + '-with-dependencies'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+nexusStaging {
+	numberOfRetries = 40
+	delayBetweenRetriesInMillis = 5000
+}
