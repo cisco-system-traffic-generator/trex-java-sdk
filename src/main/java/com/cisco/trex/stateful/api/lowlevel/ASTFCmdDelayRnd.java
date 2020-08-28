@@ -5,20 +5,28 @@ public class ASTFCmdDelayRnd extends ASTFCmd {
   private static final String NAME = "delay_rnd";
 
   /**
-   * construct
+   * constructor
    *
-   * @param minSec minimum delay seconds
-   * @param maxSec maximum delay seconds
+   * @param minUsec minimum delay seconds
+   * @param maxUsec maximum delay seconds
    */
-  public ASTFCmdDelayRnd(int minSec, int maxSec) {
+  public ASTFCmdDelayRnd(int minUsec, int maxUsec) {
     super();
     fields.addProperty("name", NAME);
-    fields.addProperty("min_usec", minSec);
-    fields.addProperty("max_usec", maxSec);
+    fields.addProperty("min_usec", minUsec);
+    fields.addProperty("max_usec", maxUsec);
   }
 
   @Override
   public String getName() {
     return NAME;
+  }
+
+  public int getMinUsec() {
+    return fields.get("min_usec").getAsInt();
+  }
+
+  public int getMaxUsec() {
+    return fields.get("max_usec").getAsInt();
   }
 }

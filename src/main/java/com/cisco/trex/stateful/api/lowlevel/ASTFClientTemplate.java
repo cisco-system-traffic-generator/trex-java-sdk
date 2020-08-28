@@ -7,32 +7,26 @@ import com.google.gson.JsonObject;
  * Template class
  */
 abstract class ASTFClientTemplate extends ASTFTemplateBase {
-  private ASTFCluster astfCluster;
-  private ASTFIpGen iPGen;
+  private ASTFCluster cluster;
+  private ASTFIpGen ipGen;
 
-  /**
-   * construct
-   *
-   * @param iPGen
-   * @param astfCluster
-   * @param astfProgram
-   */
-  public ASTFClientTemplate(ASTFIpGen iPGen, ASTFCluster astfCluster, ASTFProgram astfProgram) {
-    super(astfProgram);
-    this.iPGen = iPGen;
-    this.astfCluster = astfCluster == null ? new ASTFCluster() : astfCluster;
+  public ASTFClientTemplate(ASTFIpGen ipGen, ASTFCluster cluster, ASTFProgram program) {
+    super(program);
+    fields.add("ip_gen", ipGen.toJson());
+    this.ipGen = ipGen;
+    this.cluster = cluster == null ? new ASTFCluster() : cluster;
+    fields.add("cluster", this.cluster.toJson());
   }
 
-  /**
-   * to json format
-   *
-   * @return JsonObject
-   */
   @Override
   public JsonObject toJson() {
-    JsonObject json = super.toJson();
-    json.add("ip_gen", iPGen.toJson());
-    json.add("cluster", astfCluster.toJson());
-    return json;
+    JsonObject object = super.toJson();
+    object.add("ip_gen", ipGen.toJson());
+    object.add("cluster", this.cluster.toJson());
+    return object;
+  }
+
+  public ASTFIpGen getIpGen() {
+    return ipGen;
   }
 }

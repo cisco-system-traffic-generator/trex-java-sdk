@@ -4,7 +4,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 public class ASTFCmdCloseMsg extends ASTFCmd {
   private static final String NAME = "close_msg";
 
-  /** construct */
+  /** constructor */
   public ASTFCmdCloseMsg() {
     super();
     fields.addProperty("name", NAME);

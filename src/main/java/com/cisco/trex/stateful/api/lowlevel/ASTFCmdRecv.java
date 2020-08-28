@@ -5,7 +5,7 @@ public class ASTFCmdRecv extends ASTFCmd {
   private static final String NAME = "rx";
 
   /**
-   * construct
+   * constructor
    *
    * @param minBytes minimal receive bytes
    * @param clear true if clear data

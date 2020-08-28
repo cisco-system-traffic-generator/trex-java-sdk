@@ -5,7 +5,7 @@ public class ASTFCmdDelay extends ASTFCmd {
   private static final String NAME = "delay";
 
   /**
-   * construct
+   * constructor
    *
    * @param usec
    */
@@ -18,5 +18,9 @@ public class ASTFCmdDelay extends ASTFCmd {
   @Override
   public String getName() {
     return NAME;
+  }
+
+  public int getUsec() {
+    return fields.get("usec").getAsInt();
   }
 }

@@ -9,8 +9,11 @@ import java.util.Set;
 public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
   private JsonObject tcp = new JsonObject();
   private JsonObject ip = new JsonObject();
+  private JsonObject ipv6 = new JsonObject();
   private static final Set<String> tcpParamSet =
-      new HashSet<>(Arrays.asList("initwnd", "mss", "no_delay", "rxbufsize", "txbufsize"));
+      new HashSet<>(
+          Arrays.asList(
+              "initwnd", "mss", "no_delay", "rxbufsize", "txbufsize", "no_delay_counter"));
 
   @Override
   public ASTFGlobalInfoBase scheduler(SchedulerParam schedulerParam, int value) {
@@ -19,7 +22,8 @@ public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
 
   @Override
   public ASTFGlobalInfoBase ipv6(Ipv6Param ipv6Param, int value) {
-    throw new IllegalStateException("unsupported method in AstfGlobalInfoPerTemplate class");
+    ipv6.addProperty(ipv6Param.getType(), value);
+    return this;
   }
 
   @Override
@@ -48,6 +52,9 @@ public class ASTFGlobalInfoPerTemplate implements ASTFGlobalInfoBase {
     }
     if (ip.size() != 0) {
       jsonObject.add("ip", this.ip);
+    }
+    if (ipv6.size() != 0) {
+      jsonObject.add("ipv6", this.ipv6);
     }
     return jsonObject;
   }

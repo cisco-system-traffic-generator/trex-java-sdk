@@ -4,48 +4,30 @@ import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFTCPServerTemplate class */
 public class ASTFTCPServerTemplate extends ASTFTemplateBase {
-  private ASTFGlobalInfoPerTemplate globalInfo;
-  private ASTFAssociation assoc;
+  private ASTFGlobalInfoPerTemplate globInfo;
+  private ASTFAssociation association;
 
-  /**
-   * construct
-   *
-   * @param astfProgram
-   */
-  public ASTFTCPServerTemplate(ASTFProgram astfProgram) {
-    this(astfProgram, null, null);
-  }
-
-  /**
-   * construct
-   *
-   * @param astfProgram
-   * @param assoc
-   * @param globalInfo
-   */
   public ASTFTCPServerTemplate(
-      ASTFProgram astfProgram, ASTFAssociation assoc, ASTFGlobalInfoPerTemplate globalInfo) {
-    super(astfProgram);
-    if (assoc == null) {
-      this.assoc = new ASTFAssociation(new ASTFAssociationRule(80));
+      ASTFProgram program, ASTFAssociation association, ASTFGlobalInfoPerTemplate globInfo) {
+    super(program);
+    if (association == null) {
+      this.association = new ASTFAssociation(new ASTFAssociationRule(80));
     } else {
-      this.assoc = assoc;
+      this.association = association;
     }
-    this.globalInfo = globalInfo;
+    this.globInfo = globInfo;
   }
 
-  /**
-   * to json format
-   *
-   * @return JsonObject
-   */
-  @Override
+  public ASTFAssociation getAssociation() {
+    return association;
+  }
+
   public JsonObject toJson() {
-    JsonObject json = super.toJson();
-    json.add("assoc", assoc.toJson());
-    if (globalInfo != null) {
-      json.add("glob_info", globalInfo.toJson());
+    JsonObject jsonObject = super.toJson();
+    jsonObject.add("assoc", association.toJson());
+    if (globInfo != null) {
+      jsonObject.add("glob_info", globInfo.toJson());
     }
-    return json;
+    return jsonObject;
   }
 }

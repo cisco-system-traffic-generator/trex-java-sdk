@@ -5,7 +5,7 @@ public class ASTFCmdRecvMsg extends ASTFCmd {
   private static final String NAME = "rx_msg";
 
   /**
-   * construct
+   * constructor
    *
    * @param minPkts
    * @param clear

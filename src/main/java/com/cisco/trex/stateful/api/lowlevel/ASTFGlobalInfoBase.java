@@ -113,7 +113,8 @@ public interface ASTFGlobalInfoBase {
     KEEP_INTVL("keepintvl"),
     BLACK_HOLE("blackhole"),
     DELAY_ACK_MSEC("delay_ack_msec"),
-    NO_DELAY("no_delay");
+    NO_DELAY("no_delay"),
+    NO_DELAY_COUNTER("no_delay_counter");
     String type;
 
     /**

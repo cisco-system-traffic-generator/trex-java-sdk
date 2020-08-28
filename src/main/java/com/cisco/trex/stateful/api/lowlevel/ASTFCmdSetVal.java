@@ -1,20 +1,19 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
 /** Java implementation for TRex python sdk ASTFCmdSetVal class */
-public class ASTFCmdSetVal extends ASTFCmd {
+public class ASTFCmdSetVal extends ASTFCmdSetValBase {
   private static final String NAME = "set_var";
 
   /**
-   * construct
+   * constructor
    *
    * @param idVal
    * @param val
    */
   public ASTFCmdSetVal(String idVal, long val) {
-    super();
-    this.fields.addProperty("name", NAME);
-    this.fields.addProperty("id", idVal);
-    this.fields.addProperty("val", val);
+    super(idVal);
+    fields.addProperty("name", NAME);
+    fields.addProperty("val", val);
   }
 
   @Override
