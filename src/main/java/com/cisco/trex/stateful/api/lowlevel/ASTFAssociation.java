@@ -10,7 +10,7 @@ public class ASTFAssociation {
   private List<ASTFAssociationRule> astfAssociationRuleList;
 
   /**
-   * construct
+   * constructor
    *
    * @param astfAssociationRuleList
    */
@@ -19,17 +19,17 @@ public class ASTFAssociation {
   }
 
   /**
-   * construct
+   * constructor
    *
    * @param astfAssociationRule
    */
   public ASTFAssociation(ASTFAssociationRule astfAssociationRule) {
-    astfAssociationRuleList = new ArrayList<>();
-    astfAssociationRuleList.add(astfAssociationRule);
+    this.astfAssociationRuleList = new ArrayList<>();
+    this.astfAssociationRuleList.add(astfAssociationRule);
   }
 
   /**
-   * to json format
+   * to Json format
    *
    * @return JsonArray
    */
@@ -42,7 +42,7 @@ public class ASTFAssociation {
   }
 
   /**
-   * get Port
+   * get port
    *
    * @return port
    */
@@ -53,5 +53,19 @@ public class ASTFAssociation {
               "rule list size should be 1, but it's %s now", astfAssociationRuleList.size()));
     }
     return astfAssociationRuleList.get(0).getPort();
+  }
+
+  /**
+   * check if only have port field
+   *
+   * @return true if only have port field ,otherwise return false
+   */
+  public boolean isPortOnly() {
+    if (astfAssociationRuleList.size() != 1) {
+      throw new IllegalStateException(
+          String.format(
+              "rule list size should be 1, but it's %s now", astfAssociationRuleList.size()));
+    }
+    return astfAssociationRuleList.get(0).toJson().entrySet().size() == 1;
   }
 }

@@ -11,7 +11,7 @@ class ASTFTCPInfo {
    *
    * @param filePath
    */
-  ASTFTCPInfo(String filePath) {
+  public ASTFTCPInfo(String filePath) {
     if (StringUtils.isEmpty(filePath)) {
       CpcapReader cap = CapHandling.cpcapReader(filePath);
       cap.analyze();

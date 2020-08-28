@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Java implementation for TRex python sdk ASTFProfile class */
 public class ASTFProfile {
-
   private static final Logger LOGGER = LoggerFactory.getLogger(ASTFProfile.class);
 
   private static final String L7_PRECENT = "l7_percent";
@@ -22,19 +22,10 @@ public class ASTFProfile {
   private List<ASTFTemplate> astfTemplateList;
   private Map<String, Integer> tgName2TgId = new LinkedHashMap<>(); // template group name ->
   // template group id
+  private ASTFProfileCache astfProfileCache = new ASTFProfileCache(this);
 
   /**
-   * construct
-   *
-   * @param defaultIpGen
-   * @param astfTemplateList
-   */
-  public ASTFProfile(ASTFIpGen defaultIpGen, List<ASTFTemplate> astfTemplateList) {
-    this(defaultIpGen, null, null, astfTemplateList, null);
-  }
-
-  /**
-   * construct
+   * constructor
    *
    * @param defaultIpGen
    * @param astfClientGlobalInfo
@@ -48,46 +39,88 @@ public class ASTFProfile {
       ASTFGlobalInfo astfServerGlobalInfo,
       List<ASTFTemplate> astfTemplateList,
       List<ASTFCapInfo> astfCapInfoList) {
+    this(
+        defaultIpGen,
+        astfClientGlobalInfo,
+        astfServerGlobalInfo,
+        astfTemplateList,
+        astfCapInfoList,
+        null,
+        0);
+  }
+
+  /**
+   * constructor
+   *
+   * @param defaultIpGen
+   * @param astfClientGlobalInfo
+   * @param astfServerGlobalInfo
+   * @param astfTemplateList
+   * @param astfCapInfoList
+   * @param sDelay
+   * @param udpMtu
+   */
+  public ASTFProfile(
+      ASTFIpGen defaultIpGen,
+      ASTFGlobalInfo astfClientGlobalInfo,
+      ASTFGlobalInfo astfServerGlobalInfo,
+      List<ASTFTemplate> astfTemplateList,
+      List<ASTFCapInfo> astfCapInfoList,
+      ASTFCmdDelay sDelay,
+      int udpMtu) {
     this.astfClientGlobalInfo = astfClientGlobalInfo;
     this.astfServerGlobalInfo = astfServerGlobalInfo;
-
     if (astfTemplateList == null && astfCapInfoList == null) {
       throw new IllegalStateException(
           "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time ");
     }
-    this.astfTemplateList = astfTemplateList;
 
-    for (ASTFTemplate template : astfTemplateList) {
-      if (template.getTgName() == null) {
-        template.setTgId(0);
-        continue;
-      }
+    if (astfTemplateList != null && !astfTemplateList.isEmpty()) {
 
-      String tgName = template.getTgName();
-      if (!tgName2TgId.containsKey(tgName)) {
-        tgName2TgId.put(tgName, tgName2TgId.size() + 1);
+      this.astfTemplateList = astfTemplateList;
+      List<Integer> serverPorts = new ArrayList<>();
+      for (ASTFTemplate template : astfTemplateList) {
+        addTgIdToTemplate(template);
+        ASTFAssociation association = template.getAstfTcpServerTemplate().getAssociation();
+        int port = association.getPort();
+        if (association.isPortOnly()) {
+          if (serverPorts.contains(port)) {
+            throw new IllegalStateException(
+                String.format("Two server template with port: %s", port));
+          } else {
+            serverPorts.add(port);
+          }
+        }
       }
-      template.setTgId(tgName2TgId.get(tgName));
     }
 
     /** for pcap file parse scenario */
     if (astfCapInfoList != null && !astfCapInfoList.isEmpty()) {
       String mode = null;
       List<Map<String, Object>> allCapInfo = new ArrayList<>();
-      List<Integer> dPorts = new ArrayList<>();
+      Map<Integer, String> dPorts = new HashMap<>();
       int totalPayload = 0;
+
       for (ASTFCapInfo capInfo : astfCapInfoList) {
         String capFile = capInfo.getFilePath();
         ASTFIpGen ipGen = capInfo.getAstfIpGen() != null ? capInfo.getAstfIpGen() : defaultIpGen;
         ASTFGlobalInfoPerTemplate globC = capInfo.getClientGlobInfo();
         ASTFGlobalInfoPerTemplate globS = capInfo.getServerGlobInfo();
-        ASTFProgram progC = new ASTFProgram(capFile, ASTFProgram.SideType.Client);
-        ASTFProgram progS = new ASTFProgram(capFile, ASTFProgram.SideType.Server);
-        progC.updateKeepAlive(progS);
+        int capUdpMtu = capInfo.getUdpMtu() != 0 ? capInfo.getUdpMtu() : udpMtu;
+        ASTFProgram programC = new ASTFProgram(capFile, ASTFProgram.SideType.Client, capUdpMtu);
+        ASTFCmdDelay serverDelay =
+            capInfo.getsDelay() != null ? (ASTFCmdDelay) capInfo.getsDelay() : sDelay;
+        ASTFProgram programS =
+            new ASTFProgram(capFile, ASTFProgram.SideType.Server, capUdpMtu, serverDelay);
+        programC.updateKeepalive(programS);
+        if (!programC.isStream()) {
+          programS.updateKeepalive(programC);
+        }
 
         ASTFTCPInfo tcpC = new ASTFTCPInfo(capFile);
         int tcpCPort = tcpC.getPort();
-        float cps = capInfo.getCps();
+
+        float caps = capInfo.getCps();
         float l7Percent = capInfo.getL7Percent();
         if (mode == null) {
           if (l7Percent > 0) {
@@ -105,7 +138,8 @@ public class ASTFProfile {
                 "Can't mix specifications of cps and l7_percent in same cap list");
           }
         }
-        totalPayload += progC.getPayloadLen();
+
+        totalPayload += programC.getPayloadLen();
 
         int dPort;
         ASTFAssociation myAssoc;
@@ -113,41 +147,44 @@ public class ASTFProfile {
           dPort = tcpCPort;
           myAssoc = new ASTFAssociation(new ASTFAssociationRule(dPort));
         } else {
-          dPort = capInfo.getAssoc().getPort();
           myAssoc = capInfo.getAssoc();
-          throw new IllegalStateException(
-              String.format(
-                  "More than one cap use dest port %s. This is currently not supported.", dPort));
+          dPort = myAssoc.getPort();
+          // Here the logic is different with the python code,in python code this if-block is out of
+          // the else.
+          if (dPorts.containsKey(dPort)) {
+            throw new IllegalStateException(
+                String.format(
+                    "More than one cap use dest port %s. This is currently not supported. Files with same port: %s, %s",
+                    dPort, dPorts.get(dPort), capFile));
+          }
         }
-        dPorts.add(dPort);
 
-        /** add param to cap info map */
+        dPorts.put(dPort, capFile);
         HashMap<String, Object> map = new HashMap<>();
         map.put("ip_gen", ipGen);
-        map.put("prog_c", progC);
-        map.put("prog_s", progS);
+        map.put("prog_c", programC);
+        map.put("prog_s", programS);
         map.put("glob_c", globC);
         map.put("glob_s", globS);
-        map.put("cps", cps);
+        map.put("cps", caps);
         map.put("d_port", dPort);
         map.put("my_assoc", myAssoc);
         map.put("limit", capInfo.getLimit());
         allCapInfo.add(map);
       }
 
-      // calculate cps from l7 percent
       if (mode.equals(L7_PRECENT)) {
         float percentSum = 0;
         for (Map<String, Object> map : allCapInfo) {
-          float newCps = ((ASTFProgram) map.get("prog_c")).getPayloadLen() * 100.0f / totalPayload;
-          map.put("cps", newCps);
-          percentSum += newCps;
+          float newCaps = ((ASTFProgram) map.get("prog_c")).getPayloadLen() * 100.0f / totalPayload;
+          map.put(CPS, newCaps);
+          percentSum += newCaps;
         }
         if (percentSum != 100) {
           throw new IllegalStateException("l7_percent values must sum up to 100");
         }
       }
-
+      this.astfTemplateList = new ArrayList<ASTFTemplate>();
       for (Map<String, Object> map : allCapInfo) {
         ASTFTCPClientTemplate tempC =
             new ASTFTCPClientTemplate(
@@ -158,81 +195,92 @@ public class ASTFProfile {
                 (float) map.get("cps"),
                 (ASTFGlobalInfoPerTemplate) map.get("glob_c"),
                 (int) map.get("limit"));
+
         ASTFTCPServerTemplate tempS =
             new ASTFTCPServerTemplate(
                 (ASTFProgram) map.get("prog_s"),
                 (ASTFAssociation) map.get("my_assoc"),
-                (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
+                (ASTFGlobalInfoPerTemplate) map.get("glob_c"));
+
         ASTFTemplate template = new ASTFTemplate(tempC, tempS);
-        astfTemplateList.add(template);
+        addTgIdToTemplate(template);
+
+        this.astfTemplateList.add(template);
       }
     }
   }
 
-  /**
-   * to json format
-   *
-   * @return json string
-   */
-  public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    json.add("buf_list", ASTFProgram.classToJson());
-    json.add("ip_gen_dist_list", ASTFIpGenDist.clssToJson());
-    json.add("program_list", ASTFTemplateBase.classToJson());
-    if (this.astfClientGlobalInfo != null) {
-      json.add("c_glob_info", this.astfClientGlobalInfo.toJson());
+  private void addTgIdToTemplate(ASTFTemplate template) {
+    String templateTgName = template.getTgName();
+    if (this.tgName2TgId.containsKey(templateTgName)) {
+      template.setTgId(this.tgName2TgId.get(templateTgName));
+    } else {
+      if (StringUtils.isEmpty(templateTgName)) {
+        template.setTgId(0);
+      } else {
+        int id = this.tgName2TgId.size();
+        template.setTgId(id);
+        this.tgName2TgId.put(templateTgName, id);
+      }
     }
-    if (this.astfServerGlobalInfo != null) {
-      json.add("s_glob_info", this.astfServerGlobalInfo.toJson());
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = new JsonObject();
+    astfProfileCache.fillCache();
+    jsonObject.add("buf_list", astfProfileCache.getProgramCache().toJson());
+    jsonObject.add("ip_gen_dist_list", astfProfileCache.getGenDistCache().toJson());
+    jsonObject.add("program_list", astfProfileCache.getTemplateCache().toJson());
+    if (astfClientGlobalInfo != null) {
+      jsonObject.add("c_glob_info", astfClientGlobalInfo.toJson());
+    }
+    if (astfServerGlobalInfo != null) {
+      jsonObject.add("s_glob_info", astfServerGlobalInfo.toJson());
     }
     JsonArray jsonArray = new JsonArray();
-    for (ASTFTemplate astfTemplate : astfTemplateList) {
-      jsonArray.add(astfTemplate.toJson());
+    if (!(astfTemplateList == null)) {
+      for (ASTFTemplate template : astfTemplateList) {
+        jsonArray.add(template.toJson());
+      }
     }
-    json.add("templates", jsonArray);
 
+    jsonObject.add("templates", jsonArray);
     JsonArray tgNames = new JsonArray();
     tgName2TgId.keySet().forEach(name -> tgNames.add(name));
-    json.add("tg_names", tgNames);
-
-    return json;
+    jsonObject.add("tg_names", tgNames);
+    return jsonObject;
   }
 
-  /** clear all cache data. */
-  public static void clearCache() {
-    ASTFProgram.classReset();
-    ASTFIpGenDist.classReset();
-    ASTFTemplateBase.classReset();
-  }
-
-  /** print stats */
   public void printStats() {
+    astfProfileCache.fillCache();
     float totalBps = 0;
     float totalCps = 0;
-    LOGGER.info("Num buffers: {}", ASTFProgram.getBufSize());
-    LOGGER.info("Num programs: {}", ASTFTemplateBase.programNum());
+
+    LOGGER.info("Num buffers: {}", astfProfileCache.getProgramCache().getLen());
+    LOGGER.info("Num programs: {}", astfProfileCache.getTemplateCache().getNumPrograms());
     for (int i = 0; i < astfTemplateList.size(); i++) {
       LOGGER.info("------------------------------");
       LOGGER.info("template {}:", i);
       JsonObject tempJson = astfTemplateList.get(i).toJson();
-      int clientProgInd =
-          tempJson.getAsJsonObject("client_template").get("program_index").getAsInt();
-      int serverProgInd =
-          tempJson.getAsJsonObject("server_template").get("program_index").getAsInt();
+      int cProgIndex = tempJson.getAsJsonObject("client_template").get("program_index").getAsInt();
+      int sProgIndex = tempJson.getAsJsonObject("server_template").get("program_index").getAsInt();
       int totalBytes =
-          ASTFTemplateBase.getTotalSendBytes(clientProgInd)
-              + ASTFTemplateBase.getTotalSendBytes(serverProgInd);
-
+          astfProfileCache.getTemplateCache().getTotalSendBytes(cProgIndex)
+              + astfProfileCache.getTemplateCache().getTotalSendBytes(sProgIndex);
       float tempCps = tempJson.getAsJsonObject("client_template").get("cps").getAsFloat();
       float tempBps = totalBytes * tempCps * 8;
       LOGGER.info("total bytes:{} cps:{} bps(bytes * cps * 8):{}", totalBytes, tempCps, tempBps);
-      totalBps += tempBps;
+      tempBps += tempBps;
       totalCps += tempCps;
     }
     LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);
   }
 
+  public void clearCache() {
+    astfProfileCache.clearAll();
+  }
+
   public List<ASTFTemplate> getAstfTemplateList() {
-    return this.astfTemplateList;
+    return astfTemplateList;
   }
 }

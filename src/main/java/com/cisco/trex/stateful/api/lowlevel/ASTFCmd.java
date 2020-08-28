@@ -1,6 +1,7 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonObject;
+import java.util.Base64;
 
 /** Java implementation for TRex python sdk ASTFCmd class, the abstract Astf Cmd class, */
 public abstract class ASTFCmd {
@@ -46,5 +47,10 @@ public abstract class ASTFCmd {
    */
   public Boolean isBuffer() {
     return buffer;
+  }
+
+  public static String encodeBase64(byte[] bytes) {
+    Base64.Encoder encoder = Base64.getEncoder();
+    return encoder.encodeToString(bytes);
   }
 }

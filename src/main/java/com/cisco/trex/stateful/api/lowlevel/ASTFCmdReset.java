@@ -4,7 +4,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 public class ASTFCmdReset extends ASTFCmd {
   private static final String NAME = "reset";
 
-  /** construct */
+  /** constructor */
   public ASTFCmdReset() {
     fields.addProperty("name", NAME);
     stream = true;
