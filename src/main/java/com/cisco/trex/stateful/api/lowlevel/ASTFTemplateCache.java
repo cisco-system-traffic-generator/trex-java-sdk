@@ -5,20 +5,8 @@ import com.google.gson.JsonArray;
 /** Java implementation for TRex python sdk ASTFTemplateCache class */
 public class ASTFTemplateCache {
   BufferList programs = new BufferList();
-  //    public static String programsHash(ASTFProgram program){
-  //        return ASTFProgram.encodeSha256(program.toJson().getAsString());
-  //    }
 
-  public ASTFTemplateCache() {
-    //
-    //        try {
-    //            programs=new
-    // BufferList(ASTFTemplateCache.class,ASTFTemplateCache.class.getMethod("programsHash"));
-    //        } catch (NoSuchMethodException e) {
-    //            throw new IllegalStateException("ASTFTemplateCache dont have method
-    // programsHash");
-    //        }
-  }
+  public ASTFTemplateCache() {}
 
   public void clearCache() {
     programs = new BufferList();
@@ -34,7 +22,7 @@ public class ASTFTemplateCache {
     return jsonArray;
   }
 
-  public int getTotalSendBytes(int index) {
+  public long getTotalSendBytes(int index) {
     ASTFProgram program = (ASTFProgram) programs.getBufList().get(index);
     return program.getTotalSendBytes();
   }

@@ -7,6 +7,17 @@ public class ASTFTCPServerTemplate extends ASTFTemplateBase {
   private ASTFGlobalInfoPerTemplate globInfo;
   private ASTFAssociation association;
 
+  /**
+   * construct
+   *
+   * @param astfProgram
+   */
+  public ASTFTCPServerTemplate(ASTFProgram astfProgram) {
+    super(astfProgram);
+    this.association = new ASTFAssociation(new ASTFAssociationRule(80));
+    this.globInfo = null;
+  }
+
   public ASTFTCPServerTemplate(
       ASTFProgram program, ASTFAssociation association, ASTFGlobalInfoPerTemplate globInfo) {
     super(program);
@@ -14,6 +25,19 @@ public class ASTFTCPServerTemplate extends ASTFTemplateBase {
       this.association = new ASTFAssociation(new ASTFAssociationRule(80));
     } else {
       this.association = association;
+    }
+    this.globInfo = globInfo;
+  }
+
+  public ASTFTCPServerTemplate(
+      ASTFProgram program,
+      ASTFAssociationRule associationRule,
+      ASTFGlobalInfoPerTemplate globInfo) {
+    super(program);
+    if (associationRule == null) {
+      this.association = new ASTFAssociation(new ASTFAssociationRule(80));
+    } else {
+      this.association = new ASTFAssociation(associationRule);
     }
     this.globInfo = globInfo;
   }

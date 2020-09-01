@@ -124,7 +124,7 @@ public class ASTFIpGenDist {
       int thisIpEnd = ipToInt(getIpEnd());
       int otherIpStart = ipToInt(other.getIpStart());
       int otherIpEnd = ipToInt(other.getIpEnd());
-      return thisIpStart <= otherIpStart && thisIpEnd >= otherIpEnd;
+      return thisIpStart <= otherIpEnd && thisIpEnd >= otherIpStart;
     }
 
     private int ipToInt(String ipv4Addr) {

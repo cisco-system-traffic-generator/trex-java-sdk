@@ -19,8 +19,8 @@ public class ASTFCapInfo {
   private String tgName; // template group name
   private int udpMtu; // MTU for udp packtes
   private boolean cont; // try to keep the number of flows up to limit
-  private ASTFCmd
-      sDelay; // ASTFCmdDelay or ASTFCmdDelayRnd . Server delay command before sending response back
+  private ASTFCmd sDelay =
+      null; // ASTFCmdDelay or ASTFCmdDelayRnd . Server delay command before sending response back
   // to client. defaults to None means no delay.
   private static final String DEFAULT_TG_NAME = "DefaultTgName";
 

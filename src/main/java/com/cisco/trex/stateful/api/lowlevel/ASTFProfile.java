@@ -1,7 +1,6 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,6 +24,15 @@ public class ASTFProfile {
   private ASTFProfileCache astfProfileCache = new ASTFProfileCache(this);
 
   /**
+   * construct
+   *
+   * @param defaultIpGen
+   * @param astfTemplateList
+   */
+  public ASTFProfile(ASTFIpGen defaultIpGen, List<ASTFTemplate> astfTemplateList) {
+    this(defaultIpGen, null, null, astfTemplateList, null);
+  }
+  /**
    * constructor
    *
    * @param defaultIpGen
@@ -46,19 +54,28 @@ public class ASTFProfile {
         astfTemplateList,
         astfCapInfoList,
         null,
-        0);
+        null);
   }
 
   /**
-   * constructor
+   * constructor Define a ASTF profile You should give at least a template or a cap_list, maybe
+   * both.
    *
-   * @param defaultIpGen
-   * @param astfClientGlobalInfo
-   * @param astfServerGlobalInfo
-   * @param astfTemplateList
-   * @param astfCapInfoList
-   * @param sDelay
-   * @param udpMtu
+   * @param defaultIpGen ASTFIPGen
+   * @param astfClientGlobalInfo ASTFGlobalInfo tcp parameters to be used for client side, if
+   *     cap_list is given. This is optional. If not specified,TCP parameters for each flow will be
+   *     taken from its cap file.
+   * @param astfServerGlobalInfo Same as default_tcp_server_info for client side.
+   * @param astfTemplateList define a list of manual templates or one template
+   * @param astfCapInfoList define a list of pcap files list in case there is no templates
+   * @param sDelay ASTFCmdDelay or ASTFCmdDelayRnd see
+   *     :class:`trex.astf.trex_astf_profile.ASTFCmdDelay` and
+   *     :class:`trex.astf.trex_astf_profile.ASTFCmdDelayRnd` Server delay command before sending
+   *     response back to client. This will be applied on all cap in cap list, unless cap specified
+   *     his own s_delay. defaults to None means no delay.
+   * @param udpMtu int or None MTU for udp packets, if packets exceeding the specified value they
+   *     will be cut down from L7 in order to fit. This will be applied on all cap in cap list,
+   *     unless cap specified his own udp_mtu. defaults to None.
    */
   public ASTFProfile(
       ASTFIpGen defaultIpGen,
@@ -66,8 +83,12 @@ public class ASTFProfile {
       ASTFGlobalInfo astfServerGlobalInfo,
       List<ASTFTemplate> astfTemplateList,
       List<ASTFCapInfo> astfCapInfoList,
-      ASTFCmdDelay sDelay,
-      int udpMtu) {
+      ASTFCmd sDelay,
+      Integer udpMtu) {
+    if (!(sDelay instanceof ASTFCmdDelay) && !(sDelay instanceof ASTFCmdDelayRnd)) {
+      throw new IllegalStateException(
+          "bad param sDelay, it should be instanceof ASTFCmdDelayRnd or  ASTFCmdDelay");
+    }
     this.astfClientGlobalInfo = astfClientGlobalInfo;
     this.astfServerGlobalInfo = astfServerGlobalInfo;
     if (astfTemplateList == null && astfCapInfoList == null) {
@@ -106,10 +127,9 @@ public class ASTFProfile {
         ASTFIpGen ipGen = capInfo.getAstfIpGen() != null ? capInfo.getAstfIpGen() : defaultIpGen;
         ASTFGlobalInfoPerTemplate globC = capInfo.getClientGlobInfo();
         ASTFGlobalInfoPerTemplate globS = capInfo.getServerGlobInfo();
-        int capUdpMtu = capInfo.getUdpMtu() != 0 ? capInfo.getUdpMtu() : udpMtu;
+        Integer capUdpMtu = capInfo.getUdpMtu() != 0 ? capInfo.getUdpMtu() : udpMtu;
         ASTFProgram programC = new ASTFProgram(capFile, ASTFProgram.SideType.Client, capUdpMtu);
-        ASTFCmdDelay serverDelay =
-            capInfo.getsDelay() != null ? (ASTFCmdDelay) capInfo.getsDelay() : sDelay;
+        ASTFCmd serverDelay = capInfo.getsDelay() != null ? capInfo.getsDelay() : sDelay;
         ASTFProgram programS =
             new ASTFProgram(capFile, ASTFProgram.SideType.Server, capUdpMtu, serverDelay);
         programC.updateKeepalive(programS);
@@ -170,6 +190,8 @@ public class ASTFProfile {
         map.put("d_port", dPort);
         map.put("my_assoc", myAssoc);
         map.put("limit", capInfo.getLimit());
+        map.put("cont", capInfo.isCont());
+        map.put("tg_name", capInfo.getTgName());
         allCapInfo.add(map);
       }
 
@@ -194,15 +216,16 @@ public class ASTFProfile {
                 (int) map.get("d_port"),
                 (float) map.get("cps"),
                 (ASTFGlobalInfoPerTemplate) map.get("glob_c"),
-                (int) map.get("limit"));
+                (int) map.get("limit"),
+                (boolean) map.get("cont"));
 
         ASTFTCPServerTemplate tempS =
             new ASTFTCPServerTemplate(
                 (ASTFProgram) map.get("prog_s"),
                 (ASTFAssociation) map.get("my_assoc"),
-                (ASTFGlobalInfoPerTemplate) map.get("glob_c"));
+                (ASTFGlobalInfoPerTemplate) map.get("glob_s"));
 
-        ASTFTemplate template = new ASTFTemplate(tempC, tempS);
+        ASTFTemplate template = new ASTFTemplate(tempC, tempS, (String) map.get("tg_name"));
         addTgIdToTemplate(template);
 
         this.astfTemplateList.add(template);
@@ -218,11 +241,30 @@ public class ASTFProfile {
       if (StringUtils.isEmpty(templateTgName)) {
         template.setTgId(0);
       } else {
-        int id = this.tgName2TgId.size();
+        int id = this.tgName2TgId.size() + 1;
         template.setTgId(id);
         this.tgName2TgId.put(templateTgName, id);
       }
     }
+  }
+
+  public String toJsonStr() {
+    return toJsonStr(true, false);
+  }
+
+  public String toJsonStr(boolean pretty, boolean sortKeys) {
+    JsonObject data = toJson();
+    GsonBuilder gsonBuilder = new GsonBuilder();
+    if (pretty) {
+      gsonBuilder.setPrettyPrinting();
+    }
+    JsonParser parser = new JsonParser();
+    JsonElement e = parser.parse(data.toString());
+    if (sortKeys) {
+      GsonUtil.sort(e);
+    }
+
+    return gsonBuilder.create().toJson(e);
   }
 
   public JsonObject toJson() {
@@ -238,7 +280,7 @@ public class ASTFProfile {
       jsonObject.add("s_glob_info", astfServerGlobalInfo.toJson());
     }
     JsonArray jsonArray = new JsonArray();
-    if (!(astfTemplateList == null)) {
+    if (astfTemplateList != null) {
       for (ASTFTemplate template : astfTemplateList) {
         jsonArray.add(template.toJson());
       }
@@ -264,13 +306,13 @@ public class ASTFProfile {
       JsonObject tempJson = astfTemplateList.get(i).toJson();
       int cProgIndex = tempJson.getAsJsonObject("client_template").get("program_index").getAsInt();
       int sProgIndex = tempJson.getAsJsonObject("server_template").get("program_index").getAsInt();
-      int totalBytes =
+      long totalBytes =
           astfProfileCache.getTemplateCache().getTotalSendBytes(cProgIndex)
               + astfProfileCache.getTemplateCache().getTotalSendBytes(sProgIndex);
       float tempCps = tempJson.getAsJsonObject("client_template").get("cps").getAsFloat();
       float tempBps = totalBytes * tempCps * 8;
       LOGGER.info("total bytes:{} cps:{} bps(bytes * cps * 8):{}", totalBytes, tempCps, tempBps);
-      tempBps += tempBps;
+      totalBps += tempBps;
       totalCps += tempCps;
     }
     LOGGER.info("total for all templates - cps:{} bps:{}", totalCps, totalBps);

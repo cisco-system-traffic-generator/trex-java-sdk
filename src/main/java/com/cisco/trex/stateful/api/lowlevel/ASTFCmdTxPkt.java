@@ -6,7 +6,6 @@ public class ASTFCmdTxPkt extends ASTFCmd {
 
   private String base64Buf;
   private int bufLen;
-  private boolean isDict = false;
 
   /**
    * constructor
@@ -27,7 +26,7 @@ public class ASTFCmdTxPkt extends ASTFCmd {
   public ASTFCmdTxPkt(byte[] asciiBuf, int size, byte[] fill) {
     super();
     String bufStr = encodeBase64(asciiBuf);
-    base64Buf = bufStr;
+    this.base64Buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
     if (size > asciiBuf.length) {
@@ -43,14 +42,9 @@ public class ASTFCmdTxPkt extends ASTFCmd {
                 + " }";
       }
       this.bufLen = size;
-      isDict = true;
     }
     stream = false;
     buffer = true;
-  }
-
-  public boolean isDict() {
-    return isDict;
   }
 
   /**
@@ -67,7 +61,7 @@ public class ASTFCmdTxPkt extends ASTFCmd {
    *
    * @return base64Buf
    */
-  public String getBase64Buf() {
+  public String buf() {
     return base64Buf;
   }
 
@@ -80,17 +74,21 @@ public class ASTFCmdTxPkt extends ASTFCmd {
     return fields.get("buf_index").getAsInt();
   }
 
-  /**
-   * set buf index
-   *
-   * @param index
-   */
+  @Override
+  public String getName() {
+    return NAME;
+  }
+
   public void setBufIndex(int index) {
     fields.addProperty("buf_index", index);
   }
 
-  @Override
-  public String getName() {
-    return NAME;
+  /**
+   * get buf length
+   *
+   * @return bufLen
+   */
+  public int bufLen() {
+    return bufLen;
   }
 }

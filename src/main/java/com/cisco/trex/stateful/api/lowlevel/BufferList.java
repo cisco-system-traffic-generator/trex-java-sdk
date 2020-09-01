@@ -13,12 +13,6 @@ import java.util.Map;
 public class BufferList {
   List<Object> bufList = new ArrayList<>();
   Map<String, Integer> bufHash = new HashMap<>();
-  //    Method hashFunction; //hash function
-  //    Class clz;// ASTFTemplateCache and ASTFProgramCache,
-  //    public BufferList(Class clz,Method hashFunction){
-  //        this.clz=clz;
-  //        this.hashFunction=hashFunction;
-  //    }
 
   /** Default constructor */
   public BufferList() {}
@@ -31,22 +25,27 @@ public class BufferList {
    */
   public String commandsHash(ASTFCmd cmd) {
     String buf = null;
-    boolean isDict = false;
     if (cmd instanceof ASTFCmdSend) {
       ASTFCmdSend sendCmd = (ASTFCmdSend) cmd;
       buf = sendCmd.getBase64Buf();
-      isDict = sendCmd.isDict();
     } else if (cmd instanceof ASTFCmdTxPkt) {
       ASTFCmdTxPkt txPktCmd = (ASTFCmdTxPkt) cmd;
-      buf = txPktCmd.getBase64Buf();
-      isDict = txPktCmd.isDict();
+      buf = txPktCmd.buf();
     }
-    if (!isDict) {
-      return buf;
-    } else {
-      JsonObject jsonObject = new Gson().fromJson(buf, JsonObject.class);
 
-      return jsonObject.toString();
+    // the buf is a string or a jsonString, if is a string just return buf,
+    // if is a json,return format is ((key1,value1),(key2,value2))
+    if (buf.startsWith("{")) {
+      String[] tempBuf = buf.substring(1, buf.length() - 1).split(",");
+      StringBuffer resultBuf = new StringBuffer("(");
+      for (String s : tempBuf) {
+        resultBuf.append("(").append(s.replace(":", ",")).append(")");
+      }
+      resultBuf.append(")");
+      return resultBuf.toString();
+
+    } else {
+      return buf;
     }
   }
 
@@ -66,78 +65,34 @@ public class BufferList {
   /**
    * add, and return index of added buffer
    *
-   * @param new_buf
+   * @param newBuffer
    * @return index of the added buffer
    */
-  public int add(Object new_buf) throws Exception {
+  public int add(Object newBuffer) throws Exception {
     String m = "";
-    if (new_buf instanceof ASTFCmd) {
-      m = commandsHash((ASTFCmd) new_buf);
-    } else if (new_buf instanceof ASTFProgram) {
-      m = programsHash((ASTFProgram) new_buf);
+    if (newBuffer instanceof ASTFCmd) {
+      m = commandsHash((ASTFCmd) newBuffer);
+    } else if (newBuffer instanceof ASTFProgram) {
+      m = programsHash((ASTFProgram) newBuffer);
     }
     if (bufHash.containsKey(m)) {
       return bufHash.get(m);
     }
 
-    if (new_buf instanceof ASTFCmdSend) {
-      ASTFCmdSend astfCmdSend = (ASTFCmdSend) new_buf;
+    if (newBuffer instanceof ASTFCmdSend) {
+      ASTFCmdSend astfCmdSend = (ASTFCmdSend) newBuffer;
       bufList.add(astfCmdSend.getBase64Buf());
-    } else if (new_buf instanceof ASTFCmdTxPkt) {
-      ASTFCmdTxPkt astfCmdTxPkt = (ASTFCmdTxPkt) new_buf;
-      bufList.add(astfCmdTxPkt.getBase64Buf());
+    } else if (newBuffer instanceof ASTFCmdTxPkt) {
+      ASTFCmdTxPkt astfCmdTxPkt = (ASTFCmdTxPkt) newBuffer;
+      bufList.add(astfCmdTxPkt.buf());
     } else {
-      bufList.add(new_buf);
+      bufList.add(newBuffer);
     }
     int newIndex = bufList.size() - 1;
     bufHash.put(m, newIndex);
     return newIndex;
   }
-  /*
-      public int add(Object command){
-          String sha256Buf="";
-          String cmdBuf="";
-          if (command instanceof ASTFCmdSend){
-              ASTFCmdSend sendCmd=(ASTFCmdSend)command;
-              try {
-                  cmdBuf=sendCmd.getBase64Buf();
-                  sha256Buf=hashFunction.invoke(ASTFCmdSend.class,cmdBuf).toString();
-              } catch (Exception e) {
-                  throw new IllegalStateException(String.format("Class ASTFCmdSend dont have method%",hashFunction));
-              }
-          }
-          if (command instanceof ASTFCmdTxPkt){
-              ASTFCmdTxPkt txPktCmd=(ASTFCmdTxPkt)command;
-              try {
-                  cmdBuf=txPktCmd.getBase64Buf();
-                  sha256Buf=hashFunction.invoke(ASTFCmdTxPkt.class,cmdBuf).toString();
-              } catch (Exception e) {
-                  throw new IllegalStateException(String.format("Class ASTFCmdTxPkt dont have method%",hashFunction));
-              }
-          }
-          if (command instanceof ASTFProgram){
-              ASTFProgram program=(ASTFProgram)command;
-              try {
-                  sha256Buf=hashFunction.invoke(ASTFProgram.class,program.toJson().toString()).toString();
-              } catch (Exception e) {
-                  throw new IllegalStateException(String.format("Class ASTFProgram dont have method%",hashFunction));
-              }
-          }
-          if (bufHash.containsKey(sha256Buf)) {
-              return bufHash.get(sha256Buf);
-          }else{
-              if (command instanceof ASTFCmd){
-                  bufList.add(cmdBuf);
-              }else if(command instanceof ASTFProgram){
-                  bufList.add((ASTFProgram)command);
-              }
-              int newIndex=bufList.size()-1;
-              bufHash.put(sha256Buf,newIndex);
-              return newIndex;
-          }
-      }
 
-  */
   public List<Object> getBufList() {
     return bufList;
   }
@@ -147,6 +102,7 @@ public class BufferList {
    * @return json string
    */
   public JsonArray toJson() {
+
     JsonArray jsonArray = new JsonArray();
     for (Object buf : bufList) {
       try {

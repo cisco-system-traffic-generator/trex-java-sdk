@@ -1,7 +1,6 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonObject;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
@@ -46,9 +45,7 @@ public class ASTFAssociationRule {
   public ASTFAssociationRule(String ipStart, String ipEnd, int port, List<Integer> l7List) {
     this(null, null, port);
     if (!l7List.isEmpty()) {
-      Map<String, List<Integer>> l7Map = new HashMap<>();
-      l7Map.put("offset", l7List);
-      fields.addProperty("l7_map", String.valueOf(l7Map));
+      fields.addProperty("l7_map", "{'offset': " + l7List.toString() + "}");
     }
   }
 
@@ -64,7 +61,11 @@ public class ASTFAssociationRule {
       String ipStart, String ipEnd, int port, Map<String, List<Integer>> l7Map) {
     this(null, null, port);
     if (!l7Map.isEmpty()) {
-      fields.addProperty("l7_map", String.valueOf(l7Map));
+      String l7_map =
+          String.format(
+              "{'offset': %s, 'value': %s}",
+              l7Map.get("offset").toString(), l7Map.get("value").toString());
+      fields.addProperty("l7_map", l7_map);
     }
   }
 

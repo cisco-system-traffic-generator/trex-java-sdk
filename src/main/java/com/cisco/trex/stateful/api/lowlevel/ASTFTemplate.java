@@ -28,11 +28,10 @@ public class ASTFTemplate {
   private ASTFTCPServerTemplate astfTcpServerTemplate;
   private String tgName;
   private Integer tgId;
-  private static final String DEFAULT_TG_NAME = "defaultTgName";
 
   public ASTFTemplate(
       ASTFTCPClientTemplate astfTcpClientTemplate, ASTFTCPServerTemplate astfTcpServerTemplate) {
-    this(astfTcpClientTemplate, astfTcpServerTemplate, DEFAULT_TG_NAME);
+    this(astfTcpClientTemplate, astfTcpServerTemplate, null);
   }
 
   public ASTFTemplate(
@@ -46,10 +45,7 @@ public class ASTFTemplate {
               astfTcpClientTemplate.isStream(), astfTcpServerTemplate.isStream()));
     }
 
-    if (StringUtils.isEmpty(tgName)) {
-      tgName = DEFAULT_TG_NAME;
-    }
-    if (tgName.length() > 20) {
+    if (!StringUtils.isEmpty(tgName) && tgName.length() > 20) {
       throw new IllegalStateException("tgName is longer than 20");
     }
     this.astfTcpClientTemplate = astfTcpClientTemplate;

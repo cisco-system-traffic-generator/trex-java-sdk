@@ -13,7 +13,7 @@ abstract class ASTFTemplateBase {
   private ASTFProgram program;
 
   public ASTFTemplateBase(ASTFProgram program) {
-    fields.addProperty("program_index", -1);
+    this.fields.addProperty("program_index", -1);
     this.program = program;
     this.isStream = program.isStream();
   }
@@ -37,11 +37,11 @@ abstract class ASTFTemplateBase {
   }
 
   public int getProgramIndex() {
-    return fields.get("program_index").getAsInt();
+    return this.fields.get("program_index").getAsInt();
   }
 
   public void setProgramIndex(int index) {
-    fields.addProperty("program_index", index);
+    this.fields.addProperty("program_index", index);
   }
 
   public ASTFProgram getProgram() {

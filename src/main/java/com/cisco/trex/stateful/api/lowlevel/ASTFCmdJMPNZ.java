@@ -11,7 +11,7 @@ public class ASTFCmdJMPNZ extends ASTFCmdJMPBase {
    * @param offset
    * @param label
    */
-  public ASTFCmdJMPNZ(String idVal, int offset, String label) {
+  public ASTFCmdJMPNZ(String idVal, long offset, String label) {
     super(idVal, offset, label);
     fields.addProperty("name", NAME);
   }

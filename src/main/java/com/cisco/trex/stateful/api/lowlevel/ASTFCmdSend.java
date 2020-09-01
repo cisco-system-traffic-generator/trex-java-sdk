@@ -6,12 +6,6 @@ public class ASTFCmdSend extends ASTFCmd {
 
   private String base64Buf;
   private int bufLen;
-  private int index;
-  private boolean isDict = false;
-
-  public boolean isDict() {
-    return isDict;
-  }
 
   /**
    * constructor
@@ -35,8 +29,7 @@ public class ASTFCmdSend extends ASTFCmd {
     this.base64Buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
-    this.index = -1;
-    bufLen = asciiBuf.length;
+    this.bufLen = asciiBuf.length;
     if (size > asciiBuf.length) {
       this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
       if (fill != null) {
@@ -50,7 +43,6 @@ public class ASTFCmdSend extends ASTFCmd {
                 + " }";
       }
       this.bufLen = size;
-      isDict = true;
     }
     stream = true;
     buffer = true;
@@ -80,7 +72,7 @@ public class ASTFCmdSend extends ASTFCmd {
    * @return index
    */
   public int getBufIndex() {
-    return index;
+    return fields.get("buf_index").getAsInt();
   }
 
   /**
@@ -90,7 +82,15 @@ public class ASTFCmdSend extends ASTFCmd {
    */
   public void setBufIndex(int index) {
     fields.addProperty("buf_index", index);
-    this.index = index;
+  }
+
+  /**
+   * get buf
+   *
+   * @return encoded base64 buf
+   */
+  public String buf() {
+    return base64Buf;
   }
 
   @Override

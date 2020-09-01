@@ -12,9 +12,10 @@ import com.google.gson.JsonObject;
  * progC.recv(http_response.length())
  * </code>
  *
- * <p>ip generator <code> ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255");
- * ASTFIpGenDist ipGenS =new ASTFIpGenDist("48.0.0.0", "48.0.255.255");
- * ASTFIpGen ipGen = new ASTFIpGen(new ASTFIpGenGlobal("1.0.0.0");
+ * <p>ip generator <code>
+ *  ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255",Distribution.SEQ);
+ * ASTFIpGenDist ipGenS =new ASTFIpGenDist("48.0.0.0", "48.0.255.255",Distribution.SEQ);
+ * ASTFIpGen ipGen = new ASTFIpGen(ipGenC,ipGenS,new ASTFIpGenGlobal("1.0.0.0");
  * </code>
  *
  * <p>template <code> ASTFTCPClientTemplate tempC=new ASTFTCPClientTemplate(progC, ipGen)</code>
@@ -60,6 +61,18 @@ public class ASTFTCPClientTemplate extends ASTFClientTemplate {
     this(program, ipGen, cluster, port, cps, globInfo, limit, false);
   }
 
+  /**
+   * constructor
+   *
+   * @param program L7 emulation program
+   * @param ipGen ASTFIPGen
+   * @param cluster ASTFCluster
+   * @param port destination port
+   * @param cps New connection per second rate. Minimal value is 0.5
+   * @param globInfo ASTFGlobalInfoPerTemplate
+   * @param limit limit the number of flows. default is None which means zero (there is no limit)
+   * @param cont try to keep the number of flows up to limit.
+   */
   public ASTFTCPClientTemplate(
       ASTFProgram program,
       ASTFIpGen ipGen,

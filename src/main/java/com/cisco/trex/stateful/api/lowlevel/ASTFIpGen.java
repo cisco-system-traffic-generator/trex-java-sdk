@@ -4,13 +4,15 @@ import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFIpGen class */
 public class ASTFIpGen {
-  private JsonObject fields = new JsonObject();
   private ASTFIpGenDist distClient;
   private ASTFIpGenDist distServer;
   private ASTFIpGenGlobal glob;
 
+  public ASTFIpGen(ASTFIpGenDist distClient, ASTFIpGenDist distServer) {
+    this(distClient, distServer, new ASTFIpGenGlobal());
+  }
+
   public ASTFIpGen(ASTFIpGenDist distClient, ASTFIpGenDist distServer, ASTFIpGenGlobal glob) {
-    fields.add("dist_client", distClient.toJson());
     if (distClient.getDirection() != null
         && !distClient.getDirection().equals(ASTFIpGenDist.Direction.CLIENT)) {
       throw new IllegalStateException(
@@ -21,7 +23,6 @@ public class ASTFIpGen {
     distClient.setDirection(ASTFIpGenDist.Direction.CLIENT);
     distClient.setIpOffset(glob.getIpOffset());
 
-    fields.add("dist_server", distServer.toJson());
     if (distServer.getDirection() != null
         && !distServer.getDirection().equals(ASTFIpGenDist.Direction.SERVER)) {
       throw new IllegalStateException(

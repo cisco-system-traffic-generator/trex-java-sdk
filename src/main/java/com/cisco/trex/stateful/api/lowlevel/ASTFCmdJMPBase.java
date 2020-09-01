@@ -4,6 +4,10 @@ package com.cisco.trex.stateful.api.lowlevel;
 public abstract class ASTFCmdJMPBase extends ASTFCmd {
   protected String label;
 
+  public String getLabel() {
+    return label;
+  }
+
   /**
    * constructor
    *
@@ -11,7 +15,7 @@ public abstract class ASTFCmdJMPBase extends ASTFCmd {
    * @param offset
    * @param label
    */
-  public ASTFCmdJMPBase(String idVal, int offset, String label) {
+  public ASTFCmdJMPBase(String idVal, long offset, String label) {
     super();
     this.label = label;
     fields.addProperty("id", idVal);

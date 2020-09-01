@@ -62,7 +62,7 @@ public class ASTFProgram {
   }
 
   public ASTFProgram(String filePath, SideType side, int udpMtu) {
-    this(filePath, side, null, false, null, udpMtu);
+    this(filePath, side, null, true, null, udpMtu);
   }
 
   public ASTFProgram(String filePath, SideType side, List<ASTFCmd> commands, boolean stream) {
@@ -70,7 +70,7 @@ public class ASTFProgram {
   }
 
   public ASTFProgram(String filePath, SideType side, int udpMtu, ASTFCmd sDelay) {
-    this(filePath, side, null, false, sDelay, udpMtu);
+    this(filePath, side, null, true, sDelay, udpMtu);
   }
 
   public ASTFProgram(
@@ -99,6 +99,11 @@ public class ASTFProgram {
     }
   }
 
+  /**
+   * In case of pcap file need to copy the keepalive command from client to server side
+   *
+   * @param progS
+   */
   public void updateKeepalive(ASTFProgram progS) {
     if (!fields.get(COMMANDS).isEmpty()) {
       ASTFCmd cmd = fields.get(COMMANDS).get(0);
@@ -112,6 +117,17 @@ public class ASTFProgram {
     return stream;
   }
 
+  /**
+   * Send l7_buffer by splitting it into small chunks and issue a delay betwean each chunk. This is
+   * a utility command that works on top of send/delay command
+   *
+   * <p>example1 send (buffer1,100,10) will split the buffer to buffers of 100 bytes with delay of
+   * 10usec
+   *
+   * @param l7Buf l7 stream as string
+   * @param chunkSize size of each chunk
+   * @param delayUsec the delay in usec to insert betwean each write
+   */
   public void sendChunk(String l7Buf, int chunkSize, int delayUsec) {
     int size = l7Buf.length();
     int cnt = 0;
@@ -129,6 +145,7 @@ public class ASTFProgram {
     }
   }
 
+  /** explicit UDP flow close */
   public void closeMsg() {
     fields.get(COMMANDS).add(new ASTFCmdCloseMsg());
   }
@@ -141,6 +158,15 @@ public class ASTFProgram {
     sendMsg(buf, size, null);
   }
 
+  /**
+   * send UDP message (buf)
+   *
+   * <p>example1 send_msg (buffer1) recv_msg (1)
+   *
+   * @param buf l7 stream as string
+   * @param size total size of l7 stream, effective only when size > len(buf).
+   * @param fill l7 stream filled by string, only if size is effective.
+   */
   public void sendMsg(String buf, int size, String fill) {
     ASTFCmdTxPkt txPktCmd = null;
     try {
@@ -152,15 +178,30 @@ public class ASTFProgram {
     }
 
     totalSendBytes += txPktCmd.getBufLen();
-    txPktCmd.setBufIndex(0);
+    txPktCmd.setBufIndex(-1);
     fields.get(COMMANDS).add(txPktCmd);
   }
 
+  /**
+   * set the stream transmit mode
+   *
+   * <p>block : for send command wait until the last byte is ack
+   *
+   * <p>non-block: continue to the next command when the queue is almost empty, this is good for
+   * pipeline the transmit
+   *
+   * @param block
+   */
   public void setSendBlocking(boolean block) {
     int flags = block ? 0 : 1;
     fields.get(COMMANDS).add(new ASTFCmdTxMode(flags));
   }
 
+  /**
+   * set the keepalive timer for UDP flows
+   *
+   * @param msec the keepalive time in msec
+   */
   public void setKeepaliveMsg(int msec) {
     if (msec < 0) {
       throw new IllegalStateException(String.format("usec %d is less than 0", msec));
@@ -168,21 +209,56 @@ public class ASTFProgram {
     fields.get(COMMANDS).add(new ASTFCmdKeepaliveMsg(msec));
   }
 
+  /**
+   * recv msg, works for UDP flow
+   *
+   * @param pkts wait until the rx packet watermark is reached on flow counter.
+   * @deprecated use method with long instead
+   */
+  @Deprecated
   public void recvMsg(int pkts) {
+    recvMsg((long) pkts, false);
+  }
+
+  /**
+   * recv Msg cmd
+   *
+   * @param pkts wait until the rx packet watermark is reached on flow counter.
+   * @param clear when reach the watermark clear the flow counter @Deprecated use method with long
+   *     instead
+   * @deprecated use method with long instead
+   */
+  @Deprecated
+  public void recvMsg(int pkts, boolean clear) {
+    recvMsg((long) pkts, clear);
+  }
+
+  public void recvMsg(long pkts) {
     recvMsg(pkts, false);
   }
 
-  public void recvMsg(int pkts, boolean clear) {
+  /**
+   * works for UDP flow
+   *
+   * @param pkts wait until the rx packet watermark is reached on flow counter.
+   * @param clear when reach the watermark clear the flow counter
+   */
+  public void recvMsg(long pkts, boolean clear) {
     if (pkts < 0) {
       throw new IllegalStateException(String.format("usec %d is less than 0", pkts));
     }
     totalRcvBytes += pkts;
-    fields.get(COMMANDS).add(new ASTFCmdRecvMsg(pkts, clear));
+    fields.get(COMMANDS).add(new ASTFCmdRecvMsg(totalRcvBytes, clear));
     if (clear) {
       totalRcvBytes = 0;
     }
   }
 
+  /**
+   * delay for x usec
+   *
+   * @param delayUsec delay for this time in usec
+   */
   public void delay(int delayUsec) {
     if (delayUsec < 0) {
       throw new IllegalStateException(String.format("usec %d is less than 0", delayUsec));
@@ -198,6 +274,23 @@ public class ASTFProgram {
     send(buf, size, null);
   }
 
+  /**
+   * send (l7_buffer) over TCP and wait for the buffer to be acked by peer. Rx side could work in
+   * parallel
+   *
+   * <p>example1 send (buffer1) send (buffer2)
+   *
+   * <p>Will behave differently than
+   *
+   * <p>example1 send (buffer1+ buffer2)
+   *
+   * <p>in the first example there would be PUSH in the last byte of the buffer and immediate ACK
+   * from peer while in the last example the buffer will be sent together (might be one segment)
+   *
+   * @param buf l7 stream as string
+   * @param size total size of l7 stream, effective only when size > len(buf).
+   * @param fill l7 stream filled by string, only if size is effective.
+   */
   public void send(String buf, int size, String fill) {
     ASTFCmdSend cmd = null;
     try {
@@ -208,15 +301,40 @@ public class ASTFProgram {
       throw new IllegalStateException("Unsupported Encoding Exception", e);
     }
     totalSendBytes += cmd.getBufLen();
-    cmd.setBufIndex(0);
+    cmd.setBufIndex(-1);
     fields.get(COMMANDS).add(cmd);
   }
 
+  /**
+   * recv bytes command
+   *
+   * @param bytes @Deprecated use method with Long instead
+   */
+  @Deprecated
   public void recv(int bytes) {
+    recv((long) bytes, false);
+  }
+
+  /**
+   * recv bytes command
+   *
+   * @param bytes
+   * @param clear @Deprecated use method with long instead
+   */
+  @Deprecated
+  public void recv(int bytes, boolean clear) {
+    recv((long) bytes, clear);
+  }
+
+  public void recv(long bytes) {
     recv(bytes, false);
   }
 
-  public void recv(int bytes, boolean clear) {
+  /**
+   * @param bytes wait until the rx bytes watermark is reached on flow counter.
+   * @param clear when reach the watermark clear the flow counter
+   */
+  public void recv(long bytes, boolean clear) {
     totalRcvBytes += bytes;
     fields.get(COMMANDS).add(new ASTFCmdRecv(totalRcvBytes, clear));
     if (clear) {
@@ -224,22 +342,42 @@ public class ASTFProgram {
     }
   }
 
+  /** For TCP connection send RST to peer. Should be the last command */
   public void reset() {
     fields.get(COMMANDS).add(new ASTFCmdReset());
   }
 
+  /**
+   * For TCP connection wait for peer side to close (read==0) and only then close. Should be the
+   * last command This simulates server side that waits for a requests until client retire with
+   * close().
+   */
   public void waitForPeerClose() {
     fields.get(COMMANDS).add(new ASTFCmdNoClose());
   }
 
+  /**
+   * for TCP connection wait for the connection to be connected. should be the first command in the
+   * client side
+   */
   public void connect() {
     fields.get(COMMANDS).add(new ASTFCmdConnect());
   }
 
+  /**
+   * for TCP connection wait for the connection to be accepted. should be the first command in the
+   * server side
+   */
   public void accept() {
     fields.get(COMMANDS).add(new ASTFCmdConnect());
   }
 
+  /**
+   * delay for a random time betwean min-max usec with uniform distribution
+   *
+   * @param minUsec min delay for this time in usec
+   * @param maxUsec max delay for this time in usec
+   */
   public void delayRand(int minUsec, int maxUsec) {
     if (minUsec > maxUsec) {
       throw new IllegalStateException(
@@ -262,16 +400,44 @@ public class ASTFProgram {
     return vars.get(varName);
   }
 
+  /**
+   * set var command
+   *
+   * @param varId
+   * @param val
+   * @deprecated use method with long instead
+   */
+  @Deprecated
+  public void setVar(String varId, int val) {
+    setVar(varId, (long) val);
+  }
+
+  /**
+   * Set a flow variable
+   *
+   * @param varId var-id there are limited number of variables
+   * @param val value of the variable
+   */
   public void setVar(String varId, Long val) {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetVal(varId, val));
   }
 
+  /**
+   * Set a flow variable used with jmp_nz command. Timer will be started when declaring tick var.
+   *
+   * @param varId var-id there are limited number of variables
+   */
   public void setTickVar(String varId) {
     addVar(varId);
     fields.get(COMMANDS).add(new ASTFCmdSetTickVar(varId));
   }
 
+  /**
+   * Set a location label name. used with jmp_nz command
+   *
+   * @param label
+   */
   public void setLabel(String label) {
     if (labels.containsKey(label)) {
       throw new IllegalStateException(String.format("label %s was defined already", label));
@@ -286,10 +452,24 @@ public class ASTFProgram {
     return labels.get(label);
   }
 
+  /**
+   * Decrement the flow variable, in case of none zero jump to label
+   *
+   * @param varId flow var id
+   * @param label label id
+   */
   public void jmpNz(String varId, String label) {
     fields.get(COMMANDS).add(new ASTFCmdJMPNZ(varId, 0, label));
   }
 
+  /**
+   * Check the time passed from flow variable, in case of time passed is less then duration jump to
+   * label.
+   *
+   * @param varId flow var id
+   * @param label label id
+   * @param duration duration of time in seconds
+   */
   public void jmpDp(String varId, String label, long duration) {
     fields.get(COMMANDS).add(new ASTFCmdJMPDP(varId, 0, label, duration));
   }
@@ -309,7 +489,7 @@ public class ASTFProgram {
     }
 
     List<ASTFCmd> newCmds = new ArrayList<>();
-    int totalRcvBytes = 0;
+    long totalRcvBytes = 0;
     boolean rx = false;
     int maxDelay = 0;
 
@@ -353,7 +533,7 @@ public class ASTFProgram {
         Double time = times.get(i);
         if (dir.equals(initSide)) {
           ASTFCmd ncmd;
-          if (lastDir.equals(initSide)) {
+          if (lastDir != null && lastDir.equals(initSide)) {
             int dUsec = (int) (time * 1000000);
             dUsec = dUsec > MAX_DELAY ? MAX_DELAY : dUsec;
             if (dUsec > MIN_DELAY) {
@@ -401,7 +581,7 @@ public class ASTFProgram {
         }
       }
 
-      if (maxDelay > -900000) {
+      if (maxDelay >= 900000) {
         newCmds.add(0, new ASTFCmdKeepaliveMsg((int) (maxDelay / 1000 * 1.5)));
       }
     }
@@ -414,12 +594,12 @@ public class ASTFProgram {
         if (cmd instanceof ASTFCmdTxPkt) {
           ASTFCmdTxPkt txPktCmd = (ASTFCmdTxPkt) cmd;
           totalSendBytes += txPktCmd.getBufLen();
-          txPktCmd.setBufIndex(0); // check
+          txPktCmd.setBufIndex(-1);
         }
         if (cmd instanceof ASTFCmdSend) {
           ASTFCmdSend sendCmd = (ASTFCmdSend) cmd;
           totalSendBytes += sendCmd.getBufLen();
-          sendCmd.setBufIndex(0); // check
+          sendCmd.setBufIndex(-1);
         }
       }
       fields.get(COMMANDS).add(cmd);
@@ -501,11 +681,11 @@ public class ASTFProgram {
     return payloadLen;
   }
 
-  public int getTotalSendBytes() {
-    return (int) totalSendBytes;
+  public long getTotalSendBytes() {
+    return totalSendBytes;
   }
 
-  public long getTotalRcvBytesLong() {
+  public long getTotalRcvBytes() {
     return totalRcvBytes;
   }
 

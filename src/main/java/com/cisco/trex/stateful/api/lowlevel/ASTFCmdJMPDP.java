@@ -12,7 +12,7 @@ public class ASTFCmdJMPDP extends ASTFCmdJMPBase {
    * @param label
    * @param duration
    */
-  public ASTFCmdJMPDP(String idVal, int offset, String label, long duration) {
+  public ASTFCmdJMPDP(String idVal, long offset, String label, long duration) {
     super(idVal, offset, label);
     fields.addProperty("name", NAME);
     fields.addProperty("duration", duration);
