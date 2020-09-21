@@ -490,8 +490,8 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> mul = new HashMap<>();
     mul.put("op", "abs");
-    mul.put(TYPE, "percentage");
-    mul.put("value", 100);
+    mul.put(TYPE, "pps");
+    mul.put("value", 1.0);
     startTraffic(portIndex, -1, true, mul, 1);
   }
 
