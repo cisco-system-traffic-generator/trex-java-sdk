@@ -149,21 +149,6 @@ public class TRexTransport {
       msg = zmqSocket.recv();
     }
 
-    if (msg == null) {
-      zmqSocket.connect(this.connectionString);
-      try {
-        zmqSocket.send(compressed);
-      } catch (ZMQException e) {
-        throw new IllegalStateException(
-            "Did not get any response from server "
-                + getHost()
-                + " within timeout "
-                + zmqSocket.getReceiveTimeOut(),
-            e);
-      }
-      msg = zmqSocket.recv();
-    }
-
     String response = this.dataCompressor.decompressBytesToString(msg);
     LOGGER.debug("JSON Resp: {}", response);
     return response;
