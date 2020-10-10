@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
-import zmq.ZError;
 
 /** TRex Transport class to create zmq socket for connection to trex server */
 public class TRexTransport {
@@ -134,32 +133,17 @@ public class TRexTransport {
     try {
       zmqSocket.send(compressed);
     } catch (ZMQException e) {
-      throwTimeoutException(e);
+      throw new IllegalStateException(
+          "Did not get any response from server "
+              + getHost()
+              + " within timeout "
+              + zmqSocket.getReceiveTimeOut(),
+          e);
     }
     byte[] msg = zmqSocket.recv();
-    // add this if-block to deal with the connect lost error  which is caused
-    // after a long time the client-server don't interactive
-    if (msg == null && zmqSocket.errno() == ZError.ENOTCONN) {
-      zmqSocket.connect(this.connectionString);
-      try {
-        zmqSocket.send(compressed);
-      } catch (ZMQException e) {
-        throwTimeoutException(e);
-      }
-      msg = zmqSocket.recv();
-    }
 
     String response = this.dataCompressor.decompressBytesToString(msg);
     LOGGER.debug("JSON Resp: {}", response);
     return response;
-  }
-
-  private void throwTimeoutException(Exception e) {
-    throw new IllegalStateException(
-        "Did not get any response from server "
-            + getHost()
-            + " within timeout "
-            + zmqSocket.getReceiveTimeOut(),
-        e);
   }
 }
