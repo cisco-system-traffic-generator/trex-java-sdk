@@ -27,7 +27,7 @@ public class BufferList {
     String buf = null;
     if (cmd instanceof ASTFCmdSend) {
       ASTFCmdSend sendCmd = (ASTFCmdSend) cmd;
-      buf = sendCmd.getBase64Buf();
+      buf = sendCmd.buf();
     } else if (cmd instanceof ASTFCmdTxPkt) {
       ASTFCmdTxPkt txPktCmd = (ASTFCmdTxPkt) cmd;
       buf = txPktCmd.buf();
@@ -81,7 +81,7 @@ public class BufferList {
 
     if (newBuffer instanceof ASTFCmdSend) {
       ASTFCmdSend astfCmdSend = (ASTFCmdSend) newBuffer;
-      bufList.add(astfCmdSend.getBase64Buf());
+      bufList.add(astfCmdSend.buf());
     } else if (newBuffer instanceof ASTFCmdTxPkt) {
       ASTFCmdTxPkt astfCmdTxPkt = (ASTFCmdTxPkt) newBuffer;
       bufList.add(astfCmdTxPkt.buf());

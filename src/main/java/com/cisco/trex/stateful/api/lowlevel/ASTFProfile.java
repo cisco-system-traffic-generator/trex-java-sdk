@@ -47,7 +47,7 @@ public class ASTFProfile {
       ASTFGlobalInfo astfServerGlobalInfo,
       List<ASTFTemplate> astfTemplateList,
       List<ASTFCapInfo> astfCapInfoList) {
-    this(
+    createASTFProfile(
         defaultIpGen,
         astfClientGlobalInfo,
         astfServerGlobalInfo,
@@ -68,16 +68,68 @@ public class ASTFProfile {
    * @param astfServerGlobalInfo Same as default_tcp_server_info for client side.
    * @param astfTemplateList define a list of manual templates or one template
    * @param astfCapInfoList define a list of pcap files list in case there is no templates
-   * @param sDelay ASTFCmdDelay or ASTFCmdDelayRnd see
-   *     :class:`trex.astf.trex_astf_profile.ASTFCmdDelay` and
-   *     :class:`trex.astf.trex_astf_profile.ASTFCmdDelayRnd` Server delay command before sending
-   *     response back to client. This will be applied on all cap in cap list, unless cap specified
-   *     his own s_delay. defaults to None means no delay.
+   * @param sDelay ASTFCmdDelay :class:`trex.astf.trex_astf_profile.ASTFCmdDelay` Server delay
+   *     command before sending response back to client. This will be applied on all cap in cap
+   *     list, unless cap specified his own s_delay. defaults to None means no delay.
    * @param udpMtu int or None MTU for udp packets, if packets exceeding the specified value they
    *     will be cut down from L7 in order to fit. This will be applied on all cap in cap list,
    *     unless cap specified his own udp_mtu. defaults to None.
    */
   public ASTFProfile(
+      ASTFIpGen defaultIpGen,
+      ASTFGlobalInfo astfClientGlobalInfo,
+      ASTFGlobalInfo astfServerGlobalInfo,
+      List<ASTFTemplate> astfTemplateList,
+      List<ASTFCapInfo> astfCapInfoList,
+      ASTFCmdDelay sDelay,
+      Integer udpMtu) {
+    createASTFProfile(
+        defaultIpGen,
+        astfClientGlobalInfo,
+        astfServerGlobalInfo,
+        astfTemplateList,
+        astfCapInfoList,
+        sDelay,
+        udpMtu);
+  }
+
+  /**
+   * constructor Define a ASTF profile You should give at least a template or a cap_list, maybe
+   * both.
+   *
+   * @param defaultIpGen ASTFIPGen
+   * @param astfClientGlobalInfo ASTFGlobalInfo tcp parameters to be used for client side, if
+   *     cap_list is given. This is optional. If not specified,TCP parameters for each flow will be
+   *     taken from its cap file.
+   * @param astfServerGlobalInfo Same as default_tcp_server_info for client side.
+   * @param astfTemplateList define a list of manual templates or one template
+   * @param astfCapInfoList define a list of pcap files list in case there is no templates
+   * @param sDelay ASTFCmdDelayRnd see :class:`trex.astf.trex_astf_profile.ASTFCmdDelayRnd` Server
+   *     delay command before sending response back to client. This will be applied on all cap in
+   *     cap list, unless cap specified his own s_delay. defaults to None means no delay.
+   * @param udpMtu int or None MTU for udp packets, if packets exceeding the specified value they
+   *     will be cut down from L7 in order to fit. This will be applied on all cap in cap list,
+   *     unless cap specified his own udp_mtu. defaults to None.
+   */
+  public ASTFProfile(
+      ASTFIpGen defaultIpGen,
+      ASTFGlobalInfo astfClientGlobalInfo,
+      ASTFGlobalInfo astfServerGlobalInfo,
+      List<ASTFTemplate> astfTemplateList,
+      List<ASTFCapInfo> astfCapInfoList,
+      ASTFCmdDelayRnd sDelay,
+      Integer udpMtu) {
+    createASTFProfile(
+        defaultIpGen,
+        astfClientGlobalInfo,
+        astfServerGlobalInfo,
+        astfTemplateList,
+        astfCapInfoList,
+        sDelay,
+        udpMtu);
+  }
+
+  private void createASTFProfile(
       ASTFIpGen defaultIpGen,
       ASTFGlobalInfo astfClientGlobalInfo,
       ASTFGlobalInfo astfServerGlobalInfo,
@@ -93,7 +145,7 @@ public class ASTFProfile {
     this.astfServerGlobalInfo = astfServerGlobalInfo;
     if (astfTemplateList == null && astfCapInfoList == null) {
       throw new IllegalStateException(
-          "bad param combination,AstfTemplate and AstfCapInfo should not be null at the same time ");
+          "bad param combination,ASTFTemplate and ASTFCapInfo should not be null at the same time ");
     }
 
     if (astfTemplateList != null && !astfTemplateList.isEmpty()) {
@@ -127,7 +179,7 @@ public class ASTFProfile {
         ASTFIpGen ipGen = capInfo.getAstfIpGen() != null ? capInfo.getAstfIpGen() : defaultIpGen;
         ASTFGlobalInfoPerTemplate globC = capInfo.getClientGlobInfo();
         ASTFGlobalInfoPerTemplate globS = capInfo.getServerGlobInfo();
-        Integer capUdpMtu = capInfo.getUdpMtu() != 0 ? capInfo.getUdpMtu() : udpMtu;
+        Integer capUdpMtu = capInfo.getUdpMtu() != null ? capInfo.getUdpMtu() : udpMtu;
         ASTFProgram programC = new ASTFProgram(capFile, ASTFProgram.SideType.Client, capUdpMtu);
         ASTFCmd serverDelay = capInfo.getsDelay() != null ? capInfo.getsDelay() : sDelay;
         ASTFProgram programS =

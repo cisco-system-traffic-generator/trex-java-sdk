@@ -4,7 +4,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 public class ASTFCmdSend extends ASTFCmd {
   private static final String NAME = "tx";
 
-  private String base64Buf;
+  private String buf;
   private int bufLen;
 
   /**
@@ -26,14 +26,14 @@ public class ASTFCmdSend extends ASTFCmd {
   public ASTFCmdSend(byte[] asciiBuf, int size, byte[] fill) {
     super();
     String bufStr = encodeBase64(asciiBuf);
-    this.base64Buf = bufStr;
+    this.buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
     this.bufLen = asciiBuf.length;
     if (size > asciiBuf.length) {
-      this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
+      this.buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
       if (fill != null) {
-        this.base64Buf =
+        this.buf =
             "{ \"base\": \""
                 + bufStr
                 + "\", \"fill\": \""
@@ -60,10 +60,10 @@ public class ASTFCmdSend extends ASTFCmd {
   /**
    * get buf
    *
-   * @return base64Buf
+   * @return encoded base64 buf
    */
-  public String getBase64Buf() {
-    return base64Buf;
+  public String buf() {
+    return buf;
   }
 
   /**
@@ -82,15 +82,6 @@ public class ASTFCmdSend extends ASTFCmd {
    */
   public void setBufIndex(int index) {
     fields.addProperty("buf_index", index);
-  }
-
-  /**
-   * get buf
-   *
-   * @return encoded base64 buf
-   */
-  public String buf() {
-    return base64Buf;
   }
 
   @Override

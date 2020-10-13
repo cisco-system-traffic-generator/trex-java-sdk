@@ -17,11 +17,11 @@ public class ASTFCapInfo {
   private ASTFGlobalInfoPerTemplate clientGlobInfo; // client global param
   private int limit; // Limit the number of flows
   private String tgName; // template group name
-  private int udpMtu; // MTU for udp packtes
+  private Integer udpMtu; // MTU for udp packtes
   private boolean cont; // try to keep the number of flows up to limit
-  private ASTFCmd sDelay =
-      null; // ASTFCmdDelay or ASTFCmdDelayRnd . Server delay command before sending response back
-  // to client. defaults to None means no delay.
+  private ASTFCmd
+      sDelay; // ASTFCmdDelay or ASTFCmdDelayRnd . Server delay command before sending response back
+  // to client. defaults to null means no delay.
   private static final String DEFAULT_TG_NAME = "DefaultTgName";
 
   ASTFCapInfo(AstfCapInfoBuilder builder) {
@@ -179,7 +179,7 @@ public class ASTFCapInfo {
    *
    * @return udpMtu
    */
-  public int getUdpMtu() {
+  public Integer getUdpMtu() {
     return udpMtu;
   }
 
@@ -215,7 +215,7 @@ public class ASTFCapInfo {
     int limit;
     boolean cont;
     String tgName;
-    int udpMtu;
+    Integer udpMtu;
     ASTFCmd sDelay;
 
     public AstfCapInfoBuilder filePath(String filePath) {

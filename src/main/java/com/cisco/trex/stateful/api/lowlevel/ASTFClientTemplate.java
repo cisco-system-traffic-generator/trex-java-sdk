@@ -12,10 +12,8 @@ abstract class ASTFClientTemplate extends ASTFTemplateBase {
 
   public ASTFClientTemplate(ASTFIpGen ipGen, ASTFCluster cluster, ASTFProgram program) {
     super(program);
-    fields.add("ip_gen", ipGen.toJson());
     this.ipGen = ipGen;
     this.cluster = cluster == null ? new ASTFCluster() : cluster;
-    fields.add("cluster", this.cluster.toJson());
   }
 
   @Override

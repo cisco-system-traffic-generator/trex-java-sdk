@@ -45,7 +45,7 @@ public class ASTFAssociationRule {
   public ASTFAssociationRule(String ipStart, String ipEnd, int port, List<Integer> l7List) {
     this(null, null, port);
     if (!l7List.isEmpty()) {
-      fields.addProperty("l7_map", "{'offset': " + l7List.toString() + "}");
+      fields.addProperty("l7_map", "{\"offset\": " + l7List.toString() + "}");
     }
   }
 
@@ -63,7 +63,7 @@ public class ASTFAssociationRule {
     if (!l7Map.isEmpty()) {
       String l7_map =
           String.format(
-              "{'offset': %s, 'value': %s}",
+              "{\"offset\": %s, \"value\": %s}",
               l7Map.get("offset").toString(), l7Map.get("value").toString());
       fields.addProperty("l7_map", l7_map);
     }

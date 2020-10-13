@@ -4,7 +4,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 public class ASTFCmdTxPkt extends ASTFCmd {
   private static final String NAME = "tx_msg";
 
-  private String base64Buf;
+  private String buf;
   private int bufLen;
 
   /**
@@ -26,13 +26,13 @@ public class ASTFCmdTxPkt extends ASTFCmd {
   public ASTFCmdTxPkt(byte[] asciiBuf, int size, byte[] fill) {
     super();
     String bufStr = encodeBase64(asciiBuf);
-    this.base64Buf = bufStr;
+    this.buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
     if (size > asciiBuf.length) {
-      this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
+      this.buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
       if (fill != null) {
-        this.base64Buf =
+        this.buf =
             "{ \"base\": \""
                 + bufStr
                 + "\", \"fill\": \""
@@ -62,7 +62,7 @@ public class ASTFCmdTxPkt extends ASTFCmd {
    * @return base64Buf
    */
   public String buf() {
-    return base64Buf;
+    return buf;
   }
 
   /**
