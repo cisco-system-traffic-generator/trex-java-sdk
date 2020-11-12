@@ -17,7 +17,6 @@ public class Stream {
   private StreamMode mode;
   private Integer next_stream_id;
   private StreamPacket packet;
-  private StreamRxStats rx_stats;
   private StreamVM vm;
   private Boolean self_start;
   private Map<String, Object> flow_stats = new HashMap<>();
@@ -30,7 +29,6 @@ public class Stream {
       StreamMode mode,
       Integer next_stream_id,
       Packet packet,
-      StreamRxStats rx_stats,
       StreamVM vm,
       Boolean self_start,
       boolean use_flow_stats,
@@ -45,7 +43,6 @@ public class Stream {
     this.next_stream_id = next_stream_id;
     String pkt = Base64.getEncoder().encodeToString(packet.getRawData());
     this.packet = new StreamPacket(pkt);
-    this.rx_stats = rx_stats;
     this.vm = vm;
     this.self_start = self_start;
     flow_stats.put("enabled", use_flow_stats);
@@ -63,7 +60,6 @@ public class Stream {
       StreamMode mode,
       Integer next_stream_id,
       Packet packet,
-      StreamRxStats rx_stats,
       StreamVM vm,
       Boolean self_start,
       boolean use_flow_stats,
@@ -76,7 +72,6 @@ public class Stream {
         mode,
         next_stream_id,
         packet,
-        rx_stats,
         vm,
         self_start,
         use_flow_stats,
@@ -92,7 +87,6 @@ public class Stream {
       StreamMode mode,
       Integer next_stream_id,
       Packet packet,
-      StreamRxStats rx_stats,
       StreamVM vm,
       Boolean self_start) {
     this(
@@ -103,7 +97,6 @@ public class Stream {
         mode,
         next_stream_id,
         packet,
-        rx_stats,
         vm,
         self_start,
         true,
@@ -137,10 +130,6 @@ public class Stream {
 
   public StreamPacket getPacket() {
     return packet;
-  }
-
-  public StreamRxStats getRx_stats() {
-    return rx_stats;
   }
 
   public StreamVM getVm() {
@@ -177,7 +166,6 @@ public class Stream {
         && Objects.equals(this.mode, s2.mode)
         && Objects.equals(this.next_stream_id, s2.next_stream_id)
         && Objects.equals(this.packet, s2.packet)
-        && Objects.equals(this.rx_stats, s2.rx_stats)
         && Objects.equals(this.vm, s2.vm)
         && Objects.equals(this.self_start, s2.self_start)
         && Objects.equals(this.flow_stats, s2.flow_stats);

@@ -10,7 +10,6 @@ import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.Stream;
 import com.cisco.trex.stateless.model.StreamMode;
 import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
 import com.cisco.trex.stateless.model.StreamVM;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
@@ -693,7 +692,6 @@ public class TRexClient extends ClientBase {
             StreamMode.Type.single_burst),
         -1,
         pkt,
-        new StreamRxStats(true, true, true, streamId),
         new StreamVM("", Collections.<VMInstruction>emptyList()),
         true,
         false,
