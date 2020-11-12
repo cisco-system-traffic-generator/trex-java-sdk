@@ -7,7 +7,6 @@ import com.cisco.trex.stateless.model.Ipv6Node;
 import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.StreamMode;
 import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
 import com.cisco.trex.stateless.model.StreamVM;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
@@ -370,7 +369,6 @@ public class IPv6NeighborDiscoveryService {
             StreamMode.Type.single_burst),
         -1,
         pkt,
-        new StreamRxStats(false, false, true, streamId),
         new StreamVM("", instructions),
         true,
         false,
