@@ -568,7 +568,7 @@ public class TRexClient extends ClientBase {
     List<org.pcap4j.packet.Packet> pkts = new ArrayList<>();
 
     try {
-      int steps = 60; //prolong the timeout for debugging
+      int steps = 60; // prolong the timeout for debugging
       while (steps > 0) {
         steps -= 1;
         Thread.sleep(500);
@@ -703,10 +703,10 @@ public class TRexClient extends ClientBase {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
-//    EthernetPacket naPacket =
-//        new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
+    //    EthernetPacket naPacket =
+    //        new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 5, dstIp);
     EthernetPacket naPacket =
-            new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 30, dstIp);
+        new IPv6NeighborDiscoveryService(this).sendNeighborSolicitation(portIndex, 30, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }
@@ -719,12 +719,12 @@ public class TRexClient extends ClientBase {
     removeRxQueue(portIndex);
     setRxQueue(portIndex, 1000);
 
-//    EthernetPacket naPacket =
-//        new IPv6NeighborDiscoveryService(this)
-//            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, null, srcIp, dstIp);
+    //    EthernetPacket naPacket =
+    //        new IPv6NeighborDiscoveryService(this)
+    //            .sendNeighborSolicitation(vlan, portIndex, 5, srcMac, null, srcIp, dstIp);
     EthernetPacket naPacket =
-            new IPv6NeighborDiscoveryService(this)
-                    .sendNeighborSolicitation(vlan, portIndex, 30, srcMac, null, srcIp, dstIp);
+        new IPv6NeighborDiscoveryService(this)
+            .sendNeighborSolicitation(vlan, portIndex, 30, srcMac, null, srcIp, dstIp);
     if (naPacket != null) {
       return naPacket.getHeader().getSrcAddr().toString();
     }
