@@ -8,7 +8,7 @@ public abstract class ASTFCmd {
 
   protected JsonObject fields;
   protected Boolean stream = null;
-  protected Boolean buffer = null;
+  protected Boolean buffer = false;
 
   /** construct */
   public ASTFCmd() {

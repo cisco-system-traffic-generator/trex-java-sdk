@@ -137,7 +137,9 @@ public class ASTFProfile {
       List<ASTFCapInfo> astfCapInfoList,
       ASTFCmd sDelay,
       Integer udpMtu) {
-    if (!(sDelay instanceof ASTFCmdDelay) && !(sDelay instanceof ASTFCmdDelayRnd)) {
+    if (sDelay != null
+        && !(sDelay instanceof ASTFCmdDelay)
+        && !(sDelay instanceof ASTFCmdDelayRnd)) {
       throw new IllegalStateException(
           "bad param sDelay, it should be instanceof ASTFCmdDelayRnd or  ASTFCmdDelay");
     }
@@ -221,14 +223,13 @@ public class ASTFProfile {
         } else {
           myAssoc = capInfo.getAssoc();
           dPort = myAssoc.getPort();
-          // Here the logic is different with the python code,in python code this if-block is out of
-          // the else.
-          if (dPorts.containsKey(dPort)) {
-            throw new IllegalStateException(
-                String.format(
-                    "More than one cap use dest port %s. This is currently not supported. Files with same port: %s, %s",
-                    dPort, dPorts.get(dPort), capFile));
-          }
+        }
+
+        if (dPorts.containsKey(dPort)) {
+          throw new IllegalStateException(
+              String.format(
+                  "More than one cap use dest port %s. This is currently not supported. Files with same port: %s, %s",
+                  dPort, dPorts.get(dPort), capFile));
         }
 
         dPorts.put(dPort, capFile);

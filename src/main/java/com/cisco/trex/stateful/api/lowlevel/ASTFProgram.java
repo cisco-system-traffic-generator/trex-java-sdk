@@ -34,7 +34,7 @@ public class ASTFProgram {
   private Map<String, List<ASTFCmd>> fields = new HashMap<>();
   private long totalSendBytes = 0;
   private long totalRcvBytes = 0;
-  private int udpMtu;
+  private Integer udpMtu;
   private ASTFCmd sDelay;
   private int payloadLen = 0;
 
@@ -61,7 +61,7 @@ public class ASTFProgram {
     this(filePath, side, 0);
   }
 
-  public ASTFProgram(String filePath, SideType side, int udpMtu) {
+  public ASTFProgram(String filePath, SideType side, Integer udpMtu) {
     this(filePath, side, null, true, null, udpMtu);
   }
 
@@ -69,7 +69,7 @@ public class ASTFProgram {
     this(filePath, side, commands, stream, null, 0);
   }
 
-  public ASTFProgram(String filePath, SideType side, int udpMtu, ASTFCmd sDelay) {
+  public ASTFProgram(String filePath, SideType side, Integer udpMtu, ASTFCmd sDelay) {
     this(filePath, side, null, true, sDelay, udpMtu);
   }
 
@@ -79,7 +79,7 @@ public class ASTFProgram {
       List<ASTFCmd> commands,
       boolean stream,
       ASTFCmd sDelay,
-      int udpMtu) {
+      Integer udpMtu) {
     fields.put(COMMANDS, new ArrayList<ASTFCmd>());
     this.sDelay = sDelay;
     this.udpMtu = udpMtu;
