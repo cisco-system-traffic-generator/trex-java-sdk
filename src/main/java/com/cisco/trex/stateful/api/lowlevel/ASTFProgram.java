@@ -83,6 +83,7 @@ public class ASTFProgram {
     fields.put(COMMANDS, new ArrayList<ASTFCmd>());
     this.sDelay = sDelay;
     this.udpMtu = udpMtu;
+    this.stream = stream;
     if (!StringUtils.isEmpty(filePath)) {
       CpcapReader cap = CapHandling.cpcapReader(filePath);
       cap.analyze();
@@ -104,7 +105,7 @@ public class ASTFProgram {
    *
    * @param progS
    */
-  public void updateKeepalive(ASTFProgram progS) {
+  public void updateKeepAlive(ASTFProgram progS) {
     if (!fields.get(COMMANDS).isEmpty()) {
       ASTFCmd cmd = fields.get(COMMANDS).get(0);
       if (cmd instanceof ASTFCmdKeepaliveMsg) {
@@ -164,7 +165,7 @@ public class ASTFProgram {
    * <p>example1 send_msg (buffer1) recv_msg (1)
    *
    * @param buf l7 stream as string
-   * @param size total size of l7 stream, effective only when size > len(buf).
+   * @param size udp payload size, effective only when size > len(buf).
    * @param fill l7 stream filled by string, only if size is effective.
    */
   public void sendMsg(String buf, int size, String fill) {
@@ -202,7 +203,7 @@ public class ASTFProgram {
    *
    * @param msec the keepalive time in msec
    */
-  public void setKeepaliveMsg(int msec) {
+  public void setKeepAliveMsg(int msec) {
     if (msec < 0) {
       throw new IllegalStateException(String.format("usec %d is less than 0", msec));
     }

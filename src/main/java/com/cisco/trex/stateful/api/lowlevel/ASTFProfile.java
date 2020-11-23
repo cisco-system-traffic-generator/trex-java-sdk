@@ -186,9 +186,9 @@ public class ASTFProfile {
         ASTFCmd serverDelay = capInfo.getsDelay() != null ? capInfo.getsDelay() : sDelay;
         ASTFProgram programS =
             new ASTFProgram(capFile, ASTFProgram.SideType.Server, capUdpMtu, serverDelay);
-        programC.updateKeepalive(programS);
+        programC.updateKeepAlive(programS);
         if (!programC.isStream()) {
-          programS.updateKeepalive(programC);
+          programS.updateKeepAlive(programC);
         }
 
         ASTFTCPInfo tcpC = new ASTFTCPInfo(capFile);
