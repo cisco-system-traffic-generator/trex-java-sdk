@@ -40,6 +40,11 @@ public class TRexTransport {
     int actualTimeout = timeout <= 0 ? DEFAULT_TIMEOUT : timeout;
     zmqSocket.setReceiveTimeOut(actualTimeout);
     zmqSocket.setSendTimeOut(actualTimeout);
+    zmqSocket.setHeartbeatIvl(10 * 60 * 1000);
+    zmqSocket.setHeartbeatTimeout(60000);
+    zmqSocket.setReconnectIVL(20);
+    zmqSocket.setReconnectIVLMax(500);
+    zmqSocket.setTCPKeepAlive(1);
     this.connectionString = PROTOCOL + "://" + this.host + ":" + this.port;
     zmqSocket.connect(connectionString);
     this.dataCompressor = dataCompressor;
