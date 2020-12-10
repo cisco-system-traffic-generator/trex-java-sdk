@@ -135,19 +135,21 @@ public class TRexTransport {
 
     byte[] compressed = this.dataCompressor.compressStringToBytes(json);
 
+    String response;
     try {
       zmqSocket.send(compressed);
+      byte[] msg = zmqSocket.recv();
+      response = this.dataCompressor.decompressBytesToString(msg);
     } catch (ZMQException e) {
       throw new IllegalStateException(
-          "Did not get any response from server "
-              + getHost()
-              + " within timeout "
-              + zmqSocket.getReceiveTimeOut(),
+          "Failed to send or recv json request or response due to ZMQ error: " + e.getErrorCode(),
           e);
     }
-    byte[] msg = zmqSocket.recv();
 
-    String response = this.dataCompressor.decompressBytesToString(msg);
+    if (response == null) {
+      throw new IllegalStateException(
+          "Got null json response, the reason could be get no response from server within timeout, or the ZMQ socket connection is in bad state either on client side or on server side.");
+    }
     LOGGER.debug("JSON Resp: {}", response);
     return response;
   }
