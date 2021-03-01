@@ -10,7 +10,6 @@ import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.Stream;
 import com.cisco.trex.stateless.model.StreamMode;
 import com.cisco.trex.stateless.model.StreamModeRate;
-import com.cisco.trex.stateless.model.StreamRxStats;
 import com.cisco.trex.stateless.model.StreamVM;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.stateless.model.port.PortVlan;
@@ -490,8 +489,8 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> mul = new HashMap<>();
     mul.put("op", "abs");
-    mul.put(TYPE, "percentage");
-    mul.put("value", 100);
+    mul.put(TYPE, "pps");
+    mul.put("value", 1.0);
     startTraffic(portIndex, -1, true, mul, 1);
   }
 
@@ -693,7 +692,6 @@ public class TRexClient extends ClientBase {
             StreamMode.Type.single_burst),
         -1,
         pkt,
-        new StreamRxStats(true, true, true, streamId),
         new StreamVM("", Collections.<VMInstruction>emptyList()),
         true,
         false,
