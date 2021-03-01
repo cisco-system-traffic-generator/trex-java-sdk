@@ -1,6 +1,7 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Java implementation for TRex python sdk ASTFTemplate class
@@ -23,30 +24,16 @@ import com.google.gson.JsonObject;
  * </code>
  */
 public class ASTFTemplate {
-
   private ASTFTCPClientTemplate astfTcpClientTemplate;
   private ASTFTCPServerTemplate astfTcpServerTemplate;
   private String tgName;
   private Integer tgId;
 
-  /**
-   * construct
-   *
-   * @param astfTcpClientTemplate
-   * @param astfTcpServerTemplate
-   */
   public ASTFTemplate(
       ASTFTCPClientTemplate astfTcpClientTemplate, ASTFTCPServerTemplate astfTcpServerTemplate) {
     this(astfTcpClientTemplate, astfTcpServerTemplate, null);
   }
 
-  /**
-   * construct
-   *
-   * @param astfTcpClientTemplate
-   * @param astfTcpServerTemplate
-   * @param tgName
-   */
   public ASTFTemplate(
       ASTFTCPClientTemplate astfTcpClientTemplate,
       ASTFTCPServerTemplate astfTcpServerTemplate,
@@ -58,10 +45,9 @@ public class ASTFTemplate {
               astfTcpClientTemplate.isStream(), astfTcpServerTemplate.isStream()));
     }
 
-    if (tgName != null && (tgName.length() > 20 || tgName.isEmpty())) {
-      throw new IllegalArgumentException(String.format("tgName %s is empty or too long", tgName));
+    if (!StringUtils.isEmpty(tgName) && tgName.length() > 20) {
+      throw new IllegalStateException("tgName is longer than 20");
     }
-
     this.astfTcpClientTemplate = astfTcpClientTemplate;
     this.astfTcpServerTemplate = astfTcpServerTemplate;
     this.tgName = tgName;
@@ -71,24 +57,29 @@ public class ASTFTemplate {
     return tgName;
   }
 
-  Integer getTgId() {
-    return tgId;
-  }
-
-  void setTgId(Integer tgId) {
+  public void setTgId(int tgId) {
     this.tgId = tgId;
   }
 
-  /**
-   * to json format
-   *
-   * @return JsonObject
-   */
+  public int getTgId() {
+    return tgId;
+  }
+
+  public ASTFTCPClientTemplate getAstfTcpClientTemplate() {
+    return astfTcpClientTemplate;
+  }
+
+  public ASTFTCPServerTemplate getAstfTcpServerTemplate() {
+    return astfTcpServerTemplate;
+  }
+
   public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    json.add("client_template", astfTcpClientTemplate.toJson());
-    json.add("server_template", astfTcpServerTemplate.toJson());
-    json.addProperty("tg_id", tgId);
-    return json;
+    JsonObject jsonObject = new JsonObject();
+    jsonObject.add("client_template", astfTcpClientTemplate.toJson());
+    jsonObject.add("server_template", astfTcpServerTemplate.toJson());
+    if (this.tgId != 0) {
+      jsonObject.addProperty("tg_id", tgId);
+    }
+    return jsonObject;
   }
 }

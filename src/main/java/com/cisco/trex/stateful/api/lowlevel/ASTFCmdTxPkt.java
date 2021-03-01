@@ -1,16 +1,14 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
-import java.util.Base64;
-
 /** Java implementation for TRex python sdk ASTFCmdTxPkt class */
 public class ASTFCmdTxPkt extends ASTFCmd {
   private static final String NAME = "tx_msg";
 
-  private String base64Buf;
+  private String buf;
   private int bufLen;
 
   /**
-   * construct
+   * constructor
    *
    * @param asciiBuf
    */
@@ -19,7 +17,7 @@ public class ASTFCmdTxPkt extends ASTFCmd {
   }
 
   /**
-   * construct
+   * constructor
    *
    * @param asciiBuf
    * @param size
@@ -28,14 +26,13 @@ public class ASTFCmdTxPkt extends ASTFCmd {
   public ASTFCmdTxPkt(byte[] asciiBuf, int size, byte[] fill) {
     super();
     String bufStr = encodeBase64(asciiBuf);
-    this.base64Buf = bufStr;
+    this.buf = bufStr;
     fields.addProperty("name", NAME);
     fields.addProperty("buf_index", -1);
-    this.bufLen = asciiBuf.length;
     if (size > asciiBuf.length) {
-      this.base64Buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
+      this.buf = "{ \"base\": \"" + bufStr + "\", \"size\": " + size + " }";
       if (fill != null) {
-        this.base64Buf =
+        this.buf =
             "{ \"base\": \""
                 + bufStr
                 + "\", \"fill\": \""
@@ -62,24 +59,28 @@ public class ASTFCmdTxPkt extends ASTFCmd {
   /**
    * get buf
    *
-   * @return encoded base64 buf
+   * @return base64Buf
    */
   public String buf() {
-    return base64Buf;
+    return buf;
   }
 
   /**
-   * set buf index
+   * get buf_index
    *
-   * @param index
+   * @return buf index
    */
-  public void setbufIndex(int index) {
-    fields.addProperty("buf_index", index);
+  public int getBufIndex() {
+    return fields.get("buf_index").getAsInt();
   }
 
   @Override
   public String getName() {
     return NAME;
+  }
+
+  public void setBufIndex(int index) {
+    fields.addProperty("buf_index", index);
   }
 
   /**
@@ -89,10 +90,5 @@ public class ASTFCmdTxPkt extends ASTFCmd {
    */
   public int bufLen() {
     return bufLen;
-  }
-
-  private static String encodeBase64(byte[] bytes) {
-    Base64.Encoder encoder = Base64.getEncoder();
-    return encoder.encodeToString(bytes);
   }
 }

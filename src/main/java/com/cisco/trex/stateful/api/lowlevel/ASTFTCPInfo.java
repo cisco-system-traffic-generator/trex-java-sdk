@@ -12,7 +12,7 @@ class ASTFTCPInfo {
    * @param filePath
    */
   ASTFTCPInfo(String filePath) {
-    if (StringUtils.isEmpty(filePath)) {
+    if (!StringUtils.isEmpty(filePath)) {
       CpcapReader cap = CapHandling.cpcapReader(filePath);
       cap.analyze();
       this.port = cap.getDstPort();

@@ -5,11 +5,12 @@ public class ASTFCmdTxMode extends ASTFCmd {
   private static final String NAME = "tx_mode";
 
   /**
-   * construct
+   * constructor
    *
    * @param flags
    */
   public ASTFCmdTxMode(int flags) {
+    super();
     fields.addProperty("name", NAME);
     fields.addProperty("flags", flags);
   }

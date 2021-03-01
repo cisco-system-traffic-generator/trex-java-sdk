@@ -12,9 +12,10 @@ import com.google.gson.JsonObject;
  * progC.recv(http_response.length())
  * </code>
  *
- * <p>ip generator <code> ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255");
- * ASTFIpGenDist ipGenS =new ASTFIpGenDist("48.0.0.0", "48.0.255.255");
- * ASTFIpGen ipGen = new ASTFIpGen(new ASTFIpGenGlobal("1.0.0.0");
+ * <p>ip generator <code>
+ *  ASTFIpGenDist ipGenC =new ASTFIpGenDist("16.0.0.0", "16.0.0.255",Distribution.SEQ);
+ * ASTFIpGenDist ipGenS =new ASTFIpGenDist("48.0.0.0", "48.0.255.255",Distribution.SEQ);
+ * ASTFIpGen ipGen = new ASTFIpGen(ipGenC,ipGenS,new ASTFIpGenGlobal("1.0.0.0");
  * </code>
  *
  * <p>template <code> ASTFTCPClientTemplate tempC=new ASTFTCPClientTemplate(progC, ipGen)</code>
@@ -25,64 +26,68 @@ public class ASTFTCPClientTemplate extends ASTFClientTemplate {
   private float cps = 1;
   private ASTFGlobalInfoPerTemplate globalInfoPerTemplate;
   private int limit;
+  private boolean cont;
 
-  /**
-   * construct
-   *
-   * @param astfProgram
-   * @param iPGen
-   */
-  public ASTFTCPClientTemplate(ASTFProgram astfProgram, ASTFIpGen iPGen) {
-    this(astfProgram, iPGen, 0);
+  public ASTFTCPClientTemplate(ASTFProgram program, ASTFIpGen ipGen) {
+    this(program, ipGen, null, 80, 1, null, 0, false);
   }
 
-  /**
-   * construct
-   *
-   * @param astfProgram
-   * @param iPGen
-   * @param limit
-   */
-  public ASTFTCPClientTemplate(ASTFProgram astfProgram, ASTFIpGen iPGen, int limit) {
-    this(astfProgram, iPGen, 80, limit);
+  public ASTFTCPClientTemplate(ASTFProgram program, ASTFIpGen ipGen, int limit) {
+    this(program, ipGen, null, 80, 1, null, limit, false);
   }
 
-  /**
-   * construct
-   *
-   * @param astfProgram
-   * @param iPGen
-   * @param port
-   * @param limit
-   */
-  public ASTFTCPClientTemplate(ASTFProgram astfProgram, ASTFIpGen iPGen, int port, int limit) {
-    this(astfProgram, iPGen, null, port, 1, null, limit);
+  public ASTFTCPClientTemplate(ASTFProgram program, ASTFIpGen ipGen, int port, int limit) {
+    this(program, ipGen, null, port, 1, null, limit, false);
   }
 
-  /**
-   * construct
-   *
-   * @param iPGen AstfIpGen generator
-   * @param cluster AstfCluster
-   * @param astfProgram AstfProgram L7 emulation program
-   * @param port destination port
-   * @param cps New connection per second rate. Minimal value is 0.5
-   * @param globInfo AstfGlobalInfoPerTemplate
-   * @param limit limit the number of flows. default is None which means zero (there is no limit)
-   */
   public ASTFTCPClientTemplate(
-      ASTFProgram astfProgram,
-      ASTFIpGen iPGen,
+      ASTFProgram program, ASTFIpGen ipGen, int port, float cps, int limit) {
+    this(program, ipGen, null, port, cps, null, limit, false);
+  }
+
+  public ASTFTCPClientTemplate(
+      ASTFProgram program, ASTFIpGen ipGen, int port, int limit, boolean cont) {
+    this(program, ipGen, null, port, 1, null, limit, cont);
+  }
+
+  public ASTFTCPClientTemplate(
+      ASTFProgram program,
+      ASTFIpGen ipGen,
       ASTFCluster cluster,
       int port,
       float cps,
       ASTFGlobalInfoPerTemplate globInfo,
       int limit) {
-    super(iPGen, cluster, astfProgram);
+    this(program, ipGen, cluster, port, cps, globInfo, limit, false);
+  }
+
+  /**
+   * constructor
+   *
+   * @param program L7 emulation program
+   * @param ipGen ASTFIPGen
+   * @param cluster ASTFCluster
+   * @param port destination port
+   * @param cps New connection per second rate. Minimal value is 0.5
+   * @param globInfo ASTFGlobalInfoPerTemplate
+   * @param limit limit the number of flows. default is None which means zero (there is no limit)
+   * @param cont try to keep the number of flows up to limit.
+   */
+  public ASTFTCPClientTemplate(
+      ASTFProgram program,
+      ASTFIpGen ipGen,
+      ASTFCluster cluster,
+      int port,
+      float cps,
+      ASTFGlobalInfoPerTemplate globInfo,
+      int limit,
+      boolean cont) {
+    super(ipGen, cluster, program);
     this.port = port;
     this.cps = cps;
-    this.limit = limit;
     this.globalInfoPerTemplate = globInfo;
+    this.limit = limit;
+    this.cont = cont;
   }
 
   /**
@@ -97,6 +102,9 @@ public class ASTFTCPClientTemplate extends ASTFClientTemplate {
     jsonObject.addProperty("cps", cps);
     if (limit > 0) {
       jsonObject.addProperty("limit", limit);
+      if (cont) {
+        jsonObject.addProperty("cont", cont);
+      }
     }
     if (globalInfoPerTemplate != null) {
       jsonObject.add("glob_info", globalInfoPerTemplate.toJson());

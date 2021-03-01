@@ -4,25 +4,37 @@ import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFIpGen class */
 public class ASTFIpGen {
-  private JsonObject fields = new JsonObject();
+  private ASTFIpGenDist distClient;
+  private ASTFIpGenDist distServer;
+  private ASTFIpGenGlobal glob;
 
-  /**
-   * construct
-   *
-   * @param distClient
-   * @param distServer
-   * @param ipGenGlobal
-   */
-  public ASTFIpGen(
-      ASTFIpGenDist distClient, ASTFIpGenDist distServer, ASTFIpGenGlobal ipGenGlobal) {
+  public ASTFIpGen(ASTFIpGenDist distClient, ASTFIpGenDist distServer) {
+    this(distClient, distServer, new ASTFIpGenGlobal());
+  }
 
-    this.fields.add("dist_client", distClient.toJson());
-    distClient.setDirection("c");
-    distClient.setIpOffset(ipGenGlobal.getIpOffset());
+  public ASTFIpGen(ASTFIpGenDist distClient, ASTFIpGenDist distServer, ASTFIpGenGlobal glob) {
+    if (distClient.getDirection() != null
+        && !distClient.getDirection().equals(ASTFIpGenDist.Direction.CLIENT)) {
+      throw new IllegalStateException(
+          String.format(
+              "dist_client.direction is already dir: %s",
+              distClient.getDirection().getDirection()));
+    }
+    distClient.setDirection(ASTFIpGenDist.Direction.CLIENT);
+    distClient.setIpOffset(glob.getIpOffset());
 
-    this.fields.add("dist_server", distServer.toJson());
-    distServer.setDirection("s");
-    distServer.setIpOffset(ipGenGlobal.getIpOffset());
+    if (distServer.getDirection() != null
+        && !distServer.getDirection().equals(ASTFIpGenDist.Direction.SERVER)) {
+      throw new IllegalStateException(
+          String.format(
+              "dist_server.direction is already dir: %s",
+              distServer.getDirection().getDirection()));
+    }
+    distServer.setDirection(ASTFIpGenDist.Direction.SERVER);
+    distServer.setIpOffset(glob.getIpOffset());
+    this.distClient = distClient;
+    this.distServer = distServer;
+    this.glob = glob;
   }
 
   /**
@@ -31,6 +43,21 @@ public class ASTFIpGen {
    * @return JsonObject
    */
   public JsonObject toJson() {
-    return fields;
+    JsonObject object = new JsonObject();
+    object.add("dist_client", distClient.toJson());
+    object.add("dist_server", distServer.toJson());
+    return object;
+  }
+
+  public ASTFIpGenDist getDistClient() {
+    return distClient;
+  }
+
+  public ASTFIpGenGlobal getGlob() {
+    return glob;
+  }
+
+  public ASTFIpGenDist getDistServer() {
+    return distServer;
   }
 }

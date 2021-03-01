@@ -2,7 +2,12 @@ package com.cisco.trex.stateful.api.lowlevel;
 
 import com.google.gson.JsonObject;
 
-/** AstfGlobalInfoBase interface */
+/**
+ * ASTFGlobalInfoBase interface Extract the same params(scheduler,ipv6,ip,tcp) code in class
+ * ASTFGlobalInfo & ASTFGlobalInfoPerTemplate to this class. For the different type about
+ * params,abstract their create object method in this class, so the class ASTFGlobalInfo &
+ * ASTFGlobalInfoPerTemplate can reduce the same code-block.
+ */
 public interface ASTFGlobalInfoBase {
 
   /**
@@ -113,7 +118,8 @@ public interface ASTFGlobalInfoBase {
     KEEP_INTVL("keepintvl"),
     BLACK_HOLE("blackhole"),
     DELAY_ACK_MSEC("delay_ack_msec"),
-    NO_DELAY("no_delay");
+    NO_DELAY("no_delay"),
+    NO_DELAY_COUNTER("no_delay_counter");
     String type;
 
     /**
@@ -138,7 +144,8 @@ public interface ASTFGlobalInfoBase {
   /** Ip Param enum */
   enum IpParam {
     TOS("tos"),
-    TTL("ttl");
+    TTL("ttl"),
+    DONT_USE_INBOUND_MAC("dont_use_inbound_mac");
 
     String type;
 

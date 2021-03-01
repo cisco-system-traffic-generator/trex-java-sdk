@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 
 /** Java implementation for TRex python sdk ASTFTCPServerTemplate class */
 public class ASTFTCPServerTemplate extends ASTFTemplateBase {
-  private ASTFGlobalInfoPerTemplate globalInfo;
-  private ASTFAssociation assoc;
+  private ASTFGlobalInfoPerTemplate globInfo;
+  private ASTFAssociation association;
 
   /**
    * construct
@@ -13,39 +13,45 @@ public class ASTFTCPServerTemplate extends ASTFTemplateBase {
    * @param astfProgram
    */
   public ASTFTCPServerTemplate(ASTFProgram astfProgram) {
-    this(astfProgram, null, null);
-  }
-
-  /**
-   * construct
-   *
-   * @param astfProgram
-   * @param assoc
-   * @param globalInfo
-   */
-  public ASTFTCPServerTemplate(
-      ASTFProgram astfProgram, ASTFAssociation assoc, ASTFGlobalInfoPerTemplate globalInfo) {
     super(astfProgram);
-    if (assoc == null) {
-      this.assoc = new ASTFAssociation(new ASTFAssociationRule(80));
-    } else {
-      this.assoc = assoc;
-    }
-    this.globalInfo = globalInfo;
+    this.association = new ASTFAssociation(new ASTFAssociationRule(80));
+    this.globInfo = null;
   }
 
-  /**
-   * to json format
-   *
-   * @return JsonObject
-   */
-  @Override
-  public JsonObject toJson() {
-    JsonObject json = super.toJson();
-    json.add("assoc", assoc.toJson());
-    if (globalInfo != null) {
-      json.add("glob_info", globalInfo.toJson());
+  public ASTFTCPServerTemplate(
+      ASTFProgram program, ASTFAssociation association, ASTFGlobalInfoPerTemplate globInfo) {
+    super(program);
+    if (association == null) {
+      this.association = new ASTFAssociation(new ASTFAssociationRule(80));
+    } else {
+      this.association = association;
     }
-    return json;
+    this.globInfo = globInfo;
+  }
+
+  public ASTFTCPServerTemplate(
+      ASTFProgram program,
+      ASTFAssociationRule associationRule,
+      ASTFGlobalInfoPerTemplate globInfo) {
+    super(program);
+    if (associationRule == null) {
+      this.association = new ASTFAssociation(new ASTFAssociationRule(80));
+    } else {
+      this.association = new ASTFAssociation(associationRule);
+    }
+    this.globInfo = globInfo;
+  }
+
+  public ASTFAssociation getAssociation() {
+    return association;
+  }
+
+  public JsonObject toJson() {
+    JsonObject jsonObject = super.toJson();
+    jsonObject.add("assoc", association.toJson());
+    if (globInfo != null) {
+      jsonObject.add("glob_info", globInfo.toJson());
+    }
+    return jsonObject;
   }
 }

@@ -4,8 +4,9 @@ package com.cisco.trex.stateful.api.lowlevel;
 public class ASTFCmdConnect extends ASTFCmd {
   private static final String NAME = "connect";
 
-  /** construct */
+  /** constructor */
   public ASTFCmdConnect() {
+    super();
     fields.addProperty("name", NAME);
     stream = true;
   }

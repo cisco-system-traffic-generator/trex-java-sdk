@@ -46,6 +46,10 @@ class CPacketData {
     this.payload = payload;
   }
 
+  public void setPayload(byte[] payload) {
+    this.payload = payload;
+  }
+
   boolean isEmpty() {
     if (payload == null || payload.length == 0) {
       return true;
