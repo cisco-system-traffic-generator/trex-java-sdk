@@ -3,7 +3,7 @@ package com.cisco.trex.stateful.api.lowlevel;
 import com.google.gson.JsonObject;
 import java.util.Base64;
 
-/** Java implementation for TRex python sdk ASTFCmd class, the abstract Astf Cmd class, */
+/** Java implementation for TRex python sdk ASTFCmd class, the abstract Astf Cmd class */
 public abstract class ASTFCmd {
 
   protected JsonObject fields;
