@@ -18,15 +18,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +54,20 @@ public class TRexAstfClient extends ClientBase {
     apiVers.put("name", ASTF);
     TRexClientResult<ApiVersionHandler> result =
         callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
+
+    if (!StringUtils.isBlank(result.getError()) && result.getError().contains("Version mismatch")) {
+      String regrexString = "server: '([0-9]*)\\.([0-9]*)', client: '([0-9]*)\\.([0-9]*)'";
+      Pattern pattern = Pattern.compile(regrexString);
+      Matcher matcher = pattern.matcher(result.getError());
+      if (matcher.find()) {
+        Constants.ASTF_API_VERSION_MAJOR = Integer.parseInt(matcher.group(1));
+        Constants.ASTF_API_VERSION_MINOR = Integer.parseInt(matcher.group(2));
+        apiVers.put("major", Constants.ASTF_API_VERSION_MAJOR);
+        apiVers.put("minor", Constants.ASTF_API_VERSION_MINOR);
+        result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
+      }
+    }
+
     if (result.get() == null) {
       TRexConnectionException e =
           new TRexConnectionException(
@@ -226,6 +235,7 @@ public class TRexAstfClient extends ClientBase {
    */
   public void acquirePorts(Boolean force) {
     Map<String, Object> payload = createPayload();
+    payload.put("session_id", new Random().nextInt(Integer.MAX_VALUE - 1) + 1);
     payload.put("user", userName);
     payload.put("force", force);
     String json = callMethod("acquire", payload);
