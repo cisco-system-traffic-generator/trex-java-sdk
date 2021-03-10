@@ -126,7 +126,7 @@ public class TRexClient extends ClientBase {
       if (matcher.find()) {
         majorVersion = Integer.parseInt(matcher.group(1));
         minorVersion = Integer.parseInt(matcher.group(2));
-        if (!TRexClientUtil.isVersionCorrect(TRexServerMode.ASTF, majorVersion, minorVersion)) {
+        if (!TRexClientUtil.isVersionCorrect(TRexServerMode.STL, majorVersion, minorVersion)) {
           new TRexConnectionException(
               "Unable to connect to TRex server. Required API version is "
                   + majorVersion
