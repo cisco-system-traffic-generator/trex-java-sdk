@@ -32,17 +32,21 @@ public final class TRexClientUtil {
       TRexCommand command = buildCommand("api_sync_v2", parameters);
       response = transport.sendCommand(command);
 
+      // Currently the etrex server has  the NBC  issue to uplift the  ASTF_API_VERSION_MAJOR
+      // version
+      // This if-block is a temporary solution to support uplift the  ASTF_API_VERSION_MAJOR version
+      // ,
+      // if the etrex server does not uplift its version ,the cilent will continue use the old api,
+      // if the server uplift, the client will use the new api.
       String errorMessage =
           response.getError() == null ? null : response.getError().getSpecificErr();
       if (!StringUtils.isBlank(errorMessage) && errorMessage.contains("Version mismatch")) {
-        String regrexString = "server: '([0-9]*)\\.([0-9]*)', client: '([0-9]*)\\.([0-9]*)'";
+        String regrexString = "server: '([0-9]+)\\.([0-9]+)', client: '([0-9]+)\\.([0-9]+)'";
         Pattern pattern = Pattern.compile(regrexString);
         Matcher matcher = pattern.matcher(errorMessage);
         if (matcher.find()) {
-          Constants.ASTF_API_VERSION_MAJOR = Integer.parseInt(matcher.group(1));
-          Constants.ASTF_API_VERSION_MINOR = Integer.parseInt(matcher.group(2));
-          parameters.put("major", Constants.ASTF_API_VERSION_MAJOR);
-          parameters.put("minor", Constants.ASTF_API_VERSION_MINOR);
+          parameters.put("major", Integer.parseInt(matcher.group(1)));
+          parameters.put("minor", Integer.parseInt(matcher.group(2)));
           command = buildCommand("api_sync_v2", parameters);
           response = transport.sendCommand(command);
         }
@@ -50,6 +54,8 @@ public final class TRexClientUtil {
     } catch (IOException | NullPointerException e) {
       LOGGER.debug("Unable to sync client with TRex server .", e);
       return TRexServerMode.UNKNOWN;
+    } finally {
+      transport.close();
     }
     if (!response.isFailed()) {
       return TRexServerMode.ASTF;

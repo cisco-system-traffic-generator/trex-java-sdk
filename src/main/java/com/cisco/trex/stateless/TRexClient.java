@@ -110,15 +110,21 @@ public class TRexClient extends ClientBase {
     TRexClientResult<ApiVersionHandler> result =
         callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
+    int majorVersion = Constants.STL_API_VERSION_MAJOR;
+    int minorVersion = Constants.STL_API_VERSION_MINOR;
+    // Currently the etrex server has  the NBC  issue to uplift the  STL_API_VERSION_MAJOR version
+    // This if-block is a temporary solution to support uplift the  STL_API_VERSION_MAJOR version ,
+    // if the etrex server does not uplift its version ,the cilent will continue use the old api, if
+    // the server uplift, the client will use the new api.
     if (!StringUtils.isBlank(result.getError()) && result.getError().contains("Version mismatch")) {
-      String regrexString = "server: '([0-9]*)\\.([0-9]*)', client: '([0-9]*)\\.([0-9]*)'";
+      String regrexString = "server: '([0-9]+)\\.([0-9]+)', client: '([0-9]+)\\.([0-9]+)'";
       Pattern pattern = Pattern.compile(regrexString);
       Matcher matcher = pattern.matcher(result.getError());
       if (matcher.find()) {
-        Constants.STL_API_VERSION_MAJOR = Integer.parseInt(matcher.group(1));
-        Constants.STL_API_VERSION_MINOR = Integer.parseInt(matcher.group(2));
-        parameters.put("major", Constants.STL_API_VERSION_MAJOR);
-        parameters.put("minor", Constants.STL_API_VERSION_MINOR);
+        majorVersion = Integer.parseInt(matcher.group(1));
+        minorVersion = Integer.parseInt(matcher.group(2));
+        parameters.put("major", majorVersion);
+        parameters.put("minor", minorVersion);
         result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
       }
     }
@@ -128,9 +134,7 @@ public class TRexClient extends ClientBase {
           new TRexConnectionException(
               MessageFormat.format(
                   "Unable to connect to TRex server. Required API version is {0}.{1}. Error: {2}",
-                  Constants.STL_API_VERSION_MAJOR,
-                  Constants.STL_API_VERSION_MINOR,
-                  result.getError()));
+                  majorVersion, minorVersion, result.getError()));
       LOGGER.error("Unable to sync client with TRex server due to: API_H is null.", e.getMessage());
       throw e;
     }
