@@ -18,6 +18,8 @@ import com.cisco.trex.stateless.model.stats.ActivePGIdsRPCResult;
 import com.cisco.trex.stateless.model.stats.PGIdStatsRPCResult;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.cisco.trex.util.Constants;
+import com.cisco.trex.util.TRexClientUtil;
+import com.cisco.trex.util.TRexServerMode;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -104,17 +106,18 @@ public class TRexClient extends ClientBase {
 
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("name", "STL");
-    parameters.put("major", Constants.STL_API_VERSION_MAJOR);
-    parameters.put("minor", Constants.STL_API_VERSION_MINOR);
+    int majorVersion = Constants.STL_API_VERSION_MAJOR;
+    int minorVersion = Constants.STL_API_VERSION_MINOR;
+
+    parameters.put("major", majorVersion);
+    parameters.put("minor", minorVersion);
 
     TRexClientResult<ApiVersionHandler> result =
         callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
 
-    int majorVersion = Constants.STL_API_VERSION_MAJOR;
-    int minorVersion = Constants.STL_API_VERSION_MINOR;
-    // Currently the etrex server has  the NBC  issue to uplift the  STL_API_VERSION_MAJOR version
+    // Currently the TRex server has  the NBC  issue to uplift the  STL_API_VERSION_MAJOR version
     // This if-block is a temporary solution to support uplift the  STL_API_VERSION_MAJOR version ,
-    // if the etrex server does not uplift its version ,the cilent will continue use the old api, if
+    // if the TRex server does not uplift its version ,the client will continue use the old api, if
     // the server uplift, the client will use the new api.
     if (!StringUtils.isBlank(result.getError()) && result.getError().contains("Version mismatch")) {
       String regrexString = "server: '([0-9]+)\\.([0-9]+)', client: '([0-9]+)\\.([0-9]+)'";
@@ -123,6 +126,13 @@ public class TRexClient extends ClientBase {
       if (matcher.find()) {
         majorVersion = Integer.parseInt(matcher.group(1));
         minorVersion = Integer.parseInt(matcher.group(2));
+        if (!TRexClientUtil.isVersionCorrect(TRexServerMode.ASTF, majorVersion, minorVersion)) {
+          new TRexConnectionException(
+              "Unable to connect to TRex server. Required API version is "
+                  + majorVersion
+                  + "."
+                  + minorVersion);
+        }
         parameters.put("major", majorVersion);
         parameters.put("minor", minorVersion);
         result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);

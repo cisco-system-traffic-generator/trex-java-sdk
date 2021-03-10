@@ -10,6 +10,8 @@ import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.ApiVersionHandler;
 import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.util.Constants;
+import com.cisco.trex.util.TRexClientUtil;
+import com.cisco.trex.util.TRexServerMode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -49,17 +51,17 @@ public class TRexAstfClient extends ClientBase {
   protected void serverAPISync() throws TRexConnectionException {
     LOGGER.info("Sync API with the TRex");
     Map<String, Object> apiVers = new HashMap<>();
-    apiVers.put("major", Constants.ASTF_API_VERSION_MAJOR);
-    apiVers.put("minor", Constants.ASTF_API_VERSION_MINOR);
+    int majorVersion = Constants.ASTF_API_VERSION_MAJOR;
+    int minorVersion = Constants.ASTF_API_VERSION_MINOR;
+    apiVers.put("major", majorVersion);
+    apiVers.put("minor", minorVersion);
     apiVers.put("name", ASTF);
     TRexClientResult<ApiVersionHandler> result =
         callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);
 
-    int majorVersion = Constants.ASTF_API_VERSION_MAJOR;
-    int minorVersion = Constants.ASTF_API_VERSION_MINOR;
-    // Currently the etrex server has  the NBC  issue to uplift the  ASTF_API_VERSION_MAJOR version
+    // Currently the TRex server has  the NBC  issue to uplift the  ASTF_API_VERSION_MAJOR version
     // This if-block is a temporary solution to support uplift the  ASTF_API_VERSION_MAJOR version ,
-    // if the etrex server does not uplift its version ,the cilent will continue use the old api, if
+    // if the TRex server does not uplift its version ,the client will continue use the old api, if
     // the server uplift, the client will use the new api.
     if (!StringUtils.isBlank(result.getError()) && result.getError().contains("Version mismatch")) {
       String regrexString = "server: '([0-9]+)\\.([0-9]+)', client: '([0-9]+)\\.([0-9]+)'";
@@ -68,6 +70,13 @@ public class TRexAstfClient extends ClientBase {
       if (matcher.find()) {
         majorVersion = Integer.parseInt(matcher.group(1));
         minorVersion = Integer.parseInt(matcher.group(2));
+        if (!TRexClientUtil.isVersionCorrect(TRexServerMode.ASTF, majorVersion, minorVersion)) {
+          new TRexConnectionException(
+              "Unable to connect to TRex server. Required API version is "
+                  + majorVersion
+                  + "."
+                  + minorVersion);
+        }
         apiVers.put("major", majorVersion);
         apiVers.put("minor", minorVersion);
         result = callMethod("api_sync_v2", apiVers, ApiVersionHandler.class);

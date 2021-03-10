@@ -2,6 +2,7 @@ package com.cisco.trex.util;
 
 import com.cisco.trex.stateless.TRexCommand;
 import com.cisco.trex.stateless.TRexTransport;
+import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.RPCResponse;
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,18 +26,20 @@ public final class TRexClientUtil {
     TRexTransport transport = new TRexTransport(host, port, 3000);
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("name", "ASTF");
-    parameters.put("major", Constants.ASTF_API_VERSION_MAJOR);
-    parameters.put("minor", Constants.ASTF_API_VERSION_MINOR);
+    int majorVersion = Constants.ASTF_API_VERSION_MAJOR;
+    int minorVersion = Constants.ASTF_API_VERSION_MINOR;
+    parameters.put("major", majorVersion);
+    parameters.put("minor", minorVersion);
     RPCResponse response = null;
     try {
       TRexCommand command = buildCommand("api_sync_v2", parameters);
       response = transport.sendCommand(command);
 
-      // Currently the etrex server has  the NBC  issue to uplift the  ASTF_API_VERSION_MAJOR
+      // Currently the TRex server has  the NBC  issue to uplift the  ASTF_API_VERSION_MAJOR
       // version
       // This if-block is a temporary solution to support uplift the  ASTF_API_VERSION_MAJOR version
       // ,
-      // if the etrex server does not uplift its version ,the cilent will continue use the old api,
+      // if the TRex server does not uplift its version ,the client will continue use the old api,
       // if the server uplift, the client will use the new api.
       String errorMessage =
           response.getError() == null ? null : response.getError().getSpecificErr();
@@ -45,8 +48,18 @@ public final class TRexClientUtil {
         Pattern pattern = Pattern.compile(regrexString);
         Matcher matcher = pattern.matcher(errorMessage);
         if (matcher.find()) {
-          parameters.put("major", Integer.parseInt(matcher.group(1)));
-          parameters.put("minor", Integer.parseInt(matcher.group(2)));
+          majorVersion = Integer.parseInt(matcher.group(1));
+          minorVersion = Integer.parseInt(matcher.group(2));
+          if (!TRexClientUtil.isVersionCorrect(TRexServerMode.ASTF, majorVersion, minorVersion)) {
+            new TRexConnectionException(
+                "Unable to connect to TRex server. Required API version is "
+                    + majorVersion
+                    + "."
+                    + minorVersion);
+          }
+          parameters.put("major", majorVersion);
+          parameters.put("minor", minorVersion);
+
           command = buildCommand("api_sync_v2", parameters);
           response = transport.sendCommand(command);
         }
@@ -87,5 +100,23 @@ public final class TRexClientUtil {
     payload.put("method", methodName);
     payload.put("params", parameters);
     return new TRexCommand(cmdId, methodName, payload);
+  }
+
+  public static boolean isVersionCorrect(TRexServerMode mode, int major, int minor) {
+    switch (mode) {
+        // STL mode support only version not small than 4.6
+      case STL:
+        if (major < 4 || (major == 4 && minor < 6)) {
+          return false;
+        }
+        break;
+        // ASTF mode support only version not small than 1.7
+      case ASTF:
+        if (major < 1 || (major == 1 && minor < 7)) {
+          return false;
+        }
+        break;
+    }
+    return true;
   }
 }
