@@ -38,8 +38,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.Dot1qVlanTagPacket;
 import org.pcap4j.packet.EthernetPacket;
@@ -106,6 +109,19 @@ public class TRexClient extends ClientBase {
 
     TRexClientResult<ApiVersionHandler> result =
         callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
+
+    if (!StringUtils.isBlank(result.getError()) && result.getError().contains("Version mismatch")) {
+      String regrexString = "server: '([0-9]*)\\.([0-9]*)', client: '([0-9]*)\\.([0-9]*)'";
+      Pattern pattern = Pattern.compile(regrexString);
+      Matcher matcher = pattern.matcher(result.getError());
+      if (matcher.find()) {
+        Constants.STL_API_VERSION_MAJOR = Integer.parseInt(matcher.group(1));
+        Constants.STL_API_VERSION_MINOR = Integer.parseInt(matcher.group(2));
+        parameters.put("major", Constants.STL_API_VERSION_MAJOR);
+        parameters.put("minor", Constants.STL_API_VERSION_MINOR);
+        result = callMethod("api_sync_v2", parameters, ApiVersionHandler.class);
+      }
+    }
 
     if (result.get() == null) {
       TRexConnectionException e =
