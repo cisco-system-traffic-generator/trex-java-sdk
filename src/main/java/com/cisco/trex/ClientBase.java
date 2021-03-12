@@ -15,6 +15,7 @@ import com.cisco.trex.stateless.model.capture.CaptureMonitor;
 import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
 import com.cisco.trex.stateless.model.capture.CapturedPackets;
 import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
+import com.cisco.trex.stateless.model.stats.GlobalStatistics;
 import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.stats.XstatsNames;
 import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
@@ -346,6 +347,11 @@ public abstract class ClientBase {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put(PORT_ID, portIndex);
     return callMethod("get_port_stats", parameters, PortStatistics.class).get();
+  }
+
+  /** @return GlobalStatistics */
+  public GlobalStatistics getGlobalStatistics() {
+    return callMethod("get_global_stats", null, GlobalStatistics.class).get();
   }
 
   /**
