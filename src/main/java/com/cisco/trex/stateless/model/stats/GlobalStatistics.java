@@ -58,7 +58,7 @@ public class GlobalStatistics {
   @JsonProperty("m_total_nat_no_fid ")
   private long mTotalNatNoFid = 0;
 
-  @JsonProperty("m_total_nat_open ")
+  @JsonProperty("m_total_nat_open   ")
   private long mTotalNatOpen = 0;
 
   @JsonProperty("m_total_nat_syn_wait")
