@@ -1,6 +1,8 @@
 package com.cisco.trex.stateless.model.stats;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class GlobalStatistics {
 
@@ -49,16 +51,19 @@ public class GlobalStatistics {
   @JsonProperty("m_total_clients")
   private long mTotalClients = 0;
 
-  @JsonProperty("m_total_nat_active ")
+  @JsonProperty("m_total_nat_active")
+  @JsonAlias("m_total_nat_active ")
   private long mTotalNatActive = 0;
 
   @JsonProperty("m_total_nat_learn_error")
   private long mTotalNatLearnError = 0;
 
-  @JsonProperty("m_total_nat_no_fid ")
+  @JsonProperty("m_total_nat_no_fid")
+  @JsonAlias("m_total_nat_no_fid ")
   private long mTotalNatNoFid = 0;
 
-  @JsonProperty("m_total_nat_open   ")
+  @JsonProperty("m_total_nat_open")
+  @JsonAlias("m_total_nat_open   ")
   private long mTotalNatOpen = 0;
 
   @JsonProperty("m_total_nat_syn_wait")
@@ -184,7 +189,7 @@ public class GlobalStatistics {
     return mTotalClients;
   }
 
-  @JsonProperty("m_total_nat_active ")
+  @JsonProperty("m_total_nat_active")
   public long getMTotalNatActive() {
     return mTotalNatActive;
   }
@@ -194,12 +199,12 @@ public class GlobalStatistics {
     return mTotalNatLearnError;
   }
 
-  @JsonProperty("m_total_nat_no_fid ")
+  @JsonProperty("m_total_nat_no_fid")
   public long getMTotalNatNoFid() {
     return mTotalNatNoFid;
   }
 
-  @JsonProperty("m_total_nat_open ")
+  @JsonProperty("m_total_nat_open")
   public long getMTotalNatOpen() {
     return mTotalNatOpen;
   }
