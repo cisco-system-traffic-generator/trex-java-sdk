@@ -1,5 +1,6 @@
 package com.cisco.trex.stateful.api.lowlevel;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +44,11 @@ public class ASTFAssociationRule {
    * @param l7List
    */
   public ASTFAssociationRule(String ipStart, String ipEnd, int port, List<Integer> l7List) {
-    this(null, null, port);
+    this(ipStart, ipEnd, port);
     if (!l7List.isEmpty()) {
-      fields.addProperty("l7_map", "{\"offset\": " + l7List.toString() + "}");
+      JsonObject l7_map = new JsonObject();
+      addL7MapProperty(l7List, l7_map, "offset");
+      fields.add("l7_map", l7_map);
     }
   }
 
@@ -59,14 +62,22 @@ public class ASTFAssociationRule {
    */
   public ASTFAssociationRule(
       String ipStart, String ipEnd, int port, Map<String, List<Integer>> l7Map) {
-    this(null, null, port);
+    this(ipStart, ipEnd, port);
     if (!l7Map.isEmpty()) {
-      String l7_map =
-          String.format(
-              "{\"offset\": %s, \"value\": %s}",
-              l7Map.get("offset").toString(), l7Map.get("value").toString());
-      fields.addProperty("l7_map", l7_map);
+      JsonObject l7_map = new JsonObject();
+      addL7MapProperty(l7Map.get("offset"), l7_map, "offset");
+      addL7MapProperty(l7Map.get("value"), l7_map, "value");
+      fields.add("l7_map", l7_map);
     }
+  }
+
+  private void addL7MapProperty(List<Integer> values, JsonObject l7Map, String property) {
+    if (values == null || values.isEmpty()) {
+      return;
+    }
+    JsonArray jsonArray = new JsonArray();
+    values.forEach(jsonArray::add);
+    l7Map.add(property, jsonArray);
   }
 
   /**
