@@ -1,6 +1,8 @@
 package com.cisco.trex.stateful;
 
 import com.cisco.trex.ClientBase;
+import com.cisco.trex.stateful.model.FlowInfoData;
+import com.cisco.trex.stateful.model.FlowInfoResult;
 import com.cisco.trex.stateful.model.ServerStatus;
 import com.cisco.trex.stateful.model.stats.AstfStatistics;
 import com.cisco.trex.stateful.model.stats.LatencyPortData;
@@ -17,6 +19,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -155,13 +158,37 @@ public class TRexAstfClient extends ClientBase {
    * @param nc
    */
   public void startTraffic(
+          String profileId,
+          long clientMask,
+          double duration,
+          boolean ipv6,
+          int latencyPps,
+          int mult,
+          boolean nc) {
+    startTraffic(profileId, clientMask, duration, ipv6, latencyPps, mult, nc, 0);
+  }
+
+  /**
+   * start traffic on all ports on loaded profile associated with specified profile id
+   *
+   * @param profileId
+   * @param clientMask
+   * @param duration
+   * @param ipv6
+   * @param latencyPps
+   * @param mult
+   * @param nc
+   * @param dumpInterval
+   */
+  public void startTraffic(
       String profileId,
       long clientMask,
       double duration,
       boolean ipv6,
       int latencyPps,
       int mult,
-      boolean nc) {
+      boolean nc,
+      float dumpInterval) {
     Map<String, Object> payload = createPayload(profileId);
     payload.put("client_mask", clientMask);
     payload.put("duration", duration);
@@ -169,6 +196,7 @@ public class TRexAstfClient extends ClientBase {
     payload.put("latency_pps", latencyPps);
     payload.put("mult", mult);
     payload.put("nc", nc);
+    payload.put("dump_interval", dumpInterval);
     this.callMethod("start", payload);
   }
 
@@ -521,7 +549,7 @@ public class TRexAstfClient extends ClientBase {
   /**
    * get template group statistics
    *
-   * @return Map key:tgName, value:AstfStatistics
+   * @return ServerStatus
    */
   public ServerStatus syncWithServer() {
     Map<String, Object> payload = createPayload("*");
@@ -547,5 +575,39 @@ public class TRexAstfClient extends ClientBase {
     }
 
     return name2Id;
+  }
+
+  /**
+   *  Get flow information for a profile
+   *
+   * @param profileId
+   * @return FlowInfo
+   */
+  public List<FlowInfoResult> getProfileInfo(String profileId) {
+    List<FlowInfoResult> results = new ArrayList<>();
+
+    Map<String, Object> payload = createPayload(profileId);
+    String json = callMethod("get_flow_info", payload);
+    JsonArray jsonArray = getResultFromResponse(json).getAsJsonArray();
+    Iterator<JsonElement> iterator = jsonArray.iterator();
+    BigInteger index = null;
+    Map<String, FlowInfoData> flowInfoDataMap;
+    while (iterator.hasNext()) {
+      flowInfoDataMap = new HashMap<>();
+      JsonObject flowInfoJsonObject = iterator.next().getAsJsonObject();
+      for (Map.Entry<String, JsonElement> info : flowInfoJsonObject.entrySet()) {
+
+        if (info.getKey().equals("index")) {
+          index = new BigInteger(info.getValue().getAsString());
+        } else {
+          FlowInfoData flowInfoData = GSON.fromJson(info.getValue(), FlowInfoData.class);
+          flowInfoDataMap.put(info.getKey(), flowInfoData);
+        }
+      }
+      FlowInfoResult flowResult = new FlowInfoResult(index, flowInfoDataMap);
+      results.add(flowResult);
+    }
+
+    return results;
   }
 }
