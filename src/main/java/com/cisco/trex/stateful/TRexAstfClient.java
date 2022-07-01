@@ -158,13 +158,13 @@ public class TRexAstfClient extends ClientBase {
    * @param nc
    */
   public void startTraffic(
-          String profileId,
-          long clientMask,
-          double duration,
-          boolean ipv6,
-          int latencyPps,
-          int mult,
-          boolean nc) {
+      String profileId,
+      long clientMask,
+      double duration,
+      boolean ipv6,
+      int latencyPps,
+      int mult,
+      boolean nc) {
     startTraffic(profileId, clientMask, duration, ipv6, latencyPps, mult, nc, 0);
   }
 
@@ -578,7 +578,7 @@ public class TRexAstfClient extends ClientBase {
   }
 
   /**
-   *  Get flow information for a profile
+   * Get flow information for a profile
    *
    * @param profileId
    * @return FlowInfo

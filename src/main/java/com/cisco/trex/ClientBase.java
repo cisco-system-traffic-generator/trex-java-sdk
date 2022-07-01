@@ -442,7 +442,13 @@ public abstract class ClientBase {
    * @return CaptureMonitor
    */
   public TRexClientResult<CaptureMonitor> startCapture(
-          List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit, String filter, String endpoint, int snaplen) {
+      List<Integer> rxPorts,
+      List<Integer> txPorts,
+      String mode,
+      int limit,
+      String filter,
+      String endpoint,
+      int snaplen) {
     Map<String, Object> payload = new HashMap<>();
     payload.put(COMMAND, "start");
     payload.put("limit", limit);
