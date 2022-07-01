@@ -426,6 +426,23 @@ public abstract class ClientBase {
    */
   public TRexClientResult<CaptureMonitor> startCapture(
       List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit, String filter) {
+    return startCapture(rxPorts, txPorts, mode, limit, filter, "", 0);
+  }
+
+  /**
+   * Start Capture
+   *
+   * @param rxPorts
+   * @param txPorts
+   * @param mode
+   * @param limit
+   * @param filter
+   * @param endpoint
+   * @param snaplen
+   * @return CaptureMonitor
+   */
+  public TRexClientResult<CaptureMonitor> startCapture(
+          List<Integer> rxPorts, List<Integer> txPorts, String mode, int limit, String filter, String endpoint, int snaplen) {
     Map<String, Object> payload = new HashMap<>();
     payload.put(COMMAND, "start");
     payload.put("limit", limit);
@@ -433,6 +450,12 @@ public abstract class ClientBase {
     payload.put("rx", rxPorts);
     payload.put("tx", txPorts);
     payload.put("filter", filter);
+    if (endpoint != null && !endpoint.isEmpty()) {
+      payload.put("endpoint", endpoint);
+    }
+    if (snaplen != 0) {
+      payload.put("snaplen", snaplen);
+    }
     return callMethod(CAPTURE, payload, CaptureMonitor.class);
   }
 
