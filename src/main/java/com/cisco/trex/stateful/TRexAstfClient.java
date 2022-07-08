@@ -581,12 +581,14 @@ public class TRexAstfClient extends ClientBase {
    * Get flow information for a profile
    *
    * @param profileId
+   * @param startIndex starting index to get flow info
    * @return FlowInfo
    */
-  public List<FlowInfoResult> getProfileInfo(String profileId) {
+  public List<FlowInfoResult> getFlowInfo(String profileId, BigInteger startIndex) {
     List<FlowInfoResult> results = new ArrayList<>();
 
     Map<String, Object> payload = createPayload(profileId);
+    payload.put("index", startIndex);
     String json = callMethod("get_flow_info", payload);
     JsonArray jsonArray = getResultFromResponse(json).getAsJsonArray();
     Iterator<JsonElement> iterator = jsonArray.iterator();
@@ -609,5 +611,15 @@ public class TRexAstfClient extends ClientBase {
     }
 
     return results;
+  }
+
+  /**
+   * Get flow information for a profile
+   *
+   * @param profileId
+   * @return FlowInfo
+   */
+  public List<FlowInfoResult> getFlowInfo(String profileId) {
+    return getFlowInfo(profileId, BigInteger.valueOf(0));
   }
 }
