@@ -570,7 +570,8 @@ public class TRexClient extends ClientBase {
                       etherPkt.getRawData(),
                       etherPkt.getHeader().length(),
                       etherPkt.getPayload().length());
-              vlanOutsideMatches = qInqPkt.getHeader().getVidAsInt() == vlanTags.poll();
+              vlanOutsideMatches =
+                  !vlanTags.isEmpty() && qInqPkt.getHeader().getVidAsInt() == vlanTags.poll();
 
               nextPkt = qInqPkt.getPayload();
             } catch (IllegalRawDataException e) {
@@ -581,7 +582,8 @@ public class TRexClient extends ClientBase {
           boolean vlanInsideMatches = true;
           if (nextPkt.contains(Dot1qVlanTagPacket.class)) {
             Dot1qVlanTagPacket dot1qVlanTagPacket = nextPkt.get(Dot1qVlanTagPacket.class);
-            vlanInsideMatches = dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
+            vlanInsideMatches =
+                !vlanTags.isEmpty() && dot1qVlanTagPacket.getHeader().getVid() == vlanTags.poll();
           }
 
           if (nextPkt.contains(ArpPacket.class)) {
