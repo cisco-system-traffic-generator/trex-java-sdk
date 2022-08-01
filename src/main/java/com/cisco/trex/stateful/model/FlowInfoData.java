@@ -1,71 +1,71 @@
 package com.cisco.trex.stateful.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 
 /** counters for flow info */
 public class FlowInfoData {
 
-  @JsonProperty("duration")
+  @SerializedName("duration")
   private double duration;
 
-  @JsonProperty("last_data_recv")
+  @SerializedName("last_data_recv")
   private long lastDataRecv;
 
-  @JsonProperty("options")
+  @SerializedName("options")
   private String options;
 
-  @JsonProperty("origin")
+  @SerializedName("origin")
   private String origin;
 
-  @JsonProperty("rcv_mss")
+  @SerializedName("rcv_mss")
   private long rcvMss;
 
-  @JsonProperty("rcv_nxt")
+  @SerializedName("rcv_nxt")
   private long rcvNxt;
 
-  @JsonProperty("rcv_ooopack")
+  @SerializedName("rcv_ooopack")
   private long rcvOoopack;
 
-  @JsonProperty("rcv_space")
+  @SerializedName("rcv_space")
   private long rcvSpace;
 
-  @JsonProperty("rcv_wscale")
+  @SerializedName("rcv_wscale")
   private short rcvWscale;
 
-  @JsonProperty("rto")
+  @SerializedName("rto")
   private long rto;
 
-  @JsonProperty("rtt")
+  @SerializedName("rtt")
   private long rtt;
 
-  @JsonProperty("rttvar")
+  @SerializedName("rttvar")
   private long rttvar;
 
-  @JsonProperty("snd_cwnd")
+  @SerializedName("snd_cwnd")
   private long sndCwnd;
 
-  @JsonProperty("snd_mss")
+  @SerializedName("snd_mss")
   private long sndMss;
 
-  @JsonProperty("snd_nxt")
+  @SerializedName("snd_nxt")
   private long sndNxt;
 
-  @JsonProperty("snd_rexmitpack")
+  @SerializedName("snd_rexmitpack")
   private long sndRexmitpack;
 
-  @JsonProperty("snd_ssthresh")
+  @SerializedName("snd_ssthresh")
   private long sndSsthresh;
 
-  @JsonProperty("snd_wnd")
+  @SerializedName("snd_wnd")
   private long sndWnd;
 
-  @JsonProperty("snd_wscale")
+  @SerializedName("snd_wscale")
   private short sndWscale;
 
-  @JsonProperty("snd_zerowin")
+  @SerializedName("snd_zerowin")
   private long sndZerowin;
 
-  @JsonProperty("state")
+  @SerializedName("state")
   private long state;
 
   public double getDuration() {
