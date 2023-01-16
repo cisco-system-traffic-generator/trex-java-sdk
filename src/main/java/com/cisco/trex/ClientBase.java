@@ -512,14 +512,14 @@ public abstract class ClientBase {
    * Fetch Captured Packets
    *
    * @param captureId
-   * @param chunkSize
+   * @param packetLimit amount of packets to capture
    * @return CapturedPackets
    */
-  public TRexClientResult<CapturedPackets> captureFetchPkts(int captureId, int chunkSize) {
+  public TRexClientResult<CapturedPackets> captureFetchPkts(int captureId, int packetLimit) {
     Map<String, Object> payload = new HashMap<>();
     payload.put(COMMAND, "fetch");
     payload.put(CAPTURE_ID, captureId);
-    payload.put("pkt_limit", chunkSize);
+    payload.put("pkt_limit", packetLimit);
     return callMethod(CAPTURE, payload, CapturedPackets.class);
   }
 
