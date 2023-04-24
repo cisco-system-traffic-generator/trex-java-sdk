@@ -1,23 +1,24 @@
 package com.cisco.trex;
 
+import com.cisco.trex.model.GlobalConfig;
 import com.cisco.trex.stateless.TRexCommand;
 import com.cisco.trex.stateless.TRexTransport;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.L2Configuration;
-import com.cisco.trex.stateless.model.Port;
-import com.cisco.trex.stateless.model.PortStatus;
-import com.cisco.trex.stateless.model.RPCResponse;
-import com.cisco.trex.stateless.model.StubResult;
-import com.cisco.trex.stateless.model.SystemInfo;
-import com.cisco.trex.stateless.model.TRexClientResult;
-import com.cisco.trex.stateless.model.capture.CaptureInfo;
-import com.cisco.trex.stateless.model.capture.CaptureMonitor;
-import com.cisco.trex.stateless.model.capture.CaptureMonitorStop;
-import com.cisco.trex.stateless.model.capture.CapturedPackets;
-import com.cisco.trex.stateless.model.stats.ExtendedPortStatistics;
-import com.cisco.trex.stateless.model.stats.GlobalStatistics;
-import com.cisco.trex.stateless.model.stats.PortStatistics;
-import com.cisco.trex.stateless.model.stats.XstatsNames;
+import com.cisco.trex.model.L2Configuration;
+import com.cisco.trex.model.Port;
+import com.cisco.trex.model.PortStatus;
+import com.cisco.trex.model.RPCResponse;
+import com.cisco.trex.model.StubResult;
+import com.cisco.trex.model.SystemInfo;
+import com.cisco.trex.model.TRexClientResult;
+import com.cisco.trex.model.capture.CaptureInfo;
+import com.cisco.trex.model.capture.CaptureMonitor;
+import com.cisco.trex.model.capture.CaptureMonitorStop;
+import com.cisco.trex.model.capture.CapturedPackets;
+import com.cisco.trex.model.stats.ExtendedPortStatistics;
+import com.cisco.trex.model.stats.GlobalStatistics;
+import com.cisco.trex.model.stats.PortStatistics;
+import com.cisco.trex.model.stats.XstatsNames;
 import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.cisco.trex.util.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -546,6 +547,29 @@ public abstract class ClientBase {
   public SystemInfo getSystemInfo() {
     String json = callMethod("get_system_info", null);
     return GSON.fromJson(getResultFromResponse(json), SystemInfo.class);
+  }
+
+  /**
+   * Get global configuration parameters
+   *
+   * @return GlobalConfig
+   */
+  public TRexClientResult<GlobalConfig> getGlobalConfig(int portIdx) {
+    Map<String, Object> payload = new HashMap<>();
+    return callMethod("get_global_cfg", null, GlobalConfig.class);
+  }
+
+  /**
+   * Change global configuration parameter
+   *
+   * @param name parameter name
+   * @param value parameter value in data types of dboule, boolean depending on the parameter type
+   * @return StubResult
+   */
+  public TRexClientResult<StubResult> setGlobalConfig(String name, Object value) {
+    Map<String, Object> payload = new HashMap<>();
+    payload.put(name, value);
+    return callMethod("set_global_cfg", payload, StubResult.class);
   }
 
   protected Map<String, Object> createPayload(int portIndex) {

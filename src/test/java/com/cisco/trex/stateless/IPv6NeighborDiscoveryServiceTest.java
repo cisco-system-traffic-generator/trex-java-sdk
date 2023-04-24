@@ -3,7 +3,7 @@ package com.cisco.trex.stateless;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.cisco.trex.stateless.model.port.PortVlan;
+import com.cisco.trex.model.port.PortVlan;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;

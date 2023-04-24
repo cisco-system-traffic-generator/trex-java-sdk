@@ -3,7 +3,7 @@ package com.cisco.trex.util;
 import com.cisco.trex.stateless.TRexCommand;
 import com.cisco.trex.stateless.TRexTransport;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.stateless.model.RPCResponse;
+import com.cisco.trex.model.RPCResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

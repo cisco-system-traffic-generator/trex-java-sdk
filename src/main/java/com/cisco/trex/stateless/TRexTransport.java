@@ -1,6 +1,6 @@
 package com.cisco.trex.stateless;
 
-import com.cisco.trex.stateless.model.RPCResponse;
+import com.cisco.trex.model.RPCResponse;
 import com.cisco.trex.stateless.util.IDataCompressor;
 import com.cisco.trex.stateless.util.TRexDataCompressor;
 import com.fasterxml.jackson.databind.ObjectMapper;
