@@ -3,7 +3,7 @@ package com.cisco.trex.stateless;
 import static org.junit.Assert.assertTrue;
 
 import com.cisco.trex.stateless.exception.TRexConnectionException;
-import com.cisco.trex.model.RPCResponse;
+import com.cisco.trex.stateless.model.RPCResponse;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

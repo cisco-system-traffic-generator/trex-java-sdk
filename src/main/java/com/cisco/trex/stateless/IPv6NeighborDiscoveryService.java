@@ -3,13 +3,13 @@ package com.cisco.trex.stateless;
 import static org.pcap4j.util.ByteArrays.BYTE_SIZE_IN_BYTES;
 
 import com.cisco.trex.stateless.exception.ServiceModeRequiredException;
-import com.cisco.trex.model.Ipv6Node;
-import com.cisco.trex.model.PortStatus;
+import com.cisco.trex.stateless.model.Ipv6Node;
+import com.cisco.trex.stateless.model.PortStatus;
 import com.cisco.trex.stateless.model.StreamMode;
 import com.cisco.trex.stateless.model.StreamModeRate;
 import com.cisco.trex.stateless.model.StreamVM;
-import com.cisco.trex.model.TRexClientResult;
-import com.cisco.trex.model.port.PortVlan;
+import com.cisco.trex.stateless.model.TRexClientResult;
+import com.cisco.trex.stateless.model.port.PortVlan;
 import com.cisco.trex.stateless.model.vm.VMInstruction;
 import com.google.common.collect.Lists;
 import java.net.Inet6Address;

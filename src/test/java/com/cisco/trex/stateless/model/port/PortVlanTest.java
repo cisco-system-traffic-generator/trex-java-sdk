@@ -5,8 +5,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import com.cisco.trex.model.port.PortVlan;
 import org.junit.Test;
 
 public class PortVlanTest {

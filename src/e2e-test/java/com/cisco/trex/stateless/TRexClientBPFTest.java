@@ -2,14 +2,10 @@ package com.cisco.trex.stateless;
 
 import static java.lang.Thread.sleep;
 
-import com.cisco.trex.model.Port;
-import com.cisco.trex.model.TRexClientResult;
-import com.cisco.trex.model.capture.CaptureInfo;
-import com.cisco.trex.model.capture.CaptureMonitor;
-import com.cisco.trex.model.capture.CapturedPackets;
-import com.cisco.trex.model.capture.CapturedPkt;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.exception.TRexTimeoutException;
+import com.cisco.trex.stateless.model.*;
+import com.cisco.trex.stateless.model.capture.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.*;
