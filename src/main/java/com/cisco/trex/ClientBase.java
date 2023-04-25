@@ -1,5 +1,6 @@
 package com.cisco.trex;
 
+import com.cisco.trex.model.GlobalConfig;
 import com.cisco.trex.stateless.TRexCommand;
 import com.cisco.trex.stateless.TRexTransport;
 import com.cisco.trex.stateless.exception.TRexConnectionException;
@@ -546,6 +547,29 @@ public abstract class ClientBase {
   public SystemInfo getSystemInfo() {
     String json = callMethod("get_system_info", null);
     return GSON.fromJson(getResultFromResponse(json), SystemInfo.class);
+  }
+
+  /**
+   * Get global configuration parameters
+   *
+   * @return GlobalConfig
+   */
+  public TRexClientResult<GlobalConfig> getGlobalConfig(int portIdx) {
+    Map<String, Object> payload = new HashMap<>();
+    return callMethod("get_global_cfg", null, GlobalConfig.class);
+  }
+
+  /**
+   * Change global configuration parameter
+   *
+   * @param name parameter name
+   * @param value parameter value in data types of dboule, boolean depending on the parameter type
+   * @return StubResult
+   */
+  public TRexClientResult<StubResult> setGlobalConfig(String name, Object value) {
+    Map<String, Object> payload = new HashMap<>();
+    payload.put(name, value);
+    return callMethod("set_global_cfg", payload, StubResult.class);
   }
 
   protected Map<String, Object> createPayload(int portIndex) {
