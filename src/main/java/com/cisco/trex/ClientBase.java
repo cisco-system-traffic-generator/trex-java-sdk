@@ -563,12 +563,25 @@ public abstract class ClientBase {
    * Change global configuration parameter
    *
    * @param name parameter name
-   * @param value parameter value in data types of dboule, boolean depending on the parameter type
+   * @param value parameter value in data types of double, boolean depending on the parameter type
    * @return StubResult
    */
   public TRexClientResult<StubResult> setGlobalConfig(String name, Object value) {
     Map<String, Object> payload = new HashMap<>();
     payload.put(name, value);
+    return callMethod("set_global_cfg", payload, StubResult.class);
+  }
+
+  /**
+   * Change single or multiple global configuration parameter(s)
+   *
+   * @param parameters a map contains parameter name and value pairs, parameter value is in data types of double,
+   *                   boolean depending on the parameter type.
+   * @return StubResult
+   */
+  public TRexClientResult<StubResult> setGlobalConfig(Map<String, Object> parameters) {
+    Map<String, Object> payload = new HashMap<>();
+    parameters.forEach((key, value) -> payload.put(key, value));
     return callMethod("set_global_cfg", payload, StubResult.class);
   }
 
