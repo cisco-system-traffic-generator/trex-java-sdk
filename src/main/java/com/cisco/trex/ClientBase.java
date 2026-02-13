@@ -21,7 +21,6 @@ import com.cisco.trex.stateless.model.stats.PortStatistics;
 import com.cisco.trex.stateless.model.stats.XstatsNames;
 import com.cisco.trex.stateless.util.DoubleAsIntDeserializer;
 import com.cisco.trex.util.Constants;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -43,6 +42,7 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 /** Base class for stateful and stateless classes */
 public abstract class ClientBase {
@@ -575,8 +575,8 @@ public abstract class ClientBase {
   /**
    * Change single or multiple global configuration parameter(s)
    *
-   * @param parameters a map contains parameter name and value pairs, parameter value is in data types of double,
-   *                   boolean depending on the parameter type.
+   * @param parameters a map contains parameter name and value pairs, parameter value is in data
+   *     types of double, boolean depending on the parameter type.
    * @return StubResult
    */
   public TRexClientResult<StubResult> setGlobalConfig(Map<String, Object> parameters) {

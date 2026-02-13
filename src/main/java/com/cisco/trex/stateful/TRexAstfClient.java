@@ -14,11 +14,9 @@ import com.cisco.trex.stateless.model.TRexClientResult;
 import com.cisco.trex.util.Constants;
 import com.cisco.trex.util.TRexClientUtil;
 import com.cisco.trex.util.TRexServerMode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -30,6 +28,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** TRex Astf Client class */
 public class TRexAstfClient extends ClientBase {
@@ -538,7 +538,7 @@ public class TRexAstfClient extends ClientBase {
                     .readValue(result.get(tgId.toString()).toString(), AstfStatistics.class);
             astfStatistics.setCounterNames(metaData);
             stats.put(tgName, astfStatistics);
-          } catch (IOException e) {
+          } catch (JacksonException e) {
             LOGGER.error("Error occurred during processing output of get_tg_id_stats method", e);
           }
         });

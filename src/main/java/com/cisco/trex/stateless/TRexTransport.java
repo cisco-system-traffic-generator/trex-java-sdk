@@ -3,7 +3,6 @@ package com.cisco.trex.stateless;
 import com.cisco.trex.stateless.model.RPCResponse;
 import com.cisco.trex.stateless.util.IDataCompressor;
 import com.cisco.trex.stateless.util.TRexDataCompressor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQException;
+import tools.jackson.databind.ObjectMapper;
 
 /** TRex Transport class to create zmq socket for connection to trex server */
 public class TRexTransport {
