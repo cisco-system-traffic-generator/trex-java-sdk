@@ -24,11 +24,11 @@ public class FlowInfoResult {
   }
 
   /**
-   * Get flow info data map, as format of <string to present traffic direction , a flowInfoData
-   * object containsing flow info counters> ex., key is "1.1.1.1:41668-1.1.2.1:20" value is
+   * Get flow info data map, as format of &lt;string to present traffic direction , a flowInfoData
+   * object containsing flow info counters&gt; ex., key is "1.1.1.1:41668-1.1.2.1:20" value is
    * flowInfoData object refer to {@link FlowInfoData}
    *
-   * @return
+   * @return flow info data map
    */
   public Map<String, FlowInfoData> getFlowInfoDataMap() {
     return flowInfoDataMap;

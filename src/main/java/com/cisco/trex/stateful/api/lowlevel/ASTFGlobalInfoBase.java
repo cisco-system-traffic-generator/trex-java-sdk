@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 
 /**
  * ASTFGlobalInfoBase interface Extract the same params(scheduler,ipv6,ip,tcp) code in class
- * ASTFGlobalInfo & ASTFGlobalInfoPerTemplate to this class. For the different type about
- * params,abstract their create object method in this class, so the class ASTFGlobalInfo &
+ * ASTFGlobalInfo &amp; ASTFGlobalInfoPerTemplate to this class. For the different type about
+ * params,abstract their create object method in this class, so the class ASTFGlobalInfo &amp;
  * ASTFGlobalInfoPerTemplate can reduce the same code-block.
  */
 public interface ASTFGlobalInfoBase {

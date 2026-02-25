@@ -4,9 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.cisco.trex.stateless.exception.TRexConnectionException;
 import com.cisco.trex.stateless.model.RPCResponse;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -72,8 +70,7 @@ public class TRexClientMethodsTest {
   }
 
   @Test
-  public void serverAPISyncTest()
-      throws TRexConnectionException, JsonParseException, JsonMappingException, IOException {
+  public void serverAPISyncTest() throws TRexConnectionException, IOException {
     ObjectMapper objectMapper = new ObjectMapper();
     RPCResponse[] response =
         objectMapper.readValue(
@@ -86,8 +83,7 @@ public class TRexClientMethodsTest {
   }
 
   @Test(expected = TRexConnectionException.class)
-  public void serverAPISyncExceptionTest()
-      throws TRexConnectionException, JsonParseException, JsonMappingException, IOException {
+  public void serverAPISyncExceptionTest() throws TRexConnectionException, IOException {
     RPCResponse[] response =
         OBJECT_MAPPER.readValue(
             "[{\"id\":1417504019,\"jsonrpc\":\"2.0\",\"result\":null}]", RPCResponse[].class);
@@ -107,7 +103,7 @@ public class TRexClientMethodsTest {
    * @throws JsonParseException
    */
   @Test
-  public void acquirePortTest() throws JsonParseException, JsonMappingException, IOException {
+  public void acquirePortTest() throws IOException {
     RPCResponse[] response = OBJECT_MAPPER.readValue(PORT_STATUS, RPCResponse[].class);
     Mockito.when(transport.sendCommand(ArgumentMatchers.any(TRexCommand.class)))
         .thenReturn(response[0]);
@@ -128,7 +124,7 @@ public class TRexClientMethodsTest {
    * @throws JsonParseException
    */
   @Test
-  public void getPortStatusTest() throws JsonParseException, JsonMappingException, IOException {
+  public void getPortStatusTest() throws IOException {
     RPCResponse[] response = OBJECT_MAPPER.readValue(PORT_STATUS, RPCResponse[].class);
     Mockito.when(transport.sendCommand(ArgumentMatchers.any(TRexCommand.class)))
         .thenReturn(response[0]);
