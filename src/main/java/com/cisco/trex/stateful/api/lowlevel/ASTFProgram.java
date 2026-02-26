@@ -225,8 +225,7 @@ public class ASTFProgram {
    * recv Msg cmd
    *
    * @param pkts wait until the rx packet watermark is reached on flow counter.
-   * @param clear when reach the watermark clear the flow counter @Deprecated use method with long
-   *     instead
+   * @param clear when reach the watermark clear the flow counter
    * @deprecated use method with long instead
    */
   @Deprecated
@@ -309,7 +308,8 @@ public class ASTFProgram {
   /**
    * recv bytes command
    *
-   * @param bytes @Deprecated use method with Long instead
+   * @param bytes number of bytes
+   * @deprecated use method with Long instead
    */
   @Deprecated
   public void recv(int bytes) {
@@ -319,8 +319,9 @@ public class ASTFProgram {
   /**
    * recv bytes command
    *
-   * @param bytes
-   * @param clear @Deprecated use method with long instead
+   * @param bytes number of bytes
+   * @param clear clear flag
+   * @deprecated use method with long instead
    */
   @Deprecated
   public void recv(int bytes, boolean clear) {
